@@ -246,6 +246,84 @@ button{cursor:pointer}
   .wrap{padding:8px}
   .form-row{grid-template-columns:1fr}
 }
+
+.curl-simple-wrap{max-width:1180px;margin:0 auto}
+.curl-top-panel{margin-bottom:14px}
+.curl-topbar{display:grid;grid-template-columns:1fr 280px auto auto;gap:10px;align-items:end}
+.curl-title{font-size:22px;font-weight:1000;letter-spacing:-.5px}
+.curl-base-wrap label{
+  display:block;font-size:10px;font-weight:1000;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px
+}
+.curl-base-wrap input{
+  width:100%;border:1.5px solid var(--line);background:#fff;padding:8px;outline:none
+}
+.endpoint-cards{display:flex;flex-direction:column;gap:10px}
+.simple-endpoint{
+  background:var(--panel);border:2px solid var(--line);box-shadow:var(--shadow)
+}
+.simple-endpoint-main{
+  display:grid;grid-template-columns:minmax(260px,1fr) auto;gap:12px;align-items:center;padding:12px
+}
+.simple-endpoint-name{font-size:16px;font-weight:1000;text-transform:uppercase;margin-bottom:4px}
+.simple-endpoint-route{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.route-path{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;font-weight:800
+}
+.endpoint-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.input-zone{
+  border-top:2px solid var(--line);padding:12px;background:#f8f5ed
+}
+.input-zone-title{
+  font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:1000;margin-bottom:8px
+}
+.simple-inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px}
+.simple-input label{display:block;font-size:11px;font-weight:900;margin-bottom:4px}
+.simple-input input,.simple-input select,.simple-input textarea{
+  width:100%;border:1.5px solid var(--line);background:#fff;padding:8px;outline:none
+}
+.simple-input textarea{min-height:72px;resize:vertical}
+.required-dot{font-size:10px;color:#7a5500}
+.generated-curl{
+  border-top:1px solid var(--soft);padding:8px 12px;background:#fff;
+  display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center
+}
+.generated-curl code{
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#444
+}
+.endpoint-response{
+  display:none;border-top:2px solid var(--line);padding:10px 12px;background:#fff
+}
+.endpoint-response.show{display:block}
+.endpoint-response pre{
+  white-space:pre-wrap;word-break:break-word;margin:7px 0 0;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px
+}
+.advanced-box{border-top:1px solid var(--soft);background:#fff}
+.advanced-box summary{
+  cursor:pointer;padding:8px 12px;font-size:10px;font-weight:1000;text-transform:uppercase;letter-spacing:.07em
+}
+.advanced-inner{padding:0 12px 12px}
+.advanced-grid{display:grid;grid-template-columns:1fr 110px 1fr;gap:8px}
+.advanced-grid input,.advanced-grid select{
+  width:100%;border:1.5px solid var(--line);padding:7px;background:#fff
+}
+.input-def-row{
+  display:grid;grid-template-columns:1.2fr 1fr 120px 80px 36px;gap:6px;align-items:center;margin-top:6px
+}
+.input-def-row input,.input-def-row select{
+  width:100%;border:1.5px solid var(--line);padding:7px;background:#fff
+}
+.endpoint-empty{
+  background:#fff;border:2px dashed var(--line);padding:28px;text-align:center;font-weight:900
+}
+@media(max-width:850px){
+  .curl-topbar{grid-template-columns:1fr}
+  .simple-endpoint-main{grid-template-columns:1fr}
+  .endpoint-actions{justify-content:flex-start}
+  .advanced-grid,.input-def-row{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
@@ -425,34 +503,23 @@ button{cursor:pointer}
 
 
 <section id="curlScreen" class="screen">
-  <div class="curl-layout">
-    <aside class="sidebar" style="position:static">
-      <div class="panel">
-        <h3>API</h3>
-        <div class="panel-body">
-          <div class="curl-field">
-            <label>Base URL</label>
-            <input id="curlBaseUrl" value="http://localhost:3001">
-          </div>
-          <div class="small" style="margin-top:7px">One base URL. Every registered endpoint builds from it.</div>
+  <div class="curl-simple-wrap">
+    <div class="panel curl-top-panel">
+      <div class="panel-body curl-topbar">
+        <div>
+          <div class="curl-title">CURL TESTER</div>
+          <div class="small">Every real API endpoint gets one obvious row. Enter values only when the endpoint needs them.</div>
         </div>
-      </div>
-
-      <div class="panel">
-        <h3>Endpoints</h3>
-        <div class="panel-body">
-          <div class="toolbar">
-            <button class="btn primary" id="addEndpointBtn">+ ADD ENDPOINT</button>
-            <button class="btn" id="copyAllCurlsBtn">COPY ALL</button>
-          </div>
-          <div id="endpointList" class="endpoint-list"></div>
+        <div class="curl-base-wrap">
+          <label>API</label>
+          <input id="curlBaseUrl" value="http://localhost:3001">
         </div>
+        <button class="btn" id="addEndpointBtn">+ ADD ENDPOINT</button>
+        <button class="btn" id="copyAllCurlsBtn">COPY ALL</button>
       </div>
-    </aside>
+    </div>
 
-    <main>
-      <div id="curlEditorHost"></div>
-    </main>
+    <div id="endpointCards" class="endpoint-cards"></div>
   </div>
 </section>
 
@@ -491,11 +558,9 @@ const defaultState={
         path:"/health",
         notes:"Basic API health check.",
         tags:"system",
-        pathParams:{},
-        query:[],
-        headers:[],
-        authToken:"",
-        body:""
+        inputs:[],
+        advancedHeaders:[],
+        rawBody:""
       },
       {
         id:"db-check",
@@ -504,11 +569,9 @@ const defaultState={
         path:"/db-check",
         notes:"Confirms PostgreSQL connectivity and returns database time.",
         tags:"system,database",
-        pathParams:{},
-        query:[],
-        headers:[],
-        authToken:"",
-        body:""
+        inputs:[],
+        advancedHeaders:[],
+        rawBody:""
       }
     ]
   },
@@ -608,6 +671,7 @@ if(!state.curl) state.curl=structuredClone(defaultState.curl);
 if(!Array.isArray(state.curl.endpoints)) state.curl.endpoints=structuredClone(defaultState.curl.endpoints);
 if(!state.curl.baseUrl) state.curl.baseUrl="http://localhost:3001";
 if(!state.curl.selectedId && state.curl.endpoints[0]) state.curl.selectedId=state.curl.endpoints[0].id;
+state.curl.endpoints.forEach(ep=>{ if(!ep.inputs) normalizeEndpoint(ep); });
 
 function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}}
 function save(){localStorage.setItem(KEY,JSON.stringify(state))}
@@ -616,9 +680,9 @@ function snake(s){return String(s||"").trim().replace(/([a-z0-9])([A-Z])/g,"$1_$
 function pluralize(w){
   const ir={activity:"activities",category:"categories",person:"people",child:"children",staff:"staff"};
   if(ir[w])return ir[w];
-  if(/[^aeiou]y$/.test(w))return w.slice(0,-1)+"ies";
-  if(/(s|x|z|ch|sh)$/.test(w))return w+"es";
   if(w.endsWith("s"))return w;
+  if(/[^aeiou]y$/.test(w))return w.slice(0,-1)+"ies";
+  if(/(x|z|ch|sh)$/.test(w))return w+"es";
   return w+"s";
 }
 function singularize(w){
@@ -674,8 +738,6 @@ function tableCard(t,ti){
 function fieldRow(t,f,ti,fi){
   const el=document.createElement("div"); el.className="field-row";
   const fs=snake(f.name), snakeBad=f.name&&fs!==f.name;
-  const expected=f.definition==="FK"?fkName(f.details):"";
-  const fkBad=!!expected&&f.name!==expected;
   const defs=["PK","FK","TEXT","TEXT NOT NULL","TEXT UNIQUE NOT NULL","CHOICE","INTEGER","INTEGER NOT NULL","BOOLEAN","BOOLEAN NOT NULL","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"];
   const all=[...new Set([f.definition,...defs].filter(Boolean))];
   const detail=f.definition==="FK"
@@ -683,9 +745,8 @@ function fieldRow(t,f,ti,fi){
     : `<textarea data-a="field-details" data-ti="${ti}" data-fi="${fi}" placeholder="${f.definition==="CHOICE"?"comma-separated choices":"details / meaning"}">${esc(f.details||"")}</textarea>`;
   el.innerHTML=`
     <div class="cell" data-label="Field">
-      <input class="field-name ${(snakeBad||fkBad)?"problem":""}" data-a="field-name" data-ti="${ti}" data-fi="${fi}" value="${esc(f.name)}">
+      <input class="field-name ${snakeBad?"problem":""}" data-a="field-name" data-ti="${ti}" data-fi="${fi}" value="${esc(f.name)}">
       ${snakeBad?`<div class="suggest">snake_case <code>${esc(fs)}</code> <button class="mini good" data-a="fix-field" data-ti="${ti}" data-fi="${fi}" data-value="${esc(fs)}">FIX</button></div>`:""}
-      ${fkBad?`<div class="suggest">FK convention <code>${esc(expected)}</code> <button class="mini good" data-a="fix-field" data-ti="${ti}" data-fi="${fi}" data-value="${esc(expected)}">FIX</button></div>`:""}
     </div>
     <div class="cell" data-label="Definition"><select data-a="field-definition" data-ti="${ti}" data-fi="${fi}">${all.map(x=>`<option ${x===f.definition?"selected":""}>${esc(x)}</option>`).join("")}</select></div>
     <div class="cell" data-label="Details">${detail}</div>
@@ -715,8 +776,6 @@ function validate(){
           const target=state.tables.find(x=>x.name===tt);
           if(!target)issues.push({level:"error",text:`${t.name}.${f.name}: target table "${tt}" does not exist.`,ti,fi});
           else if(!target.fields.some(x=>x.name===ff))issues.push({level:"error",text:`${t.name}.${f.name}: target "${f.details}" does not exist.`,ti,fi});
-          const ex=fkName(f.details);
-          if(ex&&f.name!==ex)issues.push({level:"warning",text:`${t.name}.${f.name}: FK name should be "${ex}".`,ti,fi})
         }
       }
       if(f.definition==="CHOICE"&&!String(f.details||"").trim())issues.push({level:"warning",text:`${t.name}.${f.name}: CHOICE has no values.`,ti,fi});
@@ -823,14 +882,12 @@ function renderPlatform(){
 }
 
 
-function endpointById(id){
-  return state.curl.endpoints.find(x=>x.id===id)
-}
-function currentEndpoint(){
-  return endpointById(state.curl.selectedId) || state.curl.endpoints[0] || null
-}
-function shellQuote(v){
-  return "'" + String(v ?? "").replace(/'/g, "'\\''") + "'"
+
+function humanizeKey(key){
+  return String(key||"")
+    .replace(/_id$/," ID")
+    .replace(/_/g," ")
+    .replace(/\b\w/g,c=>c.toUpperCase())
 }
 function pathParamNames(path){
   const names=[];
@@ -842,284 +899,332 @@ function pathParamNames(path){
   return names
 }
 function normalizeEndpoint(ep){
-  ep.pathParams=ep.pathParams||{};
-  ep.query=Array.isArray(ep.query)?ep.query:[];
-  ep.headers=Array.isArray(ep.headers)?ep.headers:[];
+  ep.name=ep.name||"Unnamed Endpoint";
+  ep.method=(ep.method||"GET").toUpperCase();
+  ep.path=ep.path||"/";
   ep.notes=ep.notes||"";
   ep.tags=ep.tags||"";
-  ep.authToken=ep.authToken||"";
-  ep.body=ep.body||"";
-  pathParamNames(ep.path).forEach(n=>{if(!(n in ep.pathParams))ep.pathParams[n]=""});
+  ep.inputs=Array.isArray(ep.inputs)?ep.inputs:[];
+  ep.advancedHeaders=Array.isArray(ep.advancedHeaders)?ep.advancedHeaders:[];
+  ep.rawBody=ep.rawBody||"";
+
+  // Migrate the old tester format if it exists.
+  if(ep.pathParams){
+    Object.entries(ep.pathParams).forEach(([key,value])=>{
+      if(!ep.inputs.some(x=>x.location==="path"&&x.key===key)){
+        ep.inputs.push({id:uid(),key,label:humanizeKey(key),location:"path",required:true,value:String(value||"")})
+      }
+    });
+    delete ep.pathParams
+  }
+  if(Array.isArray(ep.query)){
+    ep.query.forEach(x=>{
+      if(x.key && !ep.inputs.some(i=>i.location==="query"&&i.key===x.key)){
+        ep.inputs.push({id:uid(),key:x.key,label:humanizeKey(x.key),location:"query",required:false,value:String(x.value||"")})
+      }
+    });
+    delete ep.query
+  }
+  if(Array.isArray(ep.headers)){
+    ep.advancedHeaders.push(...ep.headers.filter(x=>x.key));
+    delete ep.headers
+  }
+  if(ep.authToken){
+    ep.inputs.push({id:uid(),key:"token",label:"Bearer Token",location:"auth",required:true,value:String(ep.authToken)});
+    delete ep.authToken
+  }
+  if(ep.body){
+    ep.rawBody=String(ep.body);
+    delete ep.body
+  }
+
+  // Any :param in the path automatically becomes a visible required input.
+  pathParamNames(ep.path).forEach(key=>{
+    if(!ep.inputs.some(x=>x.location==="path"&&x.key===key)){
+      ep.inputs.push({id:uid(),key,label:humanizeKey(key),location:"path",required:true,value:""})
+    }
+  });
+}
+function allEndpoints(){
+  state.curl.endpoints.forEach(normalizeEndpoint);
+  return state.curl.endpoints
+}
+function bodyObject(ep){
+  const fields=ep.inputs.filter(x=>x.location==="body" && (x.required || String(x.value||"")!==""));
+  if(!fields.length)return null;
+  const obj={};
+  fields.forEach(x=>obj[x.key]=x.value);
+  return obj
 }
 function resolvedEndpointUrl(ep){
   normalizeEndpoint(ep);
   let path=String(ep.path||"/");
-  for(const n of pathParamNames(path)){
-    const value=ep.pathParams[n];
-    if(value!==undefined && String(value)!==""){
-      path=path.replaceAll(":"+n,encodeURIComponent(String(value))).replaceAll("{"+n+"}",encodeURIComponent(String(value)))
+  ep.inputs.filter(x=>x.location==="path").forEach(x=>{
+    const val=String(x.value||"");
+    if(val){
+      path=path.replaceAll(":"+x.key,encodeURIComponent(val)).replaceAll("{"+x.key+"}",encodeURIComponent(val))
     }
-  }
+  });
   let base=String(state.curl.baseUrl||"").replace(/\/+$/,"");
-  if(path && !path.startsWith("/"))path="/"+path;
-  const query=ep.query
-    .filter(x=>String(x.key||"").trim())
-    .map(x=>encodeURIComponent(String(x.key).trim())+"="+encodeURIComponent(String(x.value||"")))
+  if(!path.startsWith("/"))path="/"+path;
+  const q=ep.inputs
+    .filter(x=>x.location==="query" && String(x.value||"")!=="")
+    .map(x=>encodeURIComponent(x.key)+"="+encodeURIComponent(String(x.value)))
     .join("&");
-  return base+path+(query?(path.includes("?")?"&":"?")+query:"")
+  return base+path+(q?(path.includes("?")?"&":"?")+q:"")
 }
 function requestHeaders(ep){
   normalizeEndpoint(ep);
   const headers={};
-  ep.headers.forEach(x=>{
-    const k=String(x.key||"").trim();
-    if(k)headers[k]=String(x.value||"")
+  ep.advancedHeaders.forEach(x=>{
+    if(String(x.key||"").trim())headers[String(x.key).trim()]=String(x.value||"")
   });
-  if(ep.authToken)headers["Authorization"]="Bearer "+ep.authToken;
-  if(ep.body && !Object.keys(headers).some(k=>k.toLowerCase()==="content-type")){
+  const auth=ep.inputs.find(x=>x.location==="auth" && String(x.value||""));
+  if(auth)headers["Authorization"]="Bearer "+auth.value;
+  const body=bodyObject(ep);
+  if((body || ep.rawBody) && !Object.keys(headers).some(k=>k.toLowerCase()==="content-type")){
     headers["Content-Type"]="application/json"
   }
   return headers
 }
+function requestBody(ep){
+  const obj=bodyObject(ep);
+  if(obj)return JSON.stringify(obj);
+  return String(ep.rawBody||"").trim()
+}
+function shellQuote(v){
+  return "'" + String(v??"").replace(/'/g,"'\\''") + "'"
+}
 function curlCommand(ep){
-  if(!ep)return "";
+  normalizeEndpoint(ep);
+  const url=resolvedEndpointUrl(ep);
   const headers=requestHeaders(ep);
-  const parts=[`curl -X ${ep.method||"GET"} ${shellQuote(resolvedEndpointUrl(ep))}`];
+  const body=requestBody(ep);
+  const parts=[];
+  if(ep.method==="GET" && !body)parts.push(`curl ${shellQuote(url)}`);
+  else parts.push(`curl -X ${ep.method} ${shellQuote(url)}`);
   Object.entries(headers).forEach(([k,v])=>parts.push(`  -H ${shellQuote(k+": "+v)}`));
-  if(String(ep.body||"").trim())parts.push(`  --data-raw ${shellQuote(ep.body)}`);
+  if(body)parts.push(`  --data-raw ${shellQuote(body)}`);
   return parts.join(" \\\n")
 }
-function renderEndpointList(){
-  const root=document.getElementById("endpointList");
+function missingRequired(ep){
+  return ep.inputs.filter(x=>x.required && String(x.value||"").trim()==="")
+}
+function inputControl(ep,input){
+  const value=esc(input.value||"");
+  const req=input.required?'<span class="required-dot">required</span>':"";
+  return `
+    <div class="simple-input">
+      <label>${esc(input.label||humanizeKey(input.key))} ${req}</label>
+      <input data-ep-input="${esc(ep.id)}" data-input-id="${esc(input.id)}" value="${value}" placeholder="${esc(input.placeholder||"Enter value")}">
+    </div>`
+}
+function renderEndpointCards(){
+  const root=document.getElementById("endpointCards");
   if(!root)return;
-  if(!state.curl.endpoints.length){
-    root.innerHTML='<div class="empty-state">NO ENDPOINTS YET</div>';
+  const endpoints=allEndpoints();
+  if(!endpoints.length){
+    root.innerHTML='<div class="endpoint-empty">NO ENDPOINTS YET</div>';
     return
   }
-  root.innerHTML=state.curl.endpoints.map(ep=>`
-    <button class="endpoint-item ${ep.id===state.curl.selectedId?"active":""}" data-endpoint-id="${esc(ep.id)}">
-      <span class="method">${esc(ep.method||"GET")}</span>
-      <span class="endpoint-main">
-        <div class="endpoint-name">${esc(ep.name||"Unnamed endpoint")}</div>
-        <div class="endpoint-path">${esc(ep.path||"/")}</div>
-      </span>
-    </button>
-  `).join("");
-  root.querySelectorAll("[data-endpoint-id]").forEach(b=>b.onclick=()=>{
-    state.curl.selectedId=b.dataset.endpointId;
+
+  root.innerHTML=endpoints.map(ep=>{
+    const visibleInputs=ep.inputs.filter(x=>["path","query","body","auth"].includes(x.location));
+    const needs=visibleInputs.length;
+    return `
+      <section class="simple-endpoint" data-card-id="${esc(ep.id)}">
+        <div class="simple-endpoint-main">
+          <div>
+            <div class="simple-endpoint-name">${esc(ep.name)}</div>
+            <div class="simple-endpoint-route">
+              <span class="method">${esc(ep.method)}</span>
+              <span class="route-path">${esc(ep.path)}</span>
+              ${needs?`<span class="badge warning">${needs} VALUE${needs===1?"":"S"}</span>`:""}
+            </div>
+            ${ep.notes?`<div class="small" style="margin-top:5px">${esc(ep.notes)}</div>`:""}
+          </div>
+          <div class="endpoint-actions">
+            <button class="btn primary" data-copy-endpoint="${esc(ep.id)}">COPY CURL</button>
+            <button class="btn" data-run-endpoint="${esc(ep.id)}">RUN</button>
+          </div>
+        </div>
+
+        ${needs?`
+          <div class="input-zone">
+            <div class="input-zone-title">Enter what this request needs</div>
+            <div class="simple-inputs">${visibleInputs.map(x=>inputControl(ep,x)).join("")}</div>
+          </div>`:""}
+
+        <div class="generated-curl">
+          <code data-curl-preview="${esc(ep.id)}">${esc(curlCommand(ep))}</code>
+          <button class="mini" data-copy-endpoint="${esc(ep.id)}">COPY</button>
+        </div>
+
+        <div class="endpoint-response" data-response="${esc(ep.id)}">
+          <div data-response-meta="${esc(ep.id)}"></div>
+          <pre data-response-body="${esc(ep.id)}"></pre>
+        </div>
+
+        <details class="advanced-box">
+          <summary>Advanced / edit endpoint</summary>
+          <div class="advanced-inner">
+            <div class="advanced-grid">
+              <input data-edit-name="${esc(ep.id)}" value="${esc(ep.name)}" placeholder="Endpoint name">
+              <select data-edit-method="${esc(ep.id)}">
+                ${["GET","POST","PUT","PATCH","DELETE","OPTIONS","HEAD"].map(m=>`<option ${m===ep.method?"selected":""}>${m}</option>`).join("")}
+              </select>
+              <input data-edit-path="${esc(ep.id)}" value="${esc(ep.path)}" placeholder="/api/users/:id">
+            </div>
+
+            <div style="margin-top:10px;font-size:10px;font-weight:1000;text-transform:uppercase">Required / optional values</div>
+            <div>
+              ${ep.inputs.map((x,i)=>`
+                <div class="input-def-row">
+                  <input data-def-field="${esc(ep.id)}" data-def-index="${i}" data-def-prop="label" value="${esc(x.label||"")}" placeholder="Label">
+                  <input data-def-field="${esc(ep.id)}" data-def-index="${i}" data-def-prop="key" value="${esc(x.key||"")}" placeholder="key">
+                  <select data-def-field="${esc(ep.id)}" data-def-index="${i}" data-def-prop="location">
+                    ${["path","query","body","auth"].map(loc=>`<option ${x.location===loc?"selected":""}>${loc}</option>`).join("")}
+                  </select>
+                  <select data-def-field="${esc(ep.id)}" data-def-index="${i}" data-def-prop="required">
+                    <option value="true" ${x.required?"selected":""}>required</option>
+                    <option value="false" ${!x.required?"selected":""}>optional</option>
+                  </select>
+                  <button class="remove" data-remove-input="${esc(ep.id)}" data-def-index="${i}">×</button>
+                </div>`).join("")}
+            </div>
+            <div class="toolbar" style="margin-top:8px;margin-bottom:0">
+              <button class="mini" data-add-input="${esc(ep.id)}">+ ADD VALUE</button>
+              <button class="mini bad" data-delete-endpoint="${esc(ep.id)}">DELETE ENDPOINT</button>
+            </div>
+          </div>
+        </details>
+      </section>`
+  }).join("");
+
+  root.querySelectorAll("[data-ep-input]").forEach(el=>el.addEventListener("input",()=>{
+    const ep=state.curl.endpoints.find(x=>x.id===el.dataset.epInput);
+    const inp=ep?.inputs.find(x=>x.id===el.dataset.inputId);
+    if(!ep||!inp)return;
+    inp.value=el.value;
     save();
-    renderCurl()
+    refreshCurlPreview(ep)
+  }));
+
+  root.querySelectorAll("[data-copy-endpoint]").forEach(b=>b.onclick=async()=>{
+    const ep=state.curl.endpoints.find(x=>x.id===b.dataset.copyEndpoint);
+    if(!ep)return;
+    const missing=missingRequired(ep);
+    if(missing.length){
+      alert("Enter: "+missing.map(x=>x.label||humanizeKey(x.key)).join(", "));
+      return
+    }
+    await navigator.clipboard.writeText(curlCommand(ep));
+    const old=b.textContent;b.textContent="COPIED";setTimeout(()=>b.textContent=old,900)
+  });
+
+  root.querySelectorAll("[data-run-endpoint]").forEach(b=>b.onclick=()=>{
+    const ep=state.curl.endpoints.find(x=>x.id===b.dataset.runEndpoint);
+    if(ep)runEndpoint(ep,b)
+  });
+
+  root.querySelectorAll("[data-edit-name]").forEach(el=>el.addEventListener("input",()=>editEndpointBasics(el.dataset.editName)));
+  root.querySelectorAll("[data-edit-method]").forEach(el=>el.addEventListener("change",()=>editEndpointBasics(el.dataset.editMethod)));
+  root.querySelectorAll("[data-edit-path]").forEach(el=>el.addEventListener("input",()=>editEndpointBasics(el.dataset.editPath)));
+
+  root.querySelectorAll("[data-def-field]").forEach(el=>{
+    const evt=el.tagName==="SELECT"?"change":"input";
+    el.addEventListener(evt,()=>{
+      const ep=state.curl.endpoints.find(x=>x.id===el.dataset.defField);
+      if(!ep)return;
+      const input=ep.inputs[+el.dataset.defIndex];
+      if(!input)return;
+      const prop=el.dataset.defProp;
+      input[prop]=prop==="required" ? el.value==="true" : el.value;
+      save();
+      if(prop==="key"||prop==="location")renderEndpointCards();
+    })
+  });
+
+  root.querySelectorAll("[data-add-input]").forEach(b=>b.onclick=()=>{
+    const ep=state.curl.endpoints.find(x=>x.id===b.dataset.addInput);
+    if(!ep)return;
+    ep.inputs.push({id:uid(),key:"value",label:"Value",location:"body",required:true,value:""});
+    save();renderEndpointCards()
+  });
+
+  root.querySelectorAll("[data-remove-input]").forEach(b=>b.onclick=()=>{
+    const ep=state.curl.endpoints.find(x=>x.id===b.dataset.removeInput);
+    if(!ep)return;
+    ep.inputs.splice(+b.dataset.defIndex,1);
+    save();renderEndpointCards()
+  });
+
+  root.querySelectorAll("[data-delete-endpoint]").forEach(b=>b.onclick=()=>{
+    const ep=state.curl.endpoints.find(x=>x.id===b.dataset.deleteEndpoint);
+    if(!ep||!confirm(`Delete endpoint "${ep.name}"?`))return;
+    state.curl.endpoints=state.curl.endpoints.filter(x=>x.id!==ep.id);
+    save();renderEndpointCards()
   })
 }
-function pairRows(kind,rows){
-  if(!rows.length)return '<div class="small">None.</div>';
-  return rows.map((r,i)=>`
-    <div class="param-row">
-      <input data-curl-pair="${kind}" data-pair-index="${i}" data-pair-field="key" value="${esc(r.key||"")}" placeholder="name">
-      <input data-curl-pair="${kind}" data-pair-index="${i}" data-pair-field="value" value="${esc(r.value||"")}" placeholder="value">
-      <button class="remove" data-remove-pair="${kind}" data-pair-index="${i}">×</button>
-    </div>
-  `).join("")
+function editEndpointBasics(id){
+  const ep=state.curl.endpoints.find(x=>x.id===id);
+  if(!ep)return;
+  const name=document.querySelector(`[data-edit-name="${CSS.escape(id)}"]`);
+  const method=document.querySelector(`[data-edit-method="${CSS.escape(id)}"]`);
+  const path=document.querySelector(`[data-edit-path="${CSS.escape(id)}"]`);
+  if(name)ep.name=name.value;
+  if(method)ep.method=method.value;
+  if(path)ep.path=path.value;
+  normalizeEndpoint(ep);
+  save();
+  // Re-render so auto-detected path values appear immediately.
+  renderEndpointCards()
 }
-function renderCurlEditor(){
-  const host=document.getElementById("curlEditorHost");
-  if(!host)return;
-  const ep=currentEndpoint();
-  if(!ep){
-    host.innerHTML='<div class="empty-state">ADD AN ENDPOINT TO START</div>';
+function refreshCurlPreview(ep){
+  const node=document.querySelector(`[data-curl-preview="${CSS.escape(ep.id)}"]`);
+  if(node)node.textContent=curlCommand(ep)
+}
+async function runEndpoint(ep,button){
+  const missing=missingRequired(ep);
+  if(missing.length){
+    alert("Enter: "+missing.map(x=>x.label||humanizeKey(x.key)).join(", "));
     return
   }
-  normalizeEndpoint(ep);
-  const params=pathParamNames(ep.path);
-  host.innerHTML=`
-    <section class="card">
-      <div class="card-head">
-        <div>
-          <div style="font-weight:1000;font-size:18px">CURL GENERATOR</div>
-          <div class="small">Define the endpoint once. Matapon builds the command from method, path, params, headers, auth and body.</div>
-        </div>
-        <div class="actions">
-          <button class="mini" id="duplicateEndpointBtn">DUPLICATE</button>
-          <button class="mini bad" id="deleteEndpointBtn">DELETE</button>
-        </div>
-      </div>
-      <div class="panel-body">
-        <div class="curl-editor">
-          <div class="curl-field">
-            <label>Name</label>
-            <input id="curlEndpointName" value="${esc(ep.name)}">
-          </div>
-          <div class="curl-field">
-            <label>Tags</label>
-            <input id="curlEndpointTags" value="${esc(ep.tags)}" placeholder="users, admin, auth">
-          </div>
-          <div class="curl-field">
-            <label>Method</label>
-            <select id="curlMethod">
-              ${["GET","POST","PUT","PATCH","DELETE","OPTIONS","HEAD"].map(m=>`<option ${m===ep.method?"selected":""}>${m}</option>`).join("")}
-            </select>
-          </div>
-          <div class="curl-field">
-            <label>Path</label>
-            <input id="curlPath" value="${esc(ep.path)}" placeholder="/api/users/:id">
-          </div>
-          <div class="curl-field wide">
-            <label>What this endpoint does</label>
-            <textarea id="curlNotes" placeholder="Meaning / expected behavior">${esc(ep.notes)}</textarea>
-          </div>
-
-          <div class="curl-field wide">
-            <label>Path parameters</label>
-            <div id="pathParamHost">
-              ${params.length?params.map(n=>`
-                <div class="path-param-row">
-                  <code>${esc(n)}</code>
-                  <input data-path-param="${esc(n)}" value="${esc(ep.pathParams[n]||"")}" placeholder="value for ${esc(n)}">
-                </div>`).join(""):'<div class="small">No :param or {param} values in this path.</div>'}
-            </div>
-          </div>
-
-          <div class="curl-field wide">
-            <label>Query parameters</label>
-            <div id="queryRows">${pairRows("query",ep.query)}</div>
-            <button class="mini" id="addQueryBtn">+ QUERY PARAM</button>
-          </div>
-
-          <div class="curl-field wide">
-            <label>Headers</label>
-            <div id="headerRows">${pairRows("headers",ep.headers)}</div>
-            <button class="mini" id="addHeaderBtn">+ HEADER</button>
-          </div>
-
-          <div class="curl-field wide">
-            <label>Bearer token</label>
-            <input id="curlAuthToken" value="${esc(ep.authToken)}" placeholder="optional token">
-          </div>
-
-          <div class="curl-field wide">
-            <label>JSON / request body</label>
-            <textarea id="curlBody" placeholder='{"name":"Example"}'>${esc(ep.body)}</textarea>
-          </div>
-
-          <div class="curl-field wide">
-            <label>Generated command</label>
-            <textarea id="curlOutput" class="curl-output" readonly>${esc(curlCommand(ep))}</textarea>
-            <div class="toolbar" style="margin-top:8px;margin-bottom:0">
-              <button class="btn primary" id="copyCurlBtn">COPY CURL</button>
-              <button class="btn" id="runRequestBtn">RUN REQUEST</button>
-            </div>
-          </div>
-
-          <div class="curl-field wide">
-            <label>Response</label>
-            <div id="responseMeta" class="response-meta"></div>
-            <div id="responseOutput" class="response-output">Not run yet.</div>
-          </div>
-        </div>
-      </div>
-    </section>
-  `;
-
-  const update=()=>{
-    ep.name=document.getElementById("curlEndpointName").value;
-    ep.tags=document.getElementById("curlEndpointTags").value;
-    ep.method=document.getElementById("curlMethod").value;
-    ep.path=document.getElementById("curlPath").value;
-    ep.notes=document.getElementById("curlNotes").value;
-    ep.authToken=document.getElementById("curlAuthToken").value;
-    ep.body=document.getElementById("curlBody").value;
-    normalizeEndpoint(ep);
-    document.getElementById("curlOutput").value=curlCommand(ep);
-    save();
-    renderEndpointList()
-  };
-  ["curlEndpointName","curlEndpointTags","curlMethod","curlNotes","curlAuthToken","curlBody"].forEach(id=>{
-    const x=document.getElementById(id);
-    x.addEventListener(id==="curlMethod"?"change":"input",update)
-  });
-  document.getElementById("curlPath").addEventListener("input",()=>{
-    ep.path=document.getElementById("curlPath").value;
-    normalizeEndpoint(ep);
-    save();
-    renderCurlEditor();
-    renderEndpointList()
-  });
-  host.querySelectorAll("[data-path-param]").forEach(x=>x.addEventListener("input",()=>{
-    ep.pathParams[x.dataset.pathParam]=x.value;
-    document.getElementById("curlOutput").value=curlCommand(ep);
-    save()
-  }));
-  host.querySelectorAll("[data-curl-pair]").forEach(x=>x.addEventListener("input",()=>{
-    const list=ep[x.dataset.curlPair];
-    list[+x.dataset.pairIndex][x.dataset.pairField]=x.value;
-    document.getElementById("curlOutput").value=curlCommand(ep);
-    save()
-  }));
-  host.querySelectorAll("[data-remove-pair]").forEach(b=>b.onclick=()=>{
-    ep[b.dataset.removePair].splice(+b.dataset.pairIndex,1);
-    save();renderCurlEditor()
-  });
-  document.getElementById("addQueryBtn").onclick=()=>{
-    ep.query.push({key:"",value:""});save();renderCurlEditor()
-  };
-  document.getElementById("addHeaderBtn").onclick=()=>{
-    ep.headers.push({key:"",value:""});save();renderCurlEditor()
-  };
-  document.getElementById("duplicateEndpointBtn").onclick=()=>{
-    const copy=structuredClone(ep);
-    copy.id=uid();copy.name=(ep.name||"Endpoint")+" Copy";
-    state.curl.endpoints.push(copy);state.curl.selectedId=copy.id;save();renderCurl()
-  };
-  document.getElementById("deleteEndpointBtn").onclick=()=>{
-    if(!confirm(`Delete endpoint "${ep.name}"?`))return;
-    const i=state.curl.endpoints.findIndex(x=>x.id===ep.id);
-    state.curl.endpoints.splice(i,1);
-    state.curl.selectedId=state.curl.endpoints[0]?.id||"";
-    save();renderCurl()
-  };
-  document.getElementById("copyCurlBtn").onclick=async()=>{
-    await navigator.clipboard.writeText(curlCommand(ep));
-    const b=document.getElementById("copyCurlBtn"),old=b.textContent;
-    b.textContent="COPIED";setTimeout(()=>b.textContent=old,900)
-  };
-  document.getElementById("runRequestBtn").onclick=()=>runEndpoint(ep);
-}
-async function runEndpoint(ep){
-  const meta=document.getElementById("responseMeta");
-  const output=document.getElementById("responseOutput");
-  const button=document.getElementById("runRequestBtn");
-  if(!meta||!output||!button)return;
+  const response=document.querySelector(`[data-response="${CSS.escape(ep.id)}"]`);
+  const meta=document.querySelector(`[data-response-meta="${CSS.escape(ep.id)}"]`);
+  const bodyNode=document.querySelector(`[data-response-body="${CSS.escape(ep.id)}"]`);
+  if(!response||!meta||!bodyNode)return;
+  response.classList.add("show");
+  const old=button.textContent;
   button.disabled=true;button.textContent="RUNNING…";
   meta.innerHTML="";
-  output.textContent="Waiting…";
+  bodyNode.textContent="Waiting…";
   const started=performance.now();
   try{
+    const body=requestBody(ep);
     const options={method:ep.method,headers:requestHeaders(ep)};
-    if(String(ep.body||"").trim() && !["GET","HEAD"].includes(ep.method))options.body=ep.body;
+    if(body && !["GET","HEAD"].includes(ep.method))options.body=body;
     const res=await fetch(resolvedEndpointUrl(ep),options);
     const elapsed=Math.round(performance.now()-started);
     const raw=await res.text();
     let pretty=raw;
     try{pretty=JSON.stringify(JSON.parse(raw),null,2)}catch(e){}
-    meta.innerHTML=`
-      <span class="badge ${res.ok?"ok":"error"}">${res.status} ${esc(res.statusText)}</span>
-      <span class="badge">${elapsed} ms</span>
-      <span class="badge">${esc(ep.method)}</span>`;
-    output.textContent=pretty||"(empty response)"
+    meta.innerHTML=`<span class="badge ${res.ok?"ok":"error"}">${res.status} ${esc(res.statusText)}</span> <span class="badge">${elapsed} ms</span>`;
+    bodyNode.textContent=pretty||"(empty response)"
   }catch(err){
     const elapsed=Math.round(performance.now()-started);
-    meta.innerHTML=`<span class="badge error">REQUEST FAILED</span><span class="badge">${elapsed} ms</span>`;
-    output.textContent=String(err)
+    meta.innerHTML=`<span class="badge error">REQUEST FAILED</span> <span class="badge">${elapsed} ms</span>`;
+    bodyNode.textContent=String(err)
   }finally{
-    button.disabled=false;button.textContent="RUN REQUEST"
+    button.disabled=false;button.textContent=old
   }
 }
 function renderCurl(){
   if(!state.curl)state.curl=structuredClone(defaultState.curl);
+  if(!Array.isArray(state.curl.endpoints))state.curl.endpoints=[];
   const base=document.getElementById("curlBaseUrl");
-  if(base)base.value=state.curl.baseUrl;
-  renderEndpointList();
-  renderCurlEditor()
+  if(base)base.value=state.curl.baseUrl||"http://localhost:3001";
+  renderEndpointCards()
 }
 
 document.addEventListener("input",e=>{
@@ -1209,21 +1314,37 @@ document.getElementById("importFile").onchange=async e=>{
 document.getElementById("curlBaseUrl").addEventListener("input",e=>{
   state.curl.baseUrl=e.target.value;
   save();
-  const ep=currentEndpoint();
-  const out=document.getElementById("curlOutput");
-  if(ep&&out)out.value=curlCommand(ep)
+  allEndpoints().forEach(refreshCurlPreview)
 });
 document.getElementById("addEndpointBtn").onclick=()=>{
+  const name=prompt("Endpoint name?","New Endpoint");
+  if(name===null)return;
+  const method=(prompt("Method? GET, POST, PATCH, PUT, DELETE","GET")||"GET").toUpperCase();
+  const path=prompt("Path?","/api/")||"/api/";
   const ep={
-    id:uid(),name:"New Endpoint",method:"GET",path:"/api/",
-    notes:"",tags:"",pathParams:{},query:[],headers:[],authToken:"",body:""
+    id:uid(),
+    name:name.trim()||"New Endpoint",
+    method,
+    path,
+    notes:"",
+    tags:"",
+    inputs:[],
+    advancedHeaders:[],
+    rawBody:""
   };
+  normalizeEndpoint(ep);
   state.curl.endpoints.push(ep);
-  state.curl.selectedId=ep.id;
-  save();renderCurl()
+  save();
+  renderEndpointCards()
 };
 document.getElementById("copyAllCurlsBtn").onclick=async()=>{
-  const text=state.curl.endpoints.map(ep=>`# ${ep.name}\n${curlCommand(ep)}`).join("\n\n");
+  const endpoints=allEndpoints();
+  const missing=endpoints.flatMap(ep=>missingRequired(ep).map(x=>`${ep.name}: ${x.label||humanizeKey(x.key)}`));
+  if(missing.length){
+    alert("Some requests still need values:\\n\\n"+missing.join("\\n"));
+    return
+  }
+  const text=endpoints.map(ep=>`# ${ep.name}\\n${curlCommand(ep)}`).join("\\n\\n");
   await navigator.clipboard.writeText(text);
   const b=document.getElementById("copyAllCurlsBtn"),old=b.textContent;
   b.textContent="COPIED";setTimeout(()=>b.textContent=old,900)

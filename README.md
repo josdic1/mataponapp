@@ -1,4 +1,4 @@
-# Matapon
+# Mataponapp
 
 Matapon is a project-building system for turning a product idea into a clear, buildable application specification before implementation.
 

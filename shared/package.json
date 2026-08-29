@@ -11,6 +11,10 @@
     "./schemas/auth": {
       "types": "./dist/schemas/auth.d.ts",
       "import": "./dist/schemas/auth.js"
+    },
+    "./schemas/eventTypes": {
+      "types": "./dist/schemas/eventTypes.d.ts",
+      "import": "./dist/schemas/eventTypes.js"
     }
   },
   "dependencies": {

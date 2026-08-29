@@ -4,6 +4,7 @@ import {
   changePasswordSchema,
   loginSchema,
 } from "@matapon/shared/schemas/auth";
+import { createEventTypeSchema } from "@matapon/shared/schemas/eventTypes";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 type InputLocation = "path" | "query" | "body";
@@ -69,6 +70,23 @@ export const endpointContracts: Record<string, EndpointContract> = {
     path: "/api/auth/logout",
     notes: "Clears the secure session cookie.",
     auth: true,
+  },
+  eventTypesList: {
+    id: "event-types-list",
+    name: "Event Types",
+    method: "GET",
+    path: "/api/event-types",
+    notes: "Lists event types.",
+    auth: true,
+  },
+  eventTypesCreate: {
+    id: "event-types-create",
+    name: "Create Event Type",
+    method: "POST",
+    path: "/api/event-types",
+    notes: "Creates an event type.",
+    auth: true,
+    bodySchema: createEventTypeSchema,
   },
 };
 

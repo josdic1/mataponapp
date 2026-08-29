@@ -18,18 +18,22 @@ const frontendOrigin =
 app.use(
   cors({
     origin(origin, callback) {
-      const localDevelopment = process.env.NODE_ENV !== "production";
+      const allowedOrigins = new Set([
+        process.env.FRONTEND_ORIGIN || "http://localhost:5173",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+      ]);
 
       if (
         !origin ||
-        origin === frontendOrigin ||
-        (localDevelopment && origin === "null")
+        allowedOrigins.has(origin) ||
+        (process.env.NODE_ENV !== "production" && origin === "null")
       ) {
         callback(null, true);
         return;
       }
 
-      callback(new Error("Origin not allowed"));
+      callback(new Error(`Origin not allowed: ${origin}`));
     },
     credentials: true,
   })

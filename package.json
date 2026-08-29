@@ -1,0 +1,8 @@
+{
+  "name": "mataponapp",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "shared"
+  ]
+}

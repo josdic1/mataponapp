@@ -1,0 +1,12 @@
+{
+  "name": "@matapon/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./schemas/users": "./schemas/users.ts"
+  },
+  "dependencies": {
+    "zod": "^4.0.0"
+  }
+}

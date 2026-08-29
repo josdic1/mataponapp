@@ -1,0 +1,135 @@
+import { z } from "zod";
+
+import {
+  changePasswordSchema,
+  loginSchema,
+} from "@matapon/shared/schemas/auth";
+
+type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+type InputLocation = "path" | "query" | "body";
+
+type EndpointContract = {
+  id: string;
+  name: string;
+  method: HttpMethod;
+  path: string;
+  notes?: string;
+  auth?: boolean;
+  setsSession?: boolean;
+  paramsSchema?: z.ZodType;
+  querySchema?: z.ZodType;
+  bodySchema?: z.ZodType;
+};
+
+export const endpointContracts: Record<string, EndpointContract> = {
+  health: {
+    id: "health",
+    name: "Health",
+    method: "GET",
+    path: "/health",
+    notes: "Basic API health check.",
+  },
+  dbCheck: {
+    id: "db-check",
+    name: "Database Check",
+    method: "GET",
+    path: "/db-check",
+    notes: "Confirms PostgreSQL connectivity and returns database time.",
+  },
+  login: {
+    id: "auth-login",
+    name: "Login",
+    method: "POST",
+    path: "/api/auth/login",
+    notes: "Signs in and creates the secure session cookie.",
+    bodySchema: loginSchema,
+    setsSession: true,
+  },
+  me: {
+    id: "auth-me",
+    name: "Who Am I",
+    method: "GET",
+    path: "/api/auth/me",
+    notes: "Returns the currently signed-in user.",
+    auth: true,
+  },
+  changePassword: {
+    id: "auth-change-password",
+    name: "Change Password",
+    method: "POST",
+    path: "/api/auth/change-password",
+    notes: "Changes the signed-in user's password.",
+    auth: true,
+    bodySchema: changePasswordSchema,
+  },
+  logout: {
+    id: "auth-logout",
+    name: "Logout",
+    method: "POST",
+    path: "/api/auth/logout",
+    notes: "Clears the secure session cookie.",
+    auth: true,
+  },
+};
+
+function humanize(key: string): string {
+  return key
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function inputsFromSchema(
+  schema: z.ZodType | undefined,
+  location: InputLocation
+) {
+  if (!schema) {
+    return [];
+  }
+
+  const json = z.toJSONSchema(schema) as {
+    properties?: Record<string, {
+      type?: string | string[];
+      enum?: unknown[];
+      default?: unknown;
+      description?: string;
+    }>;
+    required?: string[];
+  };
+
+  const required = new Set(json.required ?? []);
+
+  return Object.entries(json.properties ?? {}).map(([key, property]) => {
+    const rawType = Array.isArray(property.type)
+      ? property.type.find((value) => value !== "null")
+      : property.type;
+
+    return {
+      key,
+      label: humanize(key),
+      location,
+      required: required.has(key),
+      type: rawType ?? "string",
+      options: property.enum ?? [],
+      default: property.default,
+      description: property.description ?? "",
+      secret: /password|secret|token/i.test(key),
+    };
+  });
+}
+
+export function getPublicEndpointContracts() {
+  return Object.values(endpointContracts).map((endpoint) => ({
+    id: endpoint.id,
+    name: endpoint.name,
+    method: endpoint.method,
+    path: endpoint.path,
+    notes: endpoint.notes ?? "",
+    auth: endpoint.auth ?? false,
+    setsSession: endpoint.setsSession ?? false,
+    inputs: [
+      ...inputsFromSchema(endpoint.paramsSchema, "path"),
+      ...inputsFromSchema(endpoint.querySchema, "query"),
+      ...inputsFromSchema(endpoint.bodySchema, "body"),
+    ],
+  }));
+}

@@ -5,6 +5,7 @@ import { loginSchema, changePasswordSchema } from "@matapon/shared/schemas/auth"
 import type { UserType } from "@matapon/shared/schemas/users";
 
 import { query } from "../db/db.js";
+import { endpointContracts } from "../matapon/endpoints.js";
 import { requireAuth } from "../middleware/auth.js";
 import {
   SESSION_COOKIE_NAME,
@@ -49,7 +50,7 @@ function sessionCookieOptions() {
   };
 }
 
-authRouter.post("/login", loginLimiter, async (req, res) => {
+authRouter.post(endpointContracts.login.path.replace("/api/auth", ""), loginLimiter, async (req, res) => {
   const parsed = loginSchema.safeParse(req.body);
 
   if (!parsed.success) {
@@ -121,7 +122,7 @@ authRouter.post("/login", loginLimiter, async (req, res) => {
   }
 });
 
-authRouter.get("/me", requireAuth, async (req, res) => {
+authRouter.get(endpointContracts.me.path.replace("/api/auth", ""), requireAuth, async (req, res) => {
   try {
     const result = await query<PublicUserRow>(
       `
@@ -159,7 +160,7 @@ authRouter.get("/me", requireAuth, async (req, res) => {
 });
 
 authRouter.post(
-  "/change-password",
+  endpointContracts.changePassword.path.replace("/api/auth", ""),
   requireAuth,
   async (req, res) => {
     const parsed = changePasswordSchema.safeParse(req.body);
@@ -238,7 +239,7 @@ authRouter.post(
   }
 );
 
-authRouter.post("/logout", (_req, res) => {
+authRouter.post(endpointContracts.logout.path.replace("/api/auth", ""), (_req, res) => {
   res.clearCookie(SESSION_COOKIE_NAME, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

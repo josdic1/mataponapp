@@ -1,17 +1,35 @@
-import express from "express";
-import cors from "cors";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import cookieParser from "cookie-parser";
+import cors from "cors";
+import express from "express";
 
 import { pool } from "./db/pool.js";
+import { getPublicEndpointContracts, endpointContracts } from "./matapon/endpoints.js";
 import { authRouter } from "./routes/auth.js";
 
 export const app = express();
 
+const frontendOrigin =
+  process.env.FRONTEND_ORIGIN || "http://localhost:5173";
+
 app.use(
   cors({
-    origin:
-      process.env.FRONTEND_ORIGIN ||
-      "http://localhost:5173",
+    origin(origin, callback) {
+      const localDevelopment = process.env.NODE_ENV !== "production";
+
+      if (
+        !origin ||
+        origin === frontendOrigin ||
+        (localDevelopment && origin === "null")
+      ) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("Origin not allowed"));
+    },
     credentials: true,
   })
 );
@@ -19,13 +37,13 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-app.get("/health", (_req, res) => {
+app.get(endpointContracts.health.path, (_req, res) => {
   res.json({
     ok: true,
   });
 });
 
-app.get("/db-check", async (_req, res) => {
+app.get(endpointContracts.dbCheck.path, async (_req, res) => {
   try {
     const result = await pool.query(
       "SELECT NOW() AS now"
@@ -44,6 +62,19 @@ app.get("/db-check", async (_req, res) => {
       database: false,
     });
   }
+});
+
+app.get("/__matapon/endpoints", (_req, res) => {
+  res.json({
+    endpoints: getPublicEndpointContracts(),
+  });
+});
+
+const here = dirname(fileURLToPath(import.meta.url));
+const builderPath = resolve(here, "../../index.html");
+
+app.get("/__matapon/builder", (_req, res) => {
+  res.sendFile(builderPath);
 });
 
 app.use("/api/auth", authRouter);

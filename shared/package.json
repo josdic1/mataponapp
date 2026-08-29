@@ -4,9 +4,22 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./schemas/users": "./schemas/users.ts"
+    "./schemas/users": {
+      "types": "./dist/schemas/users.d.ts",
+      "import": "./dist/schemas/users.js"
+    },
+    "./schemas/auth": {
+      "types": "./dist/schemas/auth.d.ts",
+      "import": "./dist/schemas/auth.js"
+    }
   },
   "dependencies": {
     "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
   }
 }

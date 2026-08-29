@@ -1,11 +1,23 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
+
 import { pool } from "./db/pool.js";
+import { authRouter } from "./routes/auth.js";
 
 export const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin:
+      process.env.FRONTEND_ORIGIN ||
+      "http://localhost:5173",
+    credentials: true,
+  })
+);
+
 app.use(express.json());
+app.use(cookieParser());
 
 app.get("/health", (_req, res) => {
   res.json({
@@ -15,7 +27,9 @@ app.get("/health", (_req, res) => {
 
 app.get("/db-check", async (_req, res) => {
   try {
-    const result = await pool.query("SELECT NOW() AS now");
+    const result = await pool.query(
+      "SELECT NOW() AS now"
+    );
 
     res.json({
       ok: true,
@@ -31,3 +45,5 @@ app.get("/db-check", async (_req, res) => {
     });
   }
 });
+
+app.use("/api/auth", authRouter);

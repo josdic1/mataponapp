@@ -85,6 +85,18 @@ devRouter.post(
       ];
 
       for (const table of tables) {
+        if (table === "user_members") {
+          await client.query(
+            `DELETE FROM user_members WHERE member_role <> 'primary'`
+          );
+
+          await client.query(
+            `DELETE FROM user_members WHERE member_role = 'primary'`
+          );
+
+          continue;
+        }
+
         await client.query(`DELETE FROM ${table}`);
       }
 

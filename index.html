@@ -2094,6 +2094,16 @@ ${state.tables
             state.curl.values[valueKey(ep, inp)] = entered;
             save();
             refreshCurlPreview(ep);
+
+            const runButton = el
+              .closest(".simple-endpoint")
+              ?.querySelector("[data-run-endpoint]");
+
+            if (runButton?.dataset.createLocked === "1") {
+              delete runButton.dataset.createLocked;
+              runButton.disabled = false;
+              runButton.textContent = "RUN";
+            }
           });
         });
         root.querySelectorAll("[data-copy-endpoint]").forEach(
@@ -2175,6 +2185,14 @@ ${state.tables
           } catch (e) {}
           meta.innerHTML = `<span class="badge ${res.ok ? "ok" : "error"}">${res.status} ${esc(res.statusText)}</span> <span class="badge">${elapsed} ms</span>`;
           bodyNode.textContent = pretty || "(empty response)";
+
+          if (
+            res.ok &&
+            String(ep.method).toUpperCase() === "POST"
+          ) {
+            button.dataset.createLocked = "1";
+            button.textContent = "✓ CREATED";
+          }
         } catch (err) {
           const elapsed = Math.round(performance.now() - started);
           meta.innerHTML = `<span class="badge error">REQUEST FAILED</span> <span class="badge">${elapsed} ms</span>`;
@@ -2188,8 +2206,10 @@ ${state.tables
                 String(err)
               : String(err);
         } finally {
-          button.disabled = false;
-          button.textContent = old;
+          if (button.dataset.createLocked !== "1") {
+            button.disabled = false;
+            button.textContent = old;
+          }
         }
       }
       function renderCurl() {

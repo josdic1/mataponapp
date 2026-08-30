@@ -62,24 +62,31 @@ devRouter.post(
         return;
       }
 
-      await client.query(`
-        TRUNCATE TABLE
-          event_activity_signups,
-          member_attendees,
-          event_activity_staff,
-          staff_activities,
-          staff_member_areas,
-          event_activities,
-          activity_others,
-          activities,
-          staff_areas,
-          staff_members,
-          event_type_others,
-          events,
-          event_types,
-          user_members
-        RESTART IDENTITY CASCADE
-      `);
+      await client.query(
+        `SELECT set_config('matapon.actor_user_id', $1, true)`,
+        [admin.id]
+      );
+
+      const tables = [
+        "event_activity_signups",
+        "member_attendees",
+        "event_activity_staff",
+        "staff_activities",
+        "staff_member_areas",
+        "event_activities",
+        "activity_others",
+        "activities",
+        "staff_areas",
+        "staff_members",
+        "event_type_others",
+        "events",
+        "event_types",
+        "user_members",
+      ];
+
+      for (const table of tables) {
+        await client.query(`DELETE FROM ${table}`);
+      }
 
       await client.query(
         `
@@ -88,6 +95,19 @@ devRouter.post(
         `,
         [admin.id]
       );
+
+      for (const table of tables) {
+        await client.query(
+          `
+            SELECT setval(
+              pg_get_serial_sequence($1, 'id'),
+              1,
+              false
+            )
+          `,
+          [table]
+        );
+      }
 
       await client.query(
         `

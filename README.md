@@ -1,6 +1,6 @@
 # Mataponapp
 
-Matapon is a project-building system for turning a product idea into a clear, buildable application specification before implementation.
+MataponApp is a project-building system for turning a product idea into a clear, buildable application specification before implementation.
 
 ## Core Flow
 
@@ -163,4 +163,4 @@ mataponapp/
 
 ## Next
 
-Move the current HTML builder into the repository and continue developing Matapon as the tool for defining a solid application structure before generating the actual application.
+Move the current HTML builder into the repository and continue developing MataponApp as the tool for defining a solid application structure before generating the actual application.

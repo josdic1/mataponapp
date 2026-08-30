@@ -1,729 +1,1494 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Matapon App Builder</title>
-<style>
-:root{
-  --bg:#f2efe7;
-  --panel:#fffdf8;
-  --ink:#111;
-  --muted:#716d65;
-  --line:#111;
-  --soft:#d8d2c5;
-  --accent:#dff44f;
-  --warn:#ffd36a;
-  --bad:#ff8178;
-  --good:#dff44f;
-  --shadow:3px 3px 0 #111;
-}
-*{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
-button,input,textarea,select{font:inherit;color:inherit}
-button{cursor:pointer}
-.topbar{
-  position:sticky;top:0;z-index:20;
-  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
-  padding:12px 14px;background:var(--panel);border-bottom:3px solid var(--line)
-}
-.brand{font-weight:1000;font-size:21px;letter-spacing:-.7px}
-.project-name{
-  border:0;border-bottom:2px solid var(--line);background:transparent;
-  padding:7px 3px;min-width:190px;font-weight:900;outline:none
-}
-.tabs{display:flex;gap:7px;margin-left:8px}
-.tab{
-  border:2px solid var(--line);background:var(--panel);padding:8px 11px;font-weight:900;
-  box-shadow:2px 2px 0 var(--line)
-}
-.tab.active{background:var(--accent)}
-.spacer{flex:1}
-.btn{
-  border:2px solid var(--line);background:var(--panel);padding:8px 10px;font-weight:900;
-  box-shadow:2px 2px 0 var(--line)
-}
-.btn:hover,.tab:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--line)}
-.btn.primary{background:var(--accent)}
-.btn.danger{background:var(--bad)}
-.wrap{padding:14px}
-.screen{display:none}
-.screen.active{display:block}
-.layout{
-  display:grid;grid-template-columns:minmax(660px,1fr) 340px;gap:14px;align-items:start
-}
-.sidebar{position:sticky;top:76px;display:flex;flex-direction:column;gap:12px}
-.panel{
-  background:var(--panel);border:2px solid var(--line);box-shadow:var(--shadow)
-}
-.panel h3{
-  margin:0;padding:10px 12px;border-bottom:2px solid var(--line);
-  font-size:12px;text-transform:uppercase;letter-spacing:.08em
-}
-.panel-body{padding:10px 12px}
-.small{font-size:12px;line-height:1.45;color:var(--muted)}
-.note{
-  width:100%;min-height:88px;resize:vertical;border:1.5px solid var(--line);
-  background:#fff;padding:8px;outline:none
-}
-.health{
-  display:flex;gap:6px;flex-wrap:wrap
-}
-.badge{
-  display:inline-flex;align-items:center;border:1.5px solid var(--line);padding:4px 6px;
-  font-size:10px;font-weight:900;background:#fff
-}
-.badge.error{background:var(--bad)}
-.badge.warning{background:var(--warn)}
-.badge.ok{background:var(--good)}
-.issue{
-  border:1.5px solid var(--line);padding:8px;margin-bottom:7px;background:#fff;font-size:12px
-}
-.issue.error{border-left:7px solid var(--bad)}
-.issue.warning{border-left:7px solid var(--warn)}
-.issue.ok{border-left:7px solid var(--good)}
-.card{
-  background:var(--panel);border:2px solid var(--line);box-shadow:var(--shadow);margin-bottom:14px
-}
-.card-head{
-  display:grid;grid-template-columns:1fr auto;gap:10px;padding:11px 12px;
-  background:#fff;border-bottom:2px solid var(--line);align-items:start
-}
-.table-name{
-  border:0;background:transparent;font-weight:1000;font-size:18px;text-transform:uppercase;
-  width:min(460px,90%);outline:none
-}
-.table-note{
-  width:100%;border:0;border-top:1px solid var(--soft);background:transparent;
-  padding:6px 0 0;margin-top:6px;min-height:28px;resize:vertical;outline:none;color:var(--muted);font-size:12px
-}
-.actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.mini{
-  border:1.5px solid var(--line);background:var(--panel);padding:5px 7px;font-size:11px;font-weight:900
-}
-.mini.bad{background:var(--bad)}
-.mini.good{background:var(--good)}
-.grid-head,.field-row{
-  display:grid;grid-template-columns:minmax(140px,1.05fr) minmax(145px,.9fr) minmax(185px,1.35fr) minmax(120px,.8fr) 36px
-}
-.grid-head{
-  background:#f7f4ec;border-bottom:1.5px solid var(--line);
-  font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:1000
-}
-.grid-head>div,.cell{padding:7px 8px;border-right:1px solid var(--soft)}
-.grid-head>div:last-child,.cell:last-child{border-right:0}
-.field-row{background:#fff;border-bottom:1px solid var(--soft)}
-.cell{min-width:0;position:relative}
-.cell input,.cell select,.cell textarea{
-  width:100%;border:0;background:transparent;padding:4px 2px;outline:none;font-size:12px
-}
-.cell textarea{resize:vertical;min-height:28px}
-.field-name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:800}
-.problem{background:#fff1c4!important}
-.suggest{
-  margin-top:3px;font-size:10px;color:#6b5400;display:flex;gap:4px;align-items:center;flex-wrap:wrap
-}
-.add-field{
-  width:100%;border:0;border-top:2px solid var(--line);background:var(--accent);
-  padding:9px;font-weight:1000
-}
-.remove{border:0;background:transparent;font-size:18px;padding:4px 7px}
-.remove:hover{background:var(--bad)}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MataponApp Builder</title>
+    <style>
+      :root {
+        --bg: #f2efe7;
+        --panel: #fffdf8;
+        --ink: #111;
+        --muted: #716d65;
+        --line: #111;
+        --soft: #d8d2c5;
+        --accent: #dff44f;
+        --warn: #ffd36a;
+        --bad: #ff8178;
+        --good: #dff44f;
+        --shadow: 3px 3px 0 #111;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+        color: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 12px 14px;
+        background: var(--panel);
+        border-bottom: 3px solid var(--line);
+      }
+      .brand {
+        font-weight: 1000;
+        font-size: 21px;
+        letter-spacing: -0.7px;
+      }
+      .project-name {
+        border: 0;
+        border-bottom: 2px solid var(--line);
+        background: transparent;
+        padding: 7px 3px;
+        min-width: 190px;
+        font-weight: 900;
+        outline: none;
+      }
+      .tabs {
+        display: flex;
+        gap: 7px;
+        margin-left: 8px;
+      }
+      .tab {
+        border: 2px solid var(--line);
+        background: var(--panel);
+        padding: 8px 11px;
+        font-weight: 900;
+        box-shadow: 2px 2px 0 var(--line);
+      }
+      .tab.active {
+        background: var(--accent);
+      }
+      .spacer {
+        flex: 1;
+      }
+      .btn {
+        border: 2px solid var(--line);
+        background: var(--panel);
+        padding: 8px 10px;
+        font-weight: 900;
+        box-shadow: 2px 2px 0 var(--line);
+      }
+      .btn:hover,
+      .tab:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 3px 3px 0 var(--line);
+      }
+      .btn.primary {
+        background: var(--accent);
+      }
+      .btn.danger {
+        background: var(--bad);
+      }
+      .wrap {
+        padding: 14px;
+      }
+      .screen {
+        display: none;
+      }
+      .screen.active {
+        display: block;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(660px, 1fr) 340px;
+        gap: 14px;
+        align-items: start;
+      }
+      .sidebar {
+        position: sticky;
+        top: 76px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .panel {
+        background: var(--panel);
+        border: 2px solid var(--line);
+        box-shadow: var(--shadow);
+      }
+      .panel h3 {
+        margin: 0;
+        padding: 10px 12px;
+        border-bottom: 2px solid var(--line);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .panel-body {
+        padding: 10px 12px;
+      }
+      .small {
+        font-size: 12px;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+      .note {
+        width: 100%;
+        min-height: 88px;
+        resize: vertical;
+        border: 1.5px solid var(--line);
+        background: #fff;
+        padding: 8px;
+        outline: none;
+      }
+      .health {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        border: 1.5px solid var(--line);
+        padding: 4px 6px;
+        font-size: 10px;
+        font-weight: 900;
+        background: #fff;
+      }
+      .badge.error {
+        background: var(--bad);
+      }
+      .badge.warning {
+        background: var(--warn);
+      }
+      .badge.ok {
+        background: var(--good);
+      }
+      .issue {
+        border: 1.5px solid var(--line);
+        padding: 8px;
+        margin-bottom: 7px;
+        background: #fff;
+        font-size: 12px;
+      }
+      .issue.error {
+        border-left: 7px solid var(--bad);
+      }
+      .issue.warning {
+        border-left: 7px solid var(--warn);
+      }
+      .issue.ok {
+        border-left: 7px solid var(--good);
+      }
+      .card {
+        background: var(--panel);
+        border: 2px solid var(--line);
+        box-shadow: var(--shadow);
+        margin-bottom: 14px;
+      }
+      .card-head {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        padding: 11px 12px;
+        background: #fff;
+        border-bottom: 2px solid var(--line);
+        align-items: start;
+      }
+      .table-name {
+        border: 0;
+        background: transparent;
+        font-weight: 1000;
+        font-size: 18px;
+        text-transform: uppercase;
+        width: min(460px, 90%);
+        outline: none;
+      }
+      .table-note {
+        width: 100%;
+        border: 0;
+        border-top: 1px solid var(--soft);
+        background: transparent;
+        padding: 6px 0 0;
+        margin-top: 6px;
+        min-height: 28px;
+        resize: vertical;
+        outline: none;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .mini {
+        border: 1.5px solid var(--line);
+        background: var(--panel);
+        padding: 5px 7px;
+        font-size: 11px;
+        font-weight: 900;
+      }
+      .mini.bad {
+        background: var(--bad);
+      }
+      .mini.good {
+        background: var(--good);
+      }
+      .grid-head,
+      .field-row {
+        display: grid;
+        grid-template-columns:
+          minmax(140px, 1.05fr) minmax(145px, 0.9fr)
+          minmax(185px, 1.35fr) minmax(120px, 0.8fr) 36px;
+      }
+      .grid-head {
+        background: #f7f4ec;
+        border-bottom: 1.5px solid var(--line);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 1000;
+      }
+      .grid-head > div,
+      .cell {
+        padding: 7px 8px;
+        border-right: 1px solid var(--soft);
+      }
+      .grid-head > div:last-child,
+      .cell:last-child {
+        border-right: 0;
+      }
+      .field-row {
+        background: #fff;
+        border-bottom: 1px solid var(--soft);
+      }
+      .cell {
+        min-width: 0;
+        position: relative;
+      }
+      .cell input,
+      .cell select,
+      .cell textarea {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        padding: 4px 2px;
+        outline: none;
+        font-size: 12px;
+      }
+      .cell textarea {
+        resize: vertical;
+        min-height: 28px;
+      }
+      .field-name {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-weight: 800;
+      }
+      .problem {
+        background: #fff1c4 !important;
+      }
+      .suggest {
+        margin-top: 3px;
+        font-size: 10px;
+        color: #6b5400;
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .add-field {
+        width: 100%;
+        border: 0;
+        border-top: 2px solid var(--line);
+        background: var(--accent);
+        padding: 9px;
+        font-weight: 1000;
+      }
+      .remove {
+        border: 0;
+        background: transparent;
+        font-size: 18px;
+        padding: 4px 7px;
+      }
+      .remove:hover {
+        background: var(--bad);
+      }
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
 
-.platform-grid{
-  display:grid;grid-template-columns:1fr 1fr;gap:14px
-}
-.platform-card{
-  background:var(--panel);border:2px solid var(--line);box-shadow:var(--shadow)
-}
-.platform-card h2{
-  margin:0;padding:12px;border-bottom:2px solid var(--line);font-size:17px
-}
-.platform-body{padding:12px}
-.form-row{
-  display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center;
-  padding:7px 0;border-bottom:1px solid var(--soft)
-}
-.form-row:last-child{border-bottom:0}
-.form-row label{font-size:11px;font-weight:1000;text-transform:uppercase;letter-spacing:.06em}
-.form-row input,.form-row textarea,.form-row select{
-  width:100%;border:1.5px solid var(--line);background:#fff;padding:7px;outline:none
-}
-.form-row textarea{min-height:60px;resize:vertical}
-.token-list,.stack-list{
-  display:flex;gap:6px;flex-wrap:wrap;margin-top:7px
-}
-.token,.stack-pill{
-  border:1.5px solid var(--line);background:#fff;padding:5px 7px;font-size:11px;font-weight:900
-}
-.stack-pill.fixed{background:var(--accent)}
-.arch{
-  white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-  font-size:12px;line-height:1.55;background:#111;color:#f8f5ed;padding:12px;overflow:auto
-}
-.rule-list{margin:0;padding-left:18px;font-size:12px;line-height:1.55}
-.naming-row{
-  display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center;
-  padding:7px 0;border-bottom:1px solid var(--soft)
-}
-.naming-row code{font-size:12px}
-.status-line{
-  display:flex;gap:8px;flex-wrap:wrap;margin-top:9px
-}
-.copy-output{
-  width:100%;min-height:160px;border:1.5px solid var(--line);padding:9px;background:#fff;
-  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;resize:vertical
-}
+      .platform-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .platform-card {
+        background: var(--panel);
+        border: 2px solid var(--line);
+        box-shadow: var(--shadow);
+      }
+      .platform-card h2 {
+        margin: 0;
+        padding: 12px;
+        border-bottom: 2px solid var(--line);
+        font-size: 17px;
+      }
+      .platform-body {
+        padding: 12px;
+      }
+      .form-row {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 10px;
+        align-items: center;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--soft);
+      }
+      .form-row:last-child {
+        border-bottom: 0;
+      }
+      .form-row label {
+        font-size: 11px;
+        font-weight: 1000;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .form-row input,
+      .form-row textarea,
+      .form-row select {
+        width: 100%;
+        border: 1.5px solid var(--line);
+        background: #fff;
+        padding: 7px;
+        outline: none;
+      }
+      .form-row textarea {
+        min-height: 60px;
+        resize: vertical;
+      }
+      .token-list,
+      .stack-list {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 7px;
+      }
+      .token,
+      .stack-pill {
+        border: 1.5px solid var(--line);
+        background: #fff;
+        padding: 5px 7px;
+        font-size: 11px;
+        font-weight: 900;
+      }
+      .stack-pill.fixed {
+        background: var(--accent);
+      }
+      .arch {
+        white-space: pre-wrap;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        line-height: 1.55;
+        background: #111;
+        color: #f8f5ed;
+        padding: 12px;
+        overflow: auto;
+      }
+      .rule-list {
+        margin: 0;
+        padding-left: 18px;
+        font-size: 12px;
+        line-height: 1.55;
+      }
+      .naming-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 8px;
+        align-items: center;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--soft);
+      }
+      .naming-row code {
+        font-size: 12px;
+      }
+      .status-line {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 9px;
+      }
+      .copy-output {
+        width: 100%;
+        min-height: 160px;
+        border: 1.5px solid var(--line);
+        padding: 9px;
+        background: #fff;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+        resize: vertical;
+      }
 
-.curl-layout{
-  display:grid;grid-template-columns:360px minmax(620px,1fr);gap:14px;align-items:start
-}
+      .curl-layout {
+        display: grid;
+        grid-template-columns: 360px minmax(620px, 1fr);
+        gap: 14px;
+        align-items: start;
+      }
 
-.curl-sync-status{
-  margin:0 0 10px 0;padding:9px 11px;border:2px solid var(--line);background:#fff;font-size:11px;font-weight:800
-}
-.curl-sync-status.ok{background:#efffd0}
-.curl-sync-status.error{background:#ffd9d3}
-.curl-sync-status.warn{background:#fff4c2}
-.source-badge{font-size:9px;font-weight:1000;text-transform:uppercase;border:1px solid var(--line);padding:2px 5px;background:#fff}
-.secret-input{font-family:inherit}
+      .curl-sync-status {
+        margin: 0 0 10px 0;
+        padding: 9px 11px;
+        border: 2px solid var(--line);
+        background: #fff;
+        font-size: 11px;
+        font-weight: 800;
+      }
+      .curl-sync-status.ok {
+        background: #efffd0;
+      }
+      .curl-sync-status.error {
+        background: #ffd9d3;
+      }
+      .curl-sync-status.warn {
+        background: #fff4c2;
+      }
+      .source-badge {
+        font-size: 9px;
+        font-weight: 1000;
+        text-transform: uppercase;
+        border: 1px solid var(--line);
+        padding: 2px 5px;
+        background: #fff;
+      }
+      .secret-input {
+        font-family: inherit;
+      }
 
-.endpoint-list{display:flex;flex-direction:column;gap:7px}
-.endpoint-item{
-  width:100%;display:grid;grid-template-columns:64px 1fr;gap:8px;align-items:center;
-  border:1.5px solid var(--line);background:#fff;padding:8px;text-align:left
-}
-.endpoint-item.active{background:var(--accent);box-shadow:2px 2px 0 var(--line)}
-.method{
-  display:inline-flex;justify-content:center;border:1.5px solid var(--line);
-  padding:4px 5px;font-size:10px;font-weight:1000;background:#fff
-}
-.endpoint-main{min-width:0}
-.endpoint-name{font-weight:1000;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.endpoint-path{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.curl-editor{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.curl-editor .wide{grid-column:1/-1}
-.curl-field label{
-  display:block;font-size:10px;font-weight:1000;text-transform:uppercase;
-  letter-spacing:.07em;margin-bottom:4px
-}
-.curl-field input,.curl-field select,.curl-field textarea{
-  width:100%;border:1.5px solid var(--line);background:#fff;padding:8px;outline:none
-}
-.curl-field textarea{min-height:90px;resize:vertical}
-.param-row{
-  display:grid;grid-template-columns:150px 1fr 34px;gap:6px;margin-bottom:6px
-}
-.param-row input{
-  width:100%;border:1.5px solid var(--line);background:#fff;padding:7px;outline:none
-}
-.path-param-row{
-  display:grid;grid-template-columns:150px 1fr;gap:6px;align-items:center;margin-bottom:6px
-}
-.path-param-row code{font-size:11px;font-weight:900}
-.curl-output{
-  width:100%;min-height:135px;background:#111;color:#f8f5ed;border:2px solid var(--line);
-  padding:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;
-  line-height:1.5;resize:vertical
-}
-.response-output{
-  min-height:130px;white-space:pre-wrap;overflow:auto;background:#fff;border:1.5px solid var(--line);
-  padding:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:1.45
-}
-.response-meta{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:7px}
-.empty-state{
-  border:2px dashed var(--line);padding:24px;text-align:center;background:#fff;font-weight:900
-}
-@media(max-width:1050px){
-  .curl-layout{grid-template-columns:1fr}
-}
-@media(max-width:760px){
-  .curl-editor{grid-template-columns:1fr}
-  .curl-editor .wide{grid-column:auto}
-  .param-row{grid-template-columns:100px 1fr 34px}
-}
+      .endpoint-list {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      .endpoint-item {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 64px 1fr;
+        gap: 8px;
+        align-items: center;
+        border: 1.5px solid var(--line);
+        background: #fff;
+        padding: 8px;
+        text-align: left;
+      }
+      .endpoint-item.active {
+        background: var(--accent);
+        box-shadow: 2px 2px 0 var(--line);
+      }
+      .method {
+        display: inline-flex;
+        justify-content: center;
+        border: 1.5px solid var(--line);
+        padding: 4px 5px;
+        font-size: 10px;
+        font-weight: 1000;
+        background: #fff;
+      }
+      .endpoint-main {
+        min-width: 0;
+      }
+      .endpoint-name {
+        font-weight: 1000;
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .endpoint-path {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 10px;
+        color: var(--muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .curl-editor {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .curl-editor .wide {
+        grid-column: 1/-1;
+      }
+      .curl-field label {
+        display: block;
+        font-size: 10px;
+        font-weight: 1000;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        margin-bottom: 4px;
+      }
+      .curl-field input,
+      .curl-field select,
+      .curl-field textarea {
+        width: 100%;
+        border: 1.5px solid var(--line);
+        background: #fff;
+        padding: 8px;
+        outline: none;
+      }
+      .curl-field textarea {
+        min-height: 90px;
+        resize: vertical;
+      }
+      .param-row {
+        display: grid;
+        grid-template-columns: 150px 1fr 34px;
+        gap: 6px;
+        margin-bottom: 6px;
+      }
+      .param-row input {
+        width: 100%;
+        border: 1.5px solid var(--line);
+        background: #fff;
+        padding: 7px;
+        outline: none;
+      }
+      .path-param-row {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 6px;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+      .path-param-row code {
+        font-size: 11px;
+        font-weight: 900;
+      }
+      .curl-output {
+        width: 100%;
+        min-height: 135px;
+        background: #111;
+        color: #f8f5ed;
+        border: 2px solid var(--line);
+        padding: 12px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        line-height: 1.5;
+        resize: vertical;
+      }
+      .response-output {
+        min-height: 130px;
+        white-space: pre-wrap;
+        overflow: auto;
+        background: #fff;
+        border: 1.5px solid var(--line);
+        padding: 10px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+        line-height: 1.45;
+      }
+      .response-meta {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+        margin-bottom: 7px;
+      }
+      .empty-state {
+        border: 2px dashed var(--line);
+        padding: 24px;
+        text-align: center;
+        background: #fff;
+        font-weight: 900;
+      }
+      @media (max-width: 1050px) {
+        .curl-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 760px) {
+        .curl-editor {
+          grid-template-columns: 1fr;
+        }
+        .curl-editor .wide {
+          grid-column: auto;
+        }
+        .param-row {
+          grid-template-columns: 100px 1fr 34px;
+        }
+      }
 
-@media(max-width:1050px){
-  .layout,.platform-grid{grid-template-columns:1fr}
-  .sidebar{position:static}
-}
-@media(max-width:760px){
-  .grid-head{display:none}
-  .field-row{display:block;border-bottom:2px solid var(--line)}
-  .cell{border-right:0;border-bottom:1px solid var(--soft)}
-  .cell::before{content:attr(data-label);display:block;font-size:9px;text-transform:uppercase;font-weight:900;color:var(--muted)}
-  .wrap{padding:8px}
-  .form-row{grid-template-columns:1fr}
-}
+      @media (max-width: 1050px) {
+        .layout,
+        .platform-grid {
+          grid-template-columns: 1fr;
+        }
+        .sidebar {
+          position: static;
+        }
+      }
+      @media (max-width: 760px) {
+        .grid-head {
+          display: none;
+        }
+        .field-row {
+          display: block;
+          border-bottom: 2px solid var(--line);
+        }
+        .cell {
+          border-right: 0;
+          border-bottom: 1px solid var(--soft);
+        }
+        .cell::before {
+          content: attr(data-label);
+          display: block;
+          font-size: 9px;
+          text-transform: uppercase;
+          font-weight: 900;
+          color: var(--muted);
+        }
+        .wrap {
+          padding: 8px;
+        }
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+      }
 
-.curl-simple-wrap{max-width:1180px;margin:0 auto}
-.curl-top-panel{margin-bottom:14px}
-.curl-topbar{display:grid;grid-template-columns:1fr 280px auto auto;gap:10px;align-items:end}
-.curl-title{font-size:22px;font-weight:1000;letter-spacing:-.5px}
-.curl-base-wrap label{
-  display:block;font-size:10px;font-weight:1000;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px
-}
-.curl-base-wrap input{
-  width:100%;border:1.5px solid var(--line);background:#fff;padding:8px;outline:none
-}
-.endpoint-cards{display:flex;flex-direction:column;gap:10px}
-.simple-endpoint{
-  background:var(--panel);border:2px solid var(--line);box-shadow:var(--shadow)
-}
-.simple-endpoint-main{
-  display:grid;grid-template-columns:minmax(260px,1fr) auto;gap:12px;align-items:center;padding:12px
-}
-.simple-endpoint-name{font-size:16px;font-weight:1000;text-transform:uppercase;margin-bottom:4px}
-.simple-endpoint-route{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
-.route-path{
-  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;font-weight:800
-}
-.endpoint-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
-.input-zone{
-  border-top:2px solid var(--line);padding:12px;background:#f8f5ed
-}
-.input-zone-title{
-  font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:1000;margin-bottom:8px
-}
-.simple-inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px}
-.simple-input label{display:block;font-size:11px;font-weight:900;margin-bottom:4px}
-.simple-input input,.simple-input select,.simple-input textarea{
-  width:100%;border:1.5px solid var(--line);background:#fff;padding:8px;outline:none
-}
-.simple-input textarea{min-height:72px;resize:vertical}
-.required-dot{font-size:10px;color:#7a5500}
-.generated-curl{
-  border-top:1px solid var(--soft);padding:8px 12px;background:#fff;
-  display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center
-}
-.generated-curl code{
-  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#444
-}
-.endpoint-response{
-  display:none;border-top:2px solid var(--line);padding:10px 12px;background:#fff
-}
-.endpoint-response.show{display:block}
-.endpoint-response pre{
-  white-space:pre-wrap;word-break:break-word;margin:7px 0 0;
-  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px
-}
-.advanced-box{border-top:1px solid var(--soft);background:#fff}
-.advanced-box summary{
-  cursor:pointer;padding:8px 12px;font-size:10px;font-weight:1000;text-transform:uppercase;letter-spacing:.07em
-}
-.advanced-inner{padding:0 12px 12px}
-.advanced-grid{display:grid;grid-template-columns:1fr 110px 1fr;gap:8px}
-.advanced-grid input,.advanced-grid select{
-  width:100%;border:1.5px solid var(--line);padding:7px;background:#fff
-}
-.input-def-row{
-  display:grid;grid-template-columns:1.2fr 1fr 120px 80px 36px;gap:6px;align-items:center;margin-top:6px
-}
-.input-def-row input,.input-def-row select{
-  width:100%;border:1.5px solid var(--line);padding:7px;background:#fff
-}
-.endpoint-empty{
-  background:#fff;border:2px dashed var(--line);padding:28px;text-align:center;font-weight:900
-}
-@media(max-width:850px){
-  .curl-topbar{grid-template-columns:1fr}
-  .simple-endpoint-main{grid-template-columns:1fr}
-  .endpoint-actions{justify-content:flex-start}
-  .advanced-grid,.input-def-row{grid-template-columns:1fr}
-}
-
-</style>
-</head>
-<body>
-<div class="topbar">
-  <div class="brand">MATAPON BUILDER</div>
-  <input id="projectName" class="project-name" value="mataponapp">
-  <div class="tabs">
-    <button class="tab active" data-screen="schema">SCHEMA</button>
-    <button class="tab" data-screen="platform">PLATFORM</button>
-    <button class="tab" data-screen="curl">CURL TESTER</button>
-  </div>
-  <div class="spacer"></div>
-  <button class="btn" id="copyAllBtn">COPY BUILD BRIEF</button>
-  <button class="btn" id="exportBtn">EXPORT JSON</button>
-  <button class="btn" id="importBtn">IMPORT</button>
-  <input id="importFile" type="file" accept=".json" hidden>
-</div>
-
-<div class="wrap">
-
-<section id="schemaScreen" class="screen active">
-  <div class="layout">
-    <main>
-      <div class="toolbar">
-        <button class="btn primary" id="addTableBtn">+ ADD TABLE</button>
-        <button class="btn" id="validateBtn">VALIDATE</button>
+      .curl-simple-wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+      }
+      .curl-top-panel {
+        margin-bottom: 14px;
+      }
+      .curl-topbar {
+        display: grid;
+        grid-template-columns: 1fr 280px auto auto;
+        gap: 10px;
+        align-items: end;
+      }
+      .curl-title {
+        font-size: 22px;
+        font-weight: 1000;
+        letter-spacing: -0.5px;
+      }
+      .curl-base-wrap label {
+        display: block;
+        font-size: 10px;
+        font-weight: 1000;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 4px;
+      }
+      .curl-base-wrap input {
+        width: 100%;
+        border: 1.5px solid var(--line);
+        background: #fff;
+        padding: 8px;
+        outline: none;
+      }
+      .endpoint-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .simple-endpoint {
+        background: var(--panel);
+        border: 2px solid var(--line);
+        box-shadow: var(--shadow);
+      }
+      .simple-endpoint-main {
+        display: grid;
+        grid-template-columns: minmax(260px, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        padding: 12px;
+      }
+      .simple-endpoint-name {
+        font-size: 16px;
+        font-weight: 1000;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .simple-endpoint-route {
+        display: flex;
+        gap: 7px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .route-path {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .endpoint-actions {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .input-zone {
+        border-top: 2px solid var(--line);
+        padding: 12px;
+        background: #f8f5ed;
+      }
+      .input-zone-title {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 1000;
+        margin-bottom: 8px;
+      }
+      .simple-inputs {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 9px;
+      }
+      .simple-input label {
+        display: block;
+        font-size: 11px;
+        font-weight: 900;
+        margin-bottom: 4px;
+      }
+      .simple-input input,
+      .simple-input select,
+      .simple-input textarea {
+        width: 100%;
+        border: 1.5px solid var(--line);
+        background: #fff;
+        padding: 8px;
+        outline: none;
+      }
+      .simple-input textarea {
+        min-height: 72px;
+        resize: vertical;
+      }
+      .required-dot {
+        font-size: 10px;
+        color: #7a5500;
+      }
+      .generated-curl {
+        border-top: 1px solid var(--soft);
+        padding: 8px 12px;
+        background: #fff;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: center;
+      }
+      .generated-curl code {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+        color: #444;
+      }
+      .endpoint-response {
+        display: none;
+        border-top: 2px solid var(--line);
+        padding: 10px 12px;
+        background: #fff;
+      }
+      .endpoint-response.show {
+        display: block;
+      }
+      .endpoint-response pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+        margin: 7px 0 0;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+      }
+      .advanced-box {
+        border-top: 1px solid var(--soft);
+        background: #fff;
+      }
+      .advanced-box summary {
+        cursor: pointer;
+        padding: 8px 12px;
+        font-size: 10px;
+        font-weight: 1000;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+      }
+      .advanced-inner {
+        padding: 0 12px 12px;
+      }
+      .advanced-grid {
+        display: grid;
+        grid-template-columns: 1fr 110px 1fr;
+        gap: 8px;
+      }
+      .advanced-grid input,
+      .advanced-grid select {
+        width: 100%;
+        border: 1.5px solid var(--line);
+        padding: 7px;
+        background: #fff;
+      }
+      .input-def-row {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr 120px 80px 36px;
+        gap: 6px;
+        align-items: center;
+        margin-top: 6px;
+      }
+      .input-def-row input,
+      .input-def-row select {
+        width: 100%;
+        border: 1.5px solid var(--line);
+        padding: 7px;
+        background: #fff;
+      }
+      .endpoint-empty {
+        background: #fff;
+        border: 2px dashed var(--line);
+        padding: 28px;
+        text-align: center;
+        font-weight: 900;
+      }
+      @media (max-width: 850px) {
+        .curl-topbar {
+          grid-template-columns: 1fr;
+        }
+        .simple-endpoint-main {
+          grid-template-columns: 1fr;
+        }
+        .endpoint-actions {
+          justify-content: flex-start;
+        }
+        .advanced-grid,
+        .input-def-row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="brand">MATAPONAPP BUILDER</div>
+      <input id="projectName" class="project-name" value="mataponapp" />
+      <div class="tabs">
+        <button class="tab active" data-screen="schema">SCHEMA</button>
+        <button class="tab" data-screen="platform">PLATFORM</button>
+        <button class="tab" data-screen="curl">CURL TESTER</button>
       </div>
-      <div id="tables"></div>
-    </main>
-    <aside class="sidebar">
-      <div class="panel">
-        <h3>Product truths / notes</h3>
-        <div class="panel-body">
-          <textarea id="productTruths" class="note"></textarea>
-          <div class="small">The schema should serve these facts. Do not add structure merely because it is common.</div>
+      <div class="spacer"></div>
+      <button class="btn" id="copyAllBtn">COPY BUILD BRIEF</button>
+      <button class="btn" id="exportBtn">EXPORT JSON</button>
+      <button class="btn" id="importBtn">IMPORT</button>
+      <input id="importFile" type="file" accept=".json" hidden />
+    </div>
+
+    <div class="wrap">
+      <section id="schemaScreen" class="screen active">
+        <div class="layout">
+          <main>
+            <div class="toolbar">
+              <button class="btn primary" id="addTableBtn">+ ADD TABLE</button>
+              <button class="btn" id="validateBtn">VALIDATE</button>
+            </div>
+            <div id="tables"></div>
+          </main>
+          <aside class="sidebar">
+            <div class="panel">
+              <h3>Product truths / notes</h3>
+              <div class="panel-body">
+                <textarea id="productTruths" class="note"></textarea>
+                <div class="small">
+                  The schema should serve these facts. Do not add structure
+                  merely because it is common.
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <h3>Schema health</h3>
+              <div class="panel-body">
+                <div class="health" style="margin-bottom: 8px">
+                  <span class="badge error" id="errorsBadge">0 ERRORS</span>
+                  <span class="badge warning" id="warningsBadge"
+                    >0 WARNINGS</span
+                  >
+                </div>
+                <div id="issues"></div>
+              </div>
+            </div>
+            <div class="panel">
+              <h3>Naming convention</h3>
+              <div class="panel-body">
+                <ul class="rule-list">
+                  <li>Tables = plural <code>snake_case</code>.</li>
+                  <li>Fields = singular <code>snake_case</code>.</li>
+                  <li>FK = singular target + <code>_id</code>.</li>
+                  <li>
+                    Never create fake plurals like <code>activitys</code>.
+                  </li>
+                  <li>FK targets must exist.</li>
+                  <li>Duplicate names are errors.</li>
+                </ul>
+              </div>
+            </div>
+          </aside>
         </div>
-      </div>
-      <div class="panel">
-        <h3>Schema health</h3>
-        <div class="panel-body">
-          <div class="health" style="margin-bottom:8px">
-            <span class="badge error" id="errorsBadge">0 ERRORS</span>
-            <span class="badge warning" id="warningsBadge">0 WARNINGS</span>
+      </section>
+
+      <section id="platformScreen" class="screen">
+        <div class="platform-grid">
+          <div class="platform-card">
+            <h2>PLATFORM</h2>
+            <div class="platform-body">
+              <div class="form-row">
+                <label>Repository</label>
+                <input id="repoType" value="monorepo" />
+              </div>
+              <div class="form-row">
+                <label>Frontend folder</label>
+                <input id="frontendFolder" value="frontend" />
+              </div>
+              <div class="form-row">
+                <label>Backend folder</label>
+                <input id="backendFolder" value="backend" />
+              </div>
+              <div class="form-row">
+                <label>Frontend</label>
+                <input id="frontendStack" value="React, React Router" />
+              </div>
+              <div class="form-row">
+                <label>Frontend deploy</label>
+                <input id="frontendDeploy" value="Netlify" />
+              </div>
+              <div class="form-row">
+                <label>CSS</label>
+                <input id="cssStrategy" value="Reusable token-based CSS" />
+              </div>
+              <div class="form-row">
+                <label>Backend runtime</label>
+                <input id="backendRuntime" value="Node.js" />
+              </div>
+              <div class="form-row">
+                <label>Backend server</label>
+                <input id="backendServer" value="Express" />
+              </div>
+              <div class="form-row">
+                <label>Language</label>
+                <input id="backendLanguage" value="TypeScript" />
+              </div>
+              <div class="form-row">
+                <label>Validation</label>
+                <input id="validation" value="Zod" />
+              </div>
+              <div class="form-row">
+                <label>Database access</label>
+                <input id="databaseAccess" value="Pure SQL" />
+              </div>
+              <div class="form-row">
+                <label>Backend deploy</label>
+                <input id="backendDeploy" value="Railway" />
+              </div>
+            </div>
           </div>
-          <div id="issues"></div>
-        </div>
-      </div>
-      <div class="panel">
-        <h3>Naming convention</h3>
-        <div class="panel-body">
-          <ul class="rule-list">
-            <li>Tables = plural <code>snake_case</code>.</li>
-            <li>Fields = singular <code>snake_case</code>.</li>
-            <li>FK = singular target + <code>_id</code>.</li>
-            <li>Never create fake plurals like <code>activitys</code>.</li>
-            <li>FK targets must exist.</li>
-            <li>Duplicate names are errors.</li>
-          </ul>
-        </div>
-      </div>
-    </aside>
-  </div>
-</section>
 
-<section id="platformScreen" class="screen">
-  <div class="platform-grid">
-    <div class="platform-card">
-      <h2>PLATFORM</h2>
-      <div class="platform-body">
-        <div class="form-row">
-          <label>Repository</label>
-          <input id="repoType" value="monorepo">
+          <div class="platform-card">
+            <h2>FIXED CONVENTIONS</h2>
+            <div class="platform-body">
+              <ul class="rule-list">
+                <li>One monorepo.</li>
+                <li>
+                  <code>frontend/</code> and <code>backend/</code> at repo root.
+                </li>
+                <li>React UI with React Router.</li>
+                <li>
+                  Reusable CSS tokens instead of page-specific style sprawl.
+                </li>
+                <li>Node + Express server.</li>
+                <li>TypeScript backend.</li>
+                <li>Zod at input boundaries.</li>
+                <li>Pure SQL for database queries.</li>
+                <li>Frontend → Netlify.</li>
+                <li>Backend → Railway.</li>
+                <li>
+                  Schema names and API names should match unless there is a real
+                  reason not to.
+                </li>
+              </ul>
+              <div class="status-line">
+                <span class="badge ok">MONOREPO</span>
+                <span class="badge ok">NO ORM</span>
+                <span class="badge ok">TOKEN CSS</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="platform-card">
+            <h2>REPO SHAPE</h2>
+            <div class="platform-body">
+              <div id="repoShape" class="arch"></div>
+            </div>
+          </div>
+
+          <div class="platform-card">
+            <h2>NAMING CONVENTION</h2>
+            <div class="platform-body">
+              <div class="naming-row">
+                <strong>Folders</strong><code>lowercase-kebab or lowercase</code
+                ><span class="badge ok">fixed</span>
+              </div>
+              <div class="naming-row">
+                <strong>React components</strong><code>PascalCase.tsx</code
+                ><span class="badge ok">fixed</span>
+              </div>
+              <div class="naming-row">
+                <strong>TS modules</strong><code>camelCase.ts</code
+                ><span class="badge ok">fixed</span>
+              </div>
+              <div class="naming-row">
+                <strong>DB tables</strong><code>plural_snake_case</code
+                ><span class="badge ok">fixed</span>
+              </div>
+              <div class="naming-row">
+                <strong>DB fields</strong><code>snake_case</code
+                ><span class="badge ok">fixed</span>
+              </div>
+              <div class="naming-row">
+                <strong>Foreign keys</strong><code>singular_target_id</code
+                ><span class="badge ok">fixed</span>
+              </div>
+              <div class="naming-row">
+                <strong>Routes</strong><code>/api/plural-resources</code
+                ><span class="badge ok">fixed</span>
+              </div>
+              <div class="naming-row">
+                <strong>Env vars</strong><code>UPPER_SNAKE_CASE</code
+                ><span class="badge ok">fixed</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="platform-card" style="grid-column: 1/-1">
+            <h2>BUILD BRIEF</h2>
+            <div class="platform-body">
+              <textarea id="buildBrief" class="copy-output" readonly></textarea>
+              <div style="margin-top: 8px">
+                <button class="btn primary" id="copyBriefBtn">
+                  COPY BRIEF
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="form-row">
-          <label>Frontend folder</label>
-          <input id="frontendFolder" value="frontend">
+      </section>
+
+      <section id="curlScreen" class="screen">
+        <div class="curl-simple-wrap">
+          <div class="panel curl-top-panel">
+            <div class="panel-body curl-topbar">
+              <div>
+                <div class="curl-title">CURL TESTER</div>
+                <div class="small">
+                  Synced from the running backend. MataponApp fills the plumbing
+                  and asks only for values it cannot know.
+                </div>
+              </div>
+              <div class="curl-base-wrap">
+                <label>API</label>
+                <input id="curlBaseUrl" value="http://localhost:3001" />
+              </div>
+              <button class="btn" id="syncEndpointsBtn">SYNC BACKEND</button>
+              <button class="btn" id="openLiveBuilderBtn">
+                OPEN LIVE BUILDER
+              </button>
+              <button class="btn" id="addEndpointBtn">+ MANUAL</button>
+              <button class="btn" id="copyAllCurlsBtn">COPY ALL</button>
+            </div>
+          </div>
+
+          <div id="curlSyncStatus" class="curl-sync-status"></div>
+          <div id="endpointCards" class="endpoint-cards"></div>
         </div>
-        <div class="form-row">
-          <label>Backend folder</label>
-          <input id="backendFolder" value="backend">
-        </div>
-        <div class="form-row">
-          <label>Frontend</label>
-          <input id="frontendStack" value="React, React Router">
-        </div>
-        <div class="form-row">
-          <label>Frontend deploy</label>
-          <input id="frontendDeploy" value="Netlify">
-        </div>
-        <div class="form-row">
-          <label>CSS</label>
-          <input id="cssStrategy" value="Reusable token-based CSS">
-        </div>
-        <div class="form-row">
-          <label>Backend runtime</label>
-          <input id="backendRuntime" value="Node.js">
-        </div>
-        <div class="form-row">
-          <label>Backend server</label>
-          <input id="backendServer" value="Express">
-        </div>
-        <div class="form-row">
-          <label>Language</label>
-          <input id="backendLanguage" value="TypeScript">
-        </div>
-        <div class="form-row">
-          <label>Validation</label>
-          <input id="validation" value="Zod">
-        </div>
-        <div class="form-row">
-          <label>Database access</label>
-          <input id="databaseAccess" value="Pure SQL">
-        </div>
-        <div class="form-row">
-          <label>Backend deploy</label>
-          <input id="backendDeploy" value="Railway">
-        </div>
-      </div>
+      </section>
     </div>
 
-    <div class="platform-card">
-      <h2>FIXED CONVENTIONS</h2>
-      <div class="platform-body">
-        <ul class="rule-list">
-          <li>One monorepo.</li>
-          <li><code>frontend/</code> and <code>backend/</code> at repo root.</li>
-          <li>React UI with React Router.</li>
-          <li>Reusable CSS tokens instead of page-specific style sprawl.</li>
-          <li>Node + Express server.</li>
-          <li>TypeScript backend.</li>
-          <li>Zod at input boundaries.</li>
-          <li>Pure SQL for database queries.</li>
-          <li>Frontend → Netlify.</li>
-          <li>Backend → Railway.</li>
-          <li>Schema names and API names should match unless there is a real reason not to.</li>
-        </ul>
-        <div class="status-line">
-          <span class="badge ok">MONOREPO</span>
-          <span class="badge ok">NO ORM</span>
-          <span class="badge ok">TOKEN CSS</span>
-        </div>
-      </div>
-    </div>
+    <script>
+      const KEY = "matapon_builder_v2";
+      const OLD_KEY = "matapon_builder_v1";
+      const uid = () =>
+        Math.random().toString(36).slice(2) + Date.now().toString(36);
+      const field = (name, definition, details = "", tags = "") => ({
+        id: uid(),
+        name,
+        definition,
+        details,
+        tags,
+      });
 
-    <div class="platform-card">
-      <h2>REPO SHAPE</h2>
-      <div class="platform-body">
-        <div id="repoShape" class="arch"></div>
-      </div>
-    </div>
+      const defaultState = {
+        projectName: "mataponapp",
+        productTruths:
+          "Users can be member, staff, or admin. Member accounts can contain multiple household people. Events have start/end windows. Activities are reusable and can be scheduled into events. Staff are staff or manager. Staff have activities they CAN do and can be booked to specific event activities. Event activity signups also store check-in. Activity setting is inside, outside, or other; OTHER stores the actual setting and reason.",
+        platform: {
+          repoType: "monorepo",
+          frontendFolder: "frontend",
+          backendFolder: "backend",
+          frontendStack: "React, React Router",
+          frontendDeploy: "Netlify",
+          cssStrategy: "Reusable token-based CSS",
+          backendRuntime: "Node.js",
+          backendServer: "Express",
+          backendLanguage: "TypeScript",
+          validation: "Zod",
+          databaseAccess: "Pure SQL",
+          backendDeploy: "Railway",
+        },
+        curl: {
+          baseUrl: "http://localhost:3001",
+          endpoints: [],
+          values: {},
+          lastSync: null,
+          syncError: "",
+        },
+        tables: [
+          {
+            name: "users",
+            note: "Login/account record.",
+            fields: [
+              field("id", "PK"),
+              field("username", "TEXT UNIQUE NOT NULL"),
+              field("password_hash", "TEXT NOT NULL"),
+              field(
+                "must_change_password",
+                "BOOLEAN NOT NULL DEFAULT TRUE",
+                "forces first-login password change",
+              ),
+              field("user_type", "CHOICE", "member, staff, admin"),
+              field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+              field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+            ],
+          },
+          {
+            name: "user_members",
+            note: "Actual people inside a member household/account.",
+            fields: [
+              field("id", "PK"),
+              field("user_id", "FK", "users.id"),
+              field("full_name", "TEXT NOT NULL"),
+              field("email", "TEXT"),
+              field("phone", "TEXT"),
+              field("dietary_restrictions", "TEXT"),
+              field("member_role", "CHOICE", "primary, adult, child"),
+              field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+              field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+            ],
+          },
+          {
+            name: "event_types",
+            note: "Admin-editable event taxonomy; includes OTHER.",
+            fields: [
+              field("id", "PK"),
+              field(
+                "name",
+                "TEXT UNIQUE NOT NULL",
+                "fixed editable list; includes OTHER",
+              ),
+              field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+              field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+            ],
+          },
+          {
+            name: "events",
+            note: "Overall event container and event window.",
+            fields: [
+              field("id", "PK"),
+              field("name", "TEXT NOT NULL"),
+              field("event_type_id", "FK", "event_types.id"),
+              field("starts_at", "TEXT NOT NULL"),
+              field("ends_at", "TEXT NOT NULL"),
+              field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+              field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+            ],
+          },
+          {
+            name: "event_type_others",
+            note: "Event type exception when normal taxonomy does not fit.",
+            fields: [
+              field("id", "PK"),
+              field("event_id", "FK", "events.id"),
+              field("value", "TEXT NOT NULL"),
+              field("reason", "TEXT NOT NULL"),
+              field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+            ],
+          },
+          {
+            name: "staff_members",
+            note: "Staff profile. Role is staff or manager.",
+            fields: [
+              field("id", "PK"),
+              field("user_id", "FK", "users.id"),
+              field("full_name", "TEXT NOT NULL"),
+              field("email", "TEXT"),
+              field("phone", "TEXT"),
+              field("role", "CHOICE", "staff, manager"),
+              field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+              field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+            ],
+          },
+          {
+            name: "staff_areas",
+            note: "Reusable staff work areas.",
+            fields: [
+              field("id", "PK"),
+              field("name", "TEXT UNIQUE NOT NULL"),
+              field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+              field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+            ],
+          },
+          {
+            name: "staff_member_areas",
+            note: "Areas a staff member works in.",
+            fields: [
+              field("id", "PK"),
+              field("staff_member_id", "FK", "staff_members.id"),
+              field("staff_area_id", "FK", "staff_areas.id"),
+              field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+              field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+            ],
+          },
+          {
+            name: "activities",
+            note: "Reusable activities.",
+            fields: [
+              field("id", "PK"),
+              field("name", "TEXT UNIQUE NOT NULL"),
+              field("setting", "CHOICE", "inside, outside, other"),
+              field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+              field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+            ],
+          },
+          {
+            name: "activity_others",
+            note: "Actual setting when inside/outside does not accurately fit.",
+            fields: [
+              field("id", "PK"),
+              field("activity_id", "FK", "activities.id"),
+              field(
+                "value",
+                "TEXT NOT NULL",
+                "actual setting when inside/outside does not fit",
+              ),
+              field(
+                "reason",
+                "TEXT NOT NULL",
+                "why inside/outside does not fit",
+              ),
+              field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+            ],
+          },
+          {
+            name: "staff_activities",
+            note: "Activities a staff member CAN do.",
+            fields: [
+              field("id", "PK"),
+              field("staff_member_id", "FK", "staff_members.id"),
+              field("activity_id", "FK", "activities.id"),
+              field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+              field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+            ],
+          },
+          {
+            name: "event_activities",
+            note: "A reusable activity scheduled into a specific event.",
+            fields: [
+              field("id", "PK"),
+              field("event_id", "FK", "events.id"),
+              field("activity_id", "FK", "activities.id"),
+              field("starts_at", "TEXT NOT NULL"),
+              field("ends_at", "TEXT NOT NULL"),
+              field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+              field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+            ],
+          },
+          {
+            name: "event_activity_staff",
+            note: "Staff actually booked to work a scheduled activity.",
+            fields: [
+              field("id", "PK"),
+              field("event_activity_id", "FK", "event_activities.id"),
+              field("staff_member_id", "FK", "staff_members.id"),
+              field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+              field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+            ],
+          },
+          {
+            name: "member_attendees",
+            note: "Household members attending an overall event.",
+            fields: [
+              field("id", "PK"),
+              field("member_id", "FK", "user_members.id"),
+              field("event_id", "FK", "events.id"),
+              field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+              field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+            ],
+          },
+          {
+            name: "event_activity_signups",
+            note: "Activity signup; staff check-in populates checked_in_at.",
+            fields: [
+              field("id", "PK"),
+              field("event_activity_id", "FK", "event_activities.id"),
+              field("member_attendee_id", "FK", "member_attendees.id"),
+              field(
+                "checked_in_at",
+                "TEXT",
+                "null until staff checks person in",
+              ),
+              field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+              field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+            ],
+          },
+        ],
+      };
 
-    <div class="platform-card">
-      <h2>NAMING CONVENTION</h2>
-      <div class="platform-body">
-        <div class="naming-row"><strong>Folders</strong><code>lowercase-kebab or lowercase</code><span class="badge ok">fixed</span></div>
-        <div class="naming-row"><strong>React components</strong><code>PascalCase.tsx</code><span class="badge ok">fixed</span></div>
-        <div class="naming-row"><strong>TS modules</strong><code>camelCase.ts</code><span class="badge ok">fixed</span></div>
-        <div class="naming-row"><strong>DB tables</strong><code>plural_snake_case</code><span class="badge ok">fixed</span></div>
-        <div class="naming-row"><strong>DB fields</strong><code>snake_case</code><span class="badge ok">fixed</span></div>
-        <div class="naming-row"><strong>Foreign keys</strong><code>singular_target_id</code><span class="badge ok">fixed</span></div>
-        <div class="naming-row"><strong>Routes</strong><code>/api/plural-resources</code><span class="badge ok">fixed</span></div>
-        <div class="naming-row"><strong>Env vars</strong><code>UPPER_SNAKE_CASE</code><span class="badge ok">fixed</span></div>
-      </div>
-    </div>
+      let state = load() || structuredClone(defaultState);
+      if (!state.curl) state.curl = structuredClone(defaultState.curl);
+      if (!Array.isArray(state.curl.endpoints))
+        state.curl.endpoints = structuredClone(defaultState.curl.endpoints);
+      if (!state.curl.baseUrl) state.curl.baseUrl = "http://localhost:3001";
+      if (!state.curl.selectedId && state.curl.endpoints[0])
+        state.curl.selectedId = state.curl.endpoints[0].id;
+      state.curl.endpoints.forEach((ep) => {
+        if (!ep.inputs) normalizeEndpoint(ep);
+      });
 
-    <div class="platform-card" style="grid-column:1/-1">
-      <h2>BUILD BRIEF</h2>
-      <div class="platform-body">
-        <textarea id="buildBrief" class="copy-output" readonly></textarea>
-        <div style="margin-top:8px">
-          <button class="btn primary" id="copyBriefBtn">COPY BRIEF</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+      function load() {
+        try {
+          const current = JSON.parse(localStorage.getItem(KEY));
+          if (current) return current;
+          const old = JSON.parse(localStorage.getItem(OLD_KEY));
+          if (!old) return null;
+          old.curl = {
+            baseUrl: old.curl?.baseUrl || "http://localhost:3001",
+            endpoints: [],
+            values: {},
+            lastSync: null,
+            syncError: "",
+          };
+          return old;
+        } catch (e) {
+          return null;
+        }
+      }
+      function save() {
+        localStorage.setItem(KEY, JSON.stringify(state));
+      }
+      function esc(v) {
+        return String(v ?? "").replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#039;",
+            })[m],
+        );
+      }
+      function snake(s) {
+        return String(s || "")
+          .trim()
+          .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+          .replace(/[^a-zA-Z0-9]+/g, "_")
+          .replace(/^_+|_+$/g, "")
+          .toLowerCase()
+          .replace(/_+/g, "_");
+      }
+      function pluralize(w) {
+        const ir = {
+          activity: "activities",
+          category: "categories",
+          person: "people",
+          child: "children",
+          staff: "staff",
+        };
+        if (ir[w]) return ir[w];
+        if (w.endsWith("s")) return w;
+        if (/[^aeiou]y$/.test(w)) return w.slice(0, -1) + "ies";
+        if (/(x|z|ch|sh)$/.test(w)) return w + "es";
+        return w + "s";
+      }
+      function singularize(w) {
+        const ir = {
+          activities: "activity",
+          categories: "category",
+          people: "person",
+          children: "child",
+          staff: "staff",
+        };
+        if (ir[w]) return ir[w];
+        if (w.endsWith("ies")) return w.slice(0, -3) + "y";
+        if (w.endsWith("s") && !w.endsWith("ss")) return w.slice(0, -1);
+        return w;
+      }
+      function tableSuggestion(n) {
+        let s = snake(n);
+        if (!s) return "";
+        let p = s.split("_");
+        p[p.length - 1] = pluralize(p[p.length - 1]);
+        return p.join("_");
+      }
+      function fkName(target) {
+        const t = (target || "").split(".")[0];
+        if (!t) return "";
+        const p = t.split("_");
+        p[p.length - 1] = singularize(p[p.length - 1]);
+        return p.join("_") + "_id";
+      }
+      function fkOptions() {
+        const o = [];
+        state.tables.forEach((t) =>
+          t.fields.forEach((f) => {
+            if (f.definition === "PK" || f.name === "id")
+              o.push(`${t.name}.${f.name}`);
+          }),
+        );
+        return o;
+      }
 
-
-<section id="curlScreen" class="screen">
-  <div class="curl-simple-wrap">
-    <div class="panel curl-top-panel">
-      <div class="panel-body curl-topbar">
-        <div>
-          <div class="curl-title">CURL TESTER</div>
-          <div class="small">Synced from the running backend. Matapon fills the plumbing and asks only for values it cannot know.</div>
-        </div>
-        <div class="curl-base-wrap">
-          <label>API</label>
-          <input id="curlBaseUrl" value="http://localhost:3001">
-        </div>
-        <button class="btn" id="syncEndpointsBtn">SYNC BACKEND</button>
-        <button class="btn" id="openLiveBuilderBtn">OPEN LIVE BUILDER</button>
-        <button class="btn" id="addEndpointBtn">+ MANUAL</button>
-        <button class="btn" id="copyAllCurlsBtn">COPY ALL</button>
-      </div>
-    </div>
-
-    <div id="curlSyncStatus" class="curl-sync-status"></div>
-    <div id="endpointCards" class="endpoint-cards"></div>
-  </div>
-</section>
-
-</div>
-
-<script>
-const KEY="matapon_builder_v2";
-const OLD_KEY="matapon_builder_v1";
-const uid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
-const field=(name,definition,details="",tags="")=>({id:uid(),name,definition,details,tags});
-
-const defaultState={
-  projectName:"mataponapp",
-  productTruths:"Users can be member, staff, or admin. Member accounts can contain multiple household people. Events have start/end windows. Activities are reusable and can be scheduled into events. Staff are staff or manager. Staff have activities they CAN do and can be booked to specific event activities. Event activity signups also store check-in. Activity setting is inside, outside, or other; OTHER stores the actual setting and reason.",
-  platform:{
-    repoType:"monorepo",
-    frontendFolder:"frontend",
-    backendFolder:"backend",
-    frontendStack:"React, React Router",
-    frontendDeploy:"Netlify",
-    cssStrategy:"Reusable token-based CSS",
-    backendRuntime:"Node.js",
-    backendServer:"Express",
-    backendLanguage:"TypeScript",
-    validation:"Zod",
-    databaseAccess:"Pure SQL",
-    backendDeploy:"Railway"
-  },
-  curl:{
-    baseUrl:"http://localhost:3001",
-    endpoints:[],
-    values:{},
-    lastSync:null,
-    syncError:""
-  },
-  tables:[
-    {name:"users",note:"Login/account record.",fields:[
-      field("id","PK"),field("username","TEXT UNIQUE NOT NULL"),field("password_hash","TEXT NOT NULL"),
-      field("must_change_password","BOOLEAN NOT NULL DEFAULT TRUE","forces first-login password change"),
-      field("user_type","CHOICE","member, staff, admin"),
-      field("created_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
-      field("updated_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
-    ]},
-    {name:"user_members",note:"Actual people inside a member household/account.",fields:[
-      field("id","PK"),field("user_id","FK","users.id"),field("full_name","TEXT NOT NULL"),
-      field("email","TEXT"),field("phone","TEXT"),field("dietary_restrictions","TEXT"),
-      field("member_role","CHOICE","primary, adult, child"),
-      field("created_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
-      field("updated_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
-    ]},
-    {name:"event_types",note:"Admin-editable event taxonomy; includes OTHER.",fields:[
-      field("id","PK"),field("name","TEXT UNIQUE NOT NULL","fixed editable list; includes OTHER"),
-      field("created_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
-      field("updated_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
-    ]},
-    {name:"events",note:"Overall event container and event window.",fields:[
-      field("id","PK"),field("name","TEXT NOT NULL"),field("event_type_id","FK","event_types.id"),
-      field("starts_at","TEXT NOT NULL"),field("ends_at","TEXT NOT NULL"),
-      field("created_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
-      field("updated_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
-    ]},
-    {name:"event_type_others",note:"Event type exception when normal taxonomy does not fit.",fields:[
-      field("id","PK"),field("event_id","FK","events.id"),field("value","TEXT NOT NULL"),
-      field("reason","TEXT NOT NULL"),field("created_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
-    ]},
-    {name:"staff_members",note:"Staff profile. Role is staff or manager.",fields:[
-      field("id","PK"),field("user_id","FK","users.id"),field("full_name","TEXT NOT NULL"),
-      field("email","TEXT"),field("phone","TEXT"),field("role","CHOICE","staff, manager"),
-      field("created_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
-      field("updated_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
-    ]},
-    {name:"staff_areas",note:"Reusable staff work areas.",fields:[
-      field("id","PK"),field("name","TEXT UNIQUE NOT NULL"),
-      field("created_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
-      field("updated_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
-    ]},
-    {name:"staff_member_areas",note:"Areas a staff member works in.",fields:[
-      field("id","PK"),field("staff_member_id","FK","staff_members.id"),
-      field("staff_area_id","FK","staff_areas.id"),
-      field("created_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
-      field("updated_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
-    ]},
-    {name:"activities",note:"Reusable activities.",fields:[
-      field("id","PK"),field("name","TEXT UNIQUE NOT NULL"),
-      field("setting","CHOICE","inside, outside, other"),
-      field("created_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
-      field("updated_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
-    ]},
-    {name:"activity_others",note:"Actual setting when inside/outside does not accurately fit.",fields:[
-      field("id","PK"),field("activity_id","FK","activities.id"),
-      field("value","TEXT NOT NULL","actual setting when inside/outside does not fit"),
-      field("reason","TEXT NOT NULL","why inside/outside does not fit"),
-      field("created_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
-    ]},
-    {name:"staff_activities",note:"Activities a staff member CAN do.",fields:[
-      field("id","PK"),field("staff_member_id","FK","staff_members.id"),
-      field("activity_id","FK","activities.id"),
-      field("created_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
-      field("updated_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
-    ]},
-    {name:"event_activities",note:"A reusable activity scheduled into a specific event.",fields:[
-      field("id","PK"),field("event_id","FK","events.id"),field("activity_id","FK","activities.id"),
-      field("starts_at","TEXT NOT NULL"),field("ends_at","TEXT NOT NULL"),
-      field("created_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
-      field("updated_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
-    ]},
-    {name:"event_activity_staff",note:"Staff actually booked to work a scheduled activity.",fields:[
-      field("id","PK"),field("event_activity_id","FK","event_activities.id"),
-      field("staff_member_id","FK","staff_members.id"),
-      field("created_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
-      field("updated_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
-    ]},
-    {name:"member_attendees",note:"Household members attending an overall event.",fields:[
-      field("id","PK"),field("member_id","FK","user_members.id"),field("event_id","FK","events.id"),
-      field("created_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
-      field("updated_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
-    ]},
-    {name:"event_activity_signups",note:"Activity signup; staff check-in populates checked_in_at.",fields:[
-      field("id","PK"),field("event_activity_id","FK","event_activities.id"),
-      field("member_attendee_id","FK","member_attendees.id"),
-      field("checked_in_at","TEXT","null until staff checks person in"),
-      field("created_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
-      field("updated_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
-    ]}
-  ]
-};
-
-let state=load() || structuredClone(defaultState);
-if(!state.curl) state.curl=structuredClone(defaultState.curl);
-if(!Array.isArray(state.curl.endpoints)) state.curl.endpoints=structuredClone(defaultState.curl.endpoints);
-if(!state.curl.baseUrl) state.curl.baseUrl="http://localhost:3001";
-if(!state.curl.selectedId && state.curl.endpoints[0]) state.curl.selectedId=state.curl.endpoints[0].id;
-state.curl.endpoints.forEach(ep=>{ if(!ep.inputs) normalizeEndpoint(ep); });
-
-function load(){
-  try{
-    const current=JSON.parse(localStorage.getItem(KEY));
-    if(current)return current;
-    const old=JSON.parse(localStorage.getItem(OLD_KEY));
-    if(!old)return null;
-    old.curl={baseUrl:old.curl?.baseUrl||"http://localhost:3001",endpoints:[],values:{},lastSync:null,syncError:""};
-    return old;
-  }catch(e){return null}
-}
-function save(){localStorage.setItem(KEY,JSON.stringify(state))}
-function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function snake(s){return String(s||"").trim().replace(/([a-z0-9])([A-Z])/g,"$1_$2").replace(/[^a-zA-Z0-9]+/g,"_").replace(/^_+|_+$/g,"").toLowerCase().replace(/_+/g,"_")}
-function pluralize(w){
-  const ir={activity:"activities",category:"categories",person:"people",child:"children",staff:"staff"};
-  if(ir[w])return ir[w];
-  if(w.endsWith("s"))return w;
-  if(/[^aeiou]y$/.test(w))return w.slice(0,-1)+"ies";
-  if(/(x|z|ch|sh)$/.test(w))return w+"es";
-  return w+"s";
-}
-function singularize(w){
-  const ir={activities:"activity",categories:"category",people:"person",children:"child",staff:"staff"};
-  if(ir[w])return ir[w];
-  if(w.endsWith("ies"))return w.slice(0,-3)+"y";
-  if(w.endsWith("s")&&!w.endsWith("ss"))return w.slice(0,-1);
-  return w;
-}
-function tableSuggestion(n){
-  let s=snake(n); if(!s)return "";
-  let p=s.split("_"); p[p.length-1]=pluralize(p[p.length-1]); return p.join("_")
-}
-function fkName(target){
-  const t=(target||"").split(".")[0]; if(!t)return "";
-  const p=t.split("_"); p[p.length-1]=singularize(p[p.length-1]); return p.join("_")+"_id"
-}
-function fkOptions(){
-  const o=[];
-  state.tables.forEach(t=>t.fields.forEach(f=>{if(f.definition==="PK"||f.name==="id")o.push(`${t.name}.${f.name}`)}));
-  return o
-}
-
-function renderSchema(){
-  const root=document.getElementById("tables");
-  root.innerHTML="";
-  state.tables.forEach((t,ti)=>root.appendChild(tableCard(t,ti)));
-  renderHealth();
-}
-function tableCard(t,ti){
-  const el=document.createElement("section"); el.className="card"; el.id=`table-${ti}`;
-  const ts=tableSuggestion(t.name), bad=t.name&&ts!==t.name;
-  el.innerHTML=`
+      function renderSchema() {
+        const root = document.getElementById("tables");
+        root.innerHTML = "";
+        state.tables.forEach((t, ti) => root.appendChild(tableCard(t, ti)));
+        renderHealth();
+      }
+      function tableCard(t, ti) {
+        const el = document.createElement("section");
+        el.className = "card";
+        el.id = `table-${ti}`;
+        const ts = tableSuggestion(t.name),
+          bad = t.name && ts !== t.name;
+        el.innerHTML = `
     <div class="card-head">
       <div>
-        <input class="table-name ${bad?"problem":""}" data-a="table-name" data-ti="${ti}" value="${esc(t.name)}">
-        ${bad?`<div class="suggest">suggested <code>${esc(ts)}</code> <button class="mini good" data-a="fix-table" data-ti="${ti}" data-value="${esc(ts)}">FIX</button></div>`:""}
-        <textarea class="table-note" data-a="table-note" data-ti="${ti}" placeholder="What this table means / why it exists">${esc(t.note||"")}</textarea>
+        <input class="table-name ${bad ? "problem" : ""}" data-a="table-name" data-ti="${ti}" value="${esc(t.name)}">
+        ${bad ? `<div class="suggest">suggested <code>${esc(ts)}</code> <button class="mini good" data-a="fix-table" data-ti="${ti}" data-value="${esc(ts)}">FIX</button></div>` : ""}
+        <textarea class="table-note" data-a="table-note" data-ti="${ti}" placeholder="What this table means / why it exists">${esc(t.note || "")}</textarea>
       </div>
       <div class="actions">
         <button class="mini" data-a="up" data-ti="${ti}">↑</button>
@@ -734,70 +1499,165 @@ function tableCard(t,ti){
     <div class="grid-head"><div>Field</div><div>Definition</div><div>Details</div><div>Tags</div><div></div></div>
     <div class="rows"></div>
     <button class="add-field" data-a="add-field" data-ti="${ti}">+ ADD FIELD</button>`;
-  const rows=el.querySelector(".rows");
-  t.fields.forEach((f,fi)=>rows.appendChild(fieldRow(t,f,ti,fi)));
-  return el
-}
-function fieldRow(t,f,ti,fi){
-  const el=document.createElement("div"); el.className="field-row";
-  const fs=snake(f.name), snakeBad=f.name&&fs!==f.name;
-  const defs=["PK","FK","TEXT","TEXT NOT NULL","TEXT UNIQUE NOT NULL","CHOICE","INTEGER","INTEGER NOT NULL","BOOLEAN","BOOLEAN NOT NULL","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"];
-  const all=[...new Set([f.definition,...defs].filter(Boolean))];
-  const detail=f.definition==="FK"
-    ? `<select data-a="field-details" data-ti="${ti}" data-fi="${fi}"><option value="">Choose target…</option>${fkOptions().map(x=>`<option value="${esc(x)}" ${x===f.details?"selected":""}>${esc(x)}</option>`).join("")}</select>`
-    : `<textarea data-a="field-details" data-ti="${ti}" data-fi="${fi}" placeholder="${f.definition==="CHOICE"?"comma-separated choices":"details / meaning"}">${esc(f.details||"")}</textarea>`;
-  el.innerHTML=`
-    <div class="cell" data-label="Field">
-      <input class="field-name ${snakeBad?"problem":""}" data-a="field-name" data-ti="${ti}" data-fi="${fi}" value="${esc(f.name)}">
-      ${snakeBad?`<div class="suggest">snake_case <code>${esc(fs)}</code> <button class="mini good" data-a="fix-field" data-ti="${ti}" data-fi="${fi}" data-value="${esc(fs)}">FIX</button></div>`:""}
-    </div>
-    <div class="cell" data-label="Definition"><select data-a="field-definition" data-ti="${ti}" data-fi="${fi}">${all.map(x=>`<option ${x===f.definition?"selected":""}>${esc(x)}</option>`).join("")}</select></div>
-    <div class="cell" data-label="Details">${detail}</div>
-    <div class="cell" data-label="Tags"><input data-a="field-tags" data-ti="${ti}" data-fi="${fi}" value="${esc(f.tags||"")}" placeholder="notes, tags"></div>
-    <div class="cell" data-label=""><button class="remove" data-a="delete-field" data-ti="${ti}" data-fi="${fi}">×</button></div>`;
-  return el
-}
-function validate(){
-  const issues=[], names=new Map;
-  state.tables.forEach((t,ti)=>{
-    if(!t.name)issues.push({level:"error",text:"Table has no name.",ti});
-    const ts=tableSuggestion(t.name);
-    if(t.name&&t.name!==ts)issues.push({level:"warning",text:`${t.name}: table naming suggests "${ts}".`,ti});
-    if(names.has(t.name))issues.push({level:"error",text:`Duplicate table "${t.name}".`,ti});
-    names.set(t.name,ti);
-    const fields=new Set;
-    t.fields.forEach((f,fi)=>{
-      if(!f.name)issues.push({level:"error",text:`${t.name}: unnamed field.`,ti,fi});
-      if(fields.has(f.name))issues.push({level:"error",text:`${t.name}: duplicate field "${f.name}".`,ti,fi});
-      fields.add(f.name);
-      const fs=snake(f.name);
-      if(f.name&&f.name!==fs)issues.push({level:"warning",text:`${t.name}.${f.name}: use "${fs}".`,ti,fi});
-      if(f.definition==="FK"){
-        if(!f.details)issues.push({level:"error",text:`${t.name}.${f.name}: missing FK target.`,ti,fi});
-        else{
-          const [tt,ff]=f.details.split(".");
-          const target=state.tables.find(x=>x.name===tt);
-          if(!target)issues.push({level:"error",text:`${t.name}.${f.name}: target table "${tt}" does not exist.`,ti,fi});
-          else if(!target.fields.some(x=>x.name===ff))issues.push({level:"error",text:`${t.name}.${f.name}: target "${f.details}" does not exist.`,ti,fi});
-        }
+        const rows = el.querySelector(".rows");
+        t.fields.forEach((f, fi) => rows.appendChild(fieldRow(t, f, ti, fi)));
+        return el;
       }
-      if(f.definition==="CHOICE"&&!String(f.details||"").trim())issues.push({level:"warning",text:`${t.name}.${f.name}: CHOICE has no values.`,ti,fi});
-    })
-  });
-  if(!issues.length)issues.push({level:"ok",text:"No structural naming or FK problems found."});
-  return issues
-}
-function renderHealth(){
-  const list=validate(), e=list.filter(x=>x.level==="error").length, w=list.filter(x=>x.level==="warning").length;
-  document.getElementById("errorsBadge").textContent=`${e} ERROR${e===1?"":"S"}`;
-  document.getElementById("warningsBadge").textContent=`${w} WARNING${w===1?"":"S"}`;
-  document.getElementById("issues").innerHTML=list.map(x=>`<div class="issue ${x.level}">${esc(x.text)}${x.ti!=null?`<div><button class="mini" data-jump="${x.ti}">SHOW</button></div>`:""}</div>`).join("");
-  document.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>document.getElementById(`table-${b.dataset.jump}`)?.scrollIntoView({behavior:"smooth",block:"center"}))
-}
+      function fieldRow(t, f, ti, fi) {
+        const el = document.createElement("div");
+        el.className = "field-row";
+        const fs = snake(f.name),
+          snakeBad = f.name && fs !== f.name;
+        const defs = [
+          "PK",
+          "FK",
+          "TEXT",
+          "TEXT NOT NULL",
+          "TEXT UNIQUE NOT NULL",
+          "CHOICE",
+          "INTEGER",
+          "INTEGER NOT NULL",
+          "BOOLEAN",
+          "BOOLEAN NOT NULL",
+          "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP",
+        ];
+        const all = [...new Set([f.definition, ...defs].filter(Boolean))];
+        const detail =
+          f.definition === "FK"
+            ? `<select data-a="field-details" data-ti="${ti}" data-fi="${fi}"><option value="">Choose target…</option>${fkOptions()
+                .map(
+                  (x) =>
+                    `<option value="${esc(x)}" ${x === f.details ? "selected" : ""}>${esc(x)}</option>`,
+                )
+                .join("")}</select>`
+            : `<textarea data-a="field-details" data-ti="${ti}" data-fi="${fi}" placeholder="${f.definition === "CHOICE" ? "comma-separated choices" : "details / meaning"}">${esc(f.details || "")}</textarea>`;
+        el.innerHTML = `
+    <div class="cell" data-label="Field">
+      <input class="field-name ${snakeBad ? "problem" : ""}" data-a="field-name" data-ti="${ti}" data-fi="${fi}" value="${esc(f.name)}">
+      ${snakeBad ? `<div class="suggest">snake_case <code>${esc(fs)}</code> <button class="mini good" data-a="fix-field" data-ti="${ti}" data-fi="${fi}" data-value="${esc(fs)}">FIX</button></div>` : ""}
+    </div>
+    <div class="cell" data-label="Definition"><select data-a="field-definition" data-ti="${ti}" data-fi="${fi}">${all.map((x) => `<option ${x === f.definition ? "selected" : ""}>${esc(x)}</option>`).join("")}</select></div>
+    <div class="cell" data-label="Details">${detail}</div>
+    <div class="cell" data-label="Tags"><input data-a="field-tags" data-ti="${ti}" data-fi="${fi}" value="${esc(f.tags || "")}" placeholder="notes, tags"></div>
+    <div class="cell" data-label=""><button class="remove" data-a="delete-field" data-ti="${ti}" data-fi="${fi}">×</button></div>`;
+        return el;
+      }
+      function validate() {
+        const issues = [],
+          names = new Map();
+        state.tables.forEach((t, ti) => {
+          if (!t.name)
+            issues.push({ level: "error", text: "Table has no name.", ti });
+          const ts = tableSuggestion(t.name);
+          if (t.name && t.name !== ts)
+            issues.push({
+              level: "warning",
+              text: `${t.name}: table naming suggests "${ts}".`,
+              ti,
+            });
+          if (names.has(t.name))
+            issues.push({
+              level: "error",
+              text: `Duplicate table "${t.name}".`,
+              ti,
+            });
+          names.set(t.name, ti);
+          const fields = new Set();
+          t.fields.forEach((f, fi) => {
+            if (!f.name)
+              issues.push({
+                level: "error",
+                text: `${t.name}: unnamed field.`,
+                ti,
+                fi,
+              });
+            if (fields.has(f.name))
+              issues.push({
+                level: "error",
+                text: `${t.name}: duplicate field "${f.name}".`,
+                ti,
+                fi,
+              });
+            fields.add(f.name);
+            const fs = snake(f.name);
+            if (f.name && f.name !== fs)
+              issues.push({
+                level: "warning",
+                text: `${t.name}.${f.name}: use "${fs}".`,
+                ti,
+                fi,
+              });
+            if (f.definition === "FK") {
+              if (!f.details)
+                issues.push({
+                  level: "error",
+                  text: `${t.name}.${f.name}: missing FK target.`,
+                  ti,
+                  fi,
+                });
+              else {
+                const [tt, ff] = f.details.split(".");
+                const target = state.tables.find((x) => x.name === tt);
+                if (!target)
+                  issues.push({
+                    level: "error",
+                    text: `${t.name}.${f.name}: target table "${tt}" does not exist.`,
+                    ti,
+                    fi,
+                  });
+                else if (!target.fields.some((x) => x.name === ff))
+                  issues.push({
+                    level: "error",
+                    text: `${t.name}.${f.name}: target "${f.details}" does not exist.`,
+                    ti,
+                    fi,
+                  });
+              }
+            }
+            if (f.definition === "CHOICE" && !String(f.details || "").trim())
+              issues.push({
+                level: "warning",
+                text: `${t.name}.${f.name}: CHOICE has no values.`,
+                ti,
+                fi,
+              });
+          });
+        });
+        if (!issues.length)
+          issues.push({
+            level: "ok",
+            text: "No structural naming or FK problems found.",
+          });
+        return issues;
+      }
+      function renderHealth() {
+        const list = validate(),
+          e = list.filter((x) => x.level === "error").length,
+          w = list.filter((x) => x.level === "warning").length;
+        document.getElementById("errorsBadge").textContent =
+          `${e} ERROR${e === 1 ? "" : "S"}`;
+        document.getElementById("warningsBadge").textContent =
+          `${w} WARNING${w === 1 ? "" : "S"}`;
+        document.getElementById("issues").innerHTML = list
+          .map(
+            (x) =>
+              `<div class="issue ${x.level}">${esc(x.text)}${x.ti != null ? `<div><button class="mini" data-jump="${x.ti}">SHOW</button></div>` : ""}</div>`,
+          )
+          .join("");
+        document
+          .querySelectorAll("[data-jump]")
+          .forEach(
+            (b) =>
+              (b.onclick = () =>
+                document
+                  .getElementById(`table-${b.dataset.jump}`)
+                  ?.scrollIntoView({ behavior: "smooth", block: "center" })),
+          );
+      }
 
-function repoShape(){
-  const p=state.platform;
-  return `${state.projectName}/
+      function repoShape() {
+        const p = state.platform;
+        return `${state.projectName}/
 ├── ${p.frontendFolder}/
 │   ├── src/
 │   │   ├── components/
@@ -826,10 +1686,10 @@ function repoShape(){
 │
 ├── package.json
 └── README.md`;
-}
-function buildBrief(){
-  const p=state.platform;
-  return `PROJECT: ${state.projectName}
+      }
+      function buildBrief() {
+        const p = state.platform;
+        return `PROJECT: ${state.projectName}
 
 PLATFORM
 - Repository: ${p.repoType}
@@ -858,424 +1718,684 @@ PRODUCT TRUTHS
 ${state.productTruths}
 
 API ENDPOINTS
-${state.curl.endpoints.map(ep=>`- ${ep.method} ${ep.path} — ${ep.name}`).join("\n")}
+${state.curl.endpoints.map((ep) => `- ${ep.method} ${ep.path} — ${ep.name}`).join("\n")}
 
 SCHEMA
-${state.tables.map(t=>{
-  return `${t.name}\n${t.fields.map(f=>`  ${f.name} | ${f.definition}${f.details?` | ${f.details}`:""}`).join("\n")}`;
-}).join("\n\n")}`;
-}
-function syncPlatform(){
-  state.projectName=document.getElementById("projectName").value.trim()||"mataponapp";
-  state.productTruths=document.getElementById("productTruths").value;
-  Object.keys(state.platform).forEach(k=>{
-    const el=document.getElementById(k);
-    if(el)state.platform[k]=el.value
-  });
-  document.getElementById("repoShape").textContent=repoShape();
-  document.getElementById("buildBrief").value=buildBrief();
-  save()
-}
-function renderPlatform(){
-  document.getElementById("projectName").value=state.projectName;
-  document.getElementById("productTruths").value=state.productTruths;
-  Object.keys(state.platform).forEach(k=>{const el=document.getElementById(k);if(el)el.value=state.platform[k]});
-  document.getElementById("repoShape").textContent=repoShape();
-  document.getElementById("buildBrief").value=buildBrief()
-}
+${state.tables
+  .map((t) => {
+    return `${t.name}\n${t.fields.map((f) => `  ${f.name} | ${f.definition}${f.details ? ` | ${f.details}` : ""}`).join("\n")}`;
+  })
+  .join("\n\n")}`;
+      }
+      function syncPlatform() {
+        state.projectName =
+          document.getElementById("projectName").value.trim() || "mataponapp";
+        state.productTruths = document.getElementById("productTruths").value;
+        Object.keys(state.platform).forEach((k) => {
+          const el = document.getElementById(k);
+          if (el) state.platform[k] = el.value;
+        });
+        document.getElementById("repoShape").textContent = repoShape();
+        document.getElementById("buildBrief").value = buildBrief();
+        save();
+      }
+      function renderPlatform() {
+        document.getElementById("projectName").value = state.projectName;
+        document.getElementById("productTruths").value = state.productTruths;
+        Object.keys(state.platform).forEach((k) => {
+          const el = document.getElementById(k);
+          if (el) el.value = state.platform[k];
+        });
+        document.getElementById("repoShape").textContent = repoShape();
+        document.getElementById("buildBrief").value = buildBrief();
+      }
 
-
-
-function humanizeKey(key){
-  return String(key||"")
-    .replace(/_id$/," ID")
-    .replace(/_/g," ")
-    .replace(/\b\w/g,c=>c.toUpperCase())
-}
-function pathParamNames(path){
-  const names=[];
-  const seen=new Set();
-  for(const m of String(path||"").matchAll(/:([A-Za-z_][A-Za-z0-9_]*)|\{([A-Za-z_][A-Za-z0-9_]*)\}/g)){
-    const n=m[1]||m[2];
-    if(!seen.has(n)){seen.add(n);names.push(n)}
-  }
-  return names
-}
-function humanizeKey(key){
-  return String(key||"")
-    .replace(/[_-]+/g," ")
-    .replace(/\b\w/g,c=>c.toUpperCase())
-}
-function pathParamNames(path){
-  const names=[];
-  String(path||"").replace(/:([A-Za-z0-9_]+)/g,(_,n)=>{names.push(n);return _});
-  String(path||"").replace(/\{([A-Za-z0-9_]+)\}/g,(_,n)=>{names.push(n);return _});
-  return [...new Set(names)]
-}
-function valueKey(ep,input){return `${ep.id}:${input.location}:${input.key}`}
-function normalizeEndpoint(ep){
-  ep.id=ep.id||uid();
-  ep.name=ep.name||humanizeKey(ep.id)||"Unnamed Endpoint";
-  ep.method=(ep.method||"GET").toUpperCase();
-  ep.path=ep.path||"/";
-  ep.notes=ep.notes||ep.description||"";
-  ep.auth=!!ep.auth;
-  ep.setsSession=!!ep.setsSession;
-  ep.source=ep.source||"manual";
-  ep.inputs=Array.isArray(ep.inputs)?ep.inputs:[];
-  ep.inputs=ep.inputs.map(x=>({
-    id:x.id||`${ep.id}:${x.location||"body"}:${x.key||uid()}`,
-    key:x.key||"value",
-    label:x.label||humanizeKey(x.key||"value"),
-    location:x.location||"body",
-    required:x.required!==false,
-    type:x.type||"string",
-    secret:!!x.secret || /password|secret|token/i.test(x.key||""),
-    options:Array.isArray(x.options)?x.options:[],
-    placeholder:x.placeholder||"",
-    value:x.value??""
-  }));
-  pathParamNames(ep.path).forEach(key=>{
-    if(!ep.inputs.some(x=>x.location==="path"&&x.key===key)){
-      ep.inputs.push({id:`${ep.id}:path:${key}`,key,label:humanizeKey(key),location:"path",required:true,type:"string",secret:false,options:[],placeholder:"",value:""})
-    }
-  });
-  ep.inputs.forEach(input=>{
-    const stored=state.curl.values?.[valueKey(ep,input)];
-    if(stored!==undefined && input.value==="") input.value=stored;
-    if(input.value==="" && input.default!==undefined && !input.secret) input.value=String(input.default);
-    if(input.value==="" && input.example!==undefined && !input.secret) input.value=String(input.example)
-  });
-  return ep
-}
-function allEndpoints(){
-  state.curl.endpoints=(state.curl.endpoints||[]).map(normalizeEndpoint);
-  return state.curl.endpoints
-}
-function coerceValue(input,value){
-  if(input.type==="number"||input.type==="integer"){
-    const n=Number(value); return Number.isFinite(n)?n:value
-  }
-  if(input.type==="boolean"){
-    if(String(value).toLowerCase()==="true")return true;
-    if(String(value).toLowerCase()==="false")return false
-  }
-  return value
-}
-function bodyObject(ep){
-  const fields=ep.inputs.filter(x=>x.location==="body" && (x.required || String(x.value||"")!==""));
-  if(!fields.length)return null;
-  const obj={};
-  fields.forEach(x=>obj[x.key]=coerceValue(x,x.value));
-  return obj
-}
-function resolvedEndpointUrl(ep){
-  normalizeEndpoint(ep);
-  let path=String(ep.path||"/");
-  ep.inputs.filter(x=>x.location==="path").forEach(x=>{
-    const val=String(x.value||"");
-    if(val) path=path.replaceAll(":"+x.key,encodeURIComponent(val)).replaceAll("{"+x.key+"}",encodeURIComponent(val))
-  });
-  let base=String(state.curl.baseUrl||"http://localhost:3001").replace(/\/+$/," ").trim();
-  if(!path.startsWith("/"))path="/"+path;
-  const q=ep.inputs
-    .filter(x=>x.location==="query" && String(x.value||"")!=="")
-    .map(x=>encodeURIComponent(x.key)+"="+encodeURIComponent(String(x.value)))
-    .join("&");
-  return base+path+(q?(path.includes("?")?"&":"?")+q:"")
-}
-function requestHeaders(ep){
-  const headers={};
-  const body=bodyObject(ep);
-  if(body && !["GET","HEAD"].includes(ep.method)) headers["Content-Type"]="application/json";
-  return headers
-}
-function requestBody(ep){
-  const obj=bodyObject(ep);
-  return obj?JSON.stringify(obj):""
-}
-function shellQuote(v){return "'"+String(v??"").replace(/'/g,"'\\''")+"'"}
-function curlCommand(ep){
-  normalizeEndpoint(ep);
-  const url=resolvedEndpointUrl(ep);
-  const headers=requestHeaders(ep);
-  const body=requestBody(ep);
-  const parts=[];
-  const methodBit=(ep.method==="GET"&&!body)?"":` -X ${ep.method}`;
-  parts.push(`curl${methodBit} ${shellQuote(url)}`);
-  if(ep.setsSession)parts.push(`  -c /tmp/matapon-cookie.txt`);
-  if(ep.auth)parts.push(`  -b /tmp/matapon-cookie.txt`);
-  Object.entries(headers).forEach(([k,v])=>parts.push(`  -H ${shellQuote(k+": "+v)}`));
-  if(body)parts.push(`  --data-raw ${shellQuote(body)}`);
-  return parts.join(" \\\n")
-}
-function missingRequired(ep){return ep.inputs.filter(x=>x.required&&String(x.value??"").trim()==="")}
-function promptForMissing(ep){
-  const missing=missingRequired(ep);
-  for(const input of missing){
-    const label=input.label||humanizeKey(input.key);
-    const entered=prompt(`${ep.name}: ${label}`,"");
-    if(entered===null)return false;
-    input.value=entered;
-    state.curl.values[valueKey(ep,input)]=entered
-  }
-  save();
-  renderEndpointCards();
-  return true
-}
-function inputControl(ep,input){
-  const value=esc(input.value||"");
-  const req=input.required?'<span class="required-dot">required</span>':"";
-  const type=input.secret?"password":(input.type==="number"||input.type==="integer"?"number":"text");
-  if(input.options?.length){
-    return `<div class="simple-input"><label>${esc(input.label)} ${req}</label><select data-ep-input="${esc(ep.id)}" data-input-id="${esc(input.id)}"><option value=""></option>${input.options.map(v=>`<option value="${esc(v)}" ${String(v)===String(input.value)?"selected":""}>${esc(v)}</option>`).join("")}</select></div>`
-  }
-  return `<div class="simple-input"><label>${esc(input.label)} ${req}</label><input class="${input.secret?"secret-input":""}" type="${type}" data-ep-input="${esc(ep.id)}" data-input-id="${esc(input.id)}" value="${value}" placeholder="${esc(input.placeholder||"Enter value")}"></div>`
-}
-function renderSyncStatus(){
-  const node=document.getElementById("curlSyncStatus"); if(!node)return;
-  if(state.curl.syncError){
-    node.className="curl-sync-status error";
-    node.textContent=`BACKEND SYNC FAILED — ${state.curl.syncError}`;
-    return
-  }
-  if(!state.curl.lastSync){
-    node.className="curl-sync-status warn";
-    node.textContent="NOT SYNCED YET — start the backend, then Sync Backend.";
-    return
-  }
-  node.className="curl-sync-status ok";
-  node.textContent=`SYNCED FROM BACKEND — ${state.curl.endpoints.length} ENDPOINTS`;
-}
-async function syncDynamicEndpoints(silent=false){
-  const base=String(state.curl.baseUrl||"http://localhost:3001").replace(/\/+$/," ").trim();
-  try{
-    const res=await fetch(base+"/__matapon/endpoints",{credentials:"include"});
-    if(!res.ok)throw new Error(`${res.status} ${res.statusText}`);
-    const data=await res.json();
-    if(!Array.isArray(data.endpoints))throw new Error("Backend did not return endpoint definitions");
-    const manual=(state.curl.endpoints||[]).filter(x=>x.source==="manual");
-    const dynamic=data.endpoints.map(x=>normalizeEndpoint({...x,source:"backend"}));
-    state.curl.endpoints=[...dynamic,...manual];
-    state.curl.lastSync=new Date().toISOString();
-    state.curl.syncError="";
-    save(); renderEndpointCards(); renderSyncStatus();
-    return true
-  }catch(err){
-    state.curl.syncError=String(err?.message||err);
-    save(); renderSyncStatus();
-    if(!silent)alert("Could not sync backend endpoints. Make sure npm run dev -w backend is running.");
-    return false
-  }
-}
-function renderEndpointCards(){
-  const root=document.getElementById("endpointCards"); if(!root)return;
-  const endpoints=allEndpoints();
-  if(!endpoints.length){root.innerHTML='<div class="endpoint-empty">NO ENDPOINTS YET — SYNC BACKEND</div>';return}
-  root.innerHTML=endpoints.map(ep=>{
-    const visible=ep.inputs.filter(x=>["path","query","body"].includes(x.location));
-    const needs=visible.length;
-    const requiredCount=missingRequired(ep).length;
-    return `<section class="simple-endpoint" data-card-id="${esc(ep.id)}">
+      function humanizeKey(key) {
+        return String(key || "")
+          .replace(/_id$/, " ID")
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+      }
+      function pathParamNames(path) {
+        const names = [];
+        const seen = new Set();
+        for (const m of String(path || "").matchAll(
+          /:([A-Za-z_][A-Za-z0-9_]*)|\{([A-Za-z_][A-Za-z0-9_]*)\}/g,
+        )) {
+          const n = m[1] || m[2];
+          if (!seen.has(n)) {
+            seen.add(n);
+            names.push(n);
+          }
+        }
+        return names;
+      }
+      function humanizeKey(key) {
+        return String(key || "")
+          .replace(/[_-]+/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+      }
+      function pathParamNames(path) {
+        const names = [];
+        String(path || "").replace(/:([A-Za-z0-9_]+)/g, (_, n) => {
+          names.push(n);
+          return _;
+        });
+        String(path || "").replace(/\{([A-Za-z0-9_]+)\}/g, (_, n) => {
+          names.push(n);
+          return _;
+        });
+        return [...new Set(names)];
+      }
+      function valueKey(ep, input) {
+        return `${ep.id}:${input.location}:${input.key}`;
+      }
+      function normalizeEndpoint(ep) {
+        ep.id = ep.id || uid();
+        ep.name = ep.name || humanizeKey(ep.id) || "Unnamed Endpoint";
+        ep.method = (ep.method || "GET").toUpperCase();
+        ep.path = ep.path || "/";
+        ep.notes = ep.notes || ep.description || "";
+        ep.auth = !!ep.auth;
+        ep.setsSession = !!ep.setsSession;
+        ep.source = ep.source || "manual";
+        ep.inputs = Array.isArray(ep.inputs) ? ep.inputs : [];
+        ep.inputs = ep.inputs.map((x) => ({
+          id: x.id || `${ep.id}:${x.location || "body"}:${x.key || uid()}`,
+          key: x.key || "value",
+          label: x.label || humanizeKey(x.key || "value"),
+          location: x.location || "body",
+          required: x.required !== false,
+          type: x.type || "string",
+          secret: !!x.secret || /password|secret|token/i.test(x.key || ""),
+          options: Array.isArray(x.options) ? x.options : [],
+          placeholder: x.placeholder || "",
+          value: x.value ?? "",
+        }));
+        pathParamNames(ep.path).forEach((key) => {
+          if (!ep.inputs.some((x) => x.location === "path" && x.key === key)) {
+            ep.inputs.push({
+              id: `${ep.id}:path:${key}`,
+              key,
+              label: humanizeKey(key),
+              location: "path",
+              required: true,
+              type: "string",
+              secret: false,
+              options: [],
+              placeholder: "",
+              value: "",
+            });
+          }
+        });
+        ep.inputs.forEach((input) => {
+          const stored = state.curl.values?.[valueKey(ep, input)];
+          if (stored !== undefined && input.value === "") input.value = stored;
+          if (
+            input.value === "" &&
+            input.default !== undefined &&
+            !input.secret
+          )
+            input.value = String(input.default);
+          if (
+            input.value === "" &&
+            input.example !== undefined &&
+            !input.secret
+          )
+            input.value = String(input.example);
+        });
+        return ep;
+      }
+      function allEndpoints() {
+        state.curl.endpoints = (state.curl.endpoints || []).map(
+          normalizeEndpoint,
+        );
+        return state.curl.endpoints;
+      }
+      function coerceValue(input, value) {
+        if (input.type === "number" || input.type === "integer") {
+          const n = Number(value);
+          return Number.isFinite(n) ? n : value;
+        }
+        if (input.type === "boolean") {
+          if (String(value).toLowerCase() === "true") return true;
+          if (String(value).toLowerCase() === "false") return false;
+        }
+        return value;
+      }
+      function bodyObject(ep) {
+        const fields = ep.inputs.filter(
+          (x) =>
+            x.location === "body" &&
+            (x.required || String(x.value || "") !== ""),
+        );
+        if (!fields.length) return null;
+        const obj = {};
+        fields.forEach((x) => (obj[x.key] = coerceValue(x, x.value)));
+        return obj;
+      }
+      function resolvedEndpointUrl(ep) {
+        normalizeEndpoint(ep);
+        let path = String(ep.path || "/");
+        ep.inputs
+          .filter((x) => x.location === "path")
+          .forEach((x) => {
+            const val = String(x.value || "");
+            if (val)
+              path = path
+                .replaceAll(":" + x.key, encodeURIComponent(val))
+                .replaceAll("{" + x.key + "}", encodeURIComponent(val));
+          });
+        let base = String(state.curl.baseUrl || "http://localhost:3001")
+          .replace(/\/+$/, " ")
+          .trim();
+        if (!path.startsWith("/")) path = "/" + path;
+        const q = ep.inputs
+          .filter((x) => x.location === "query" && String(x.value || "") !== "")
+          .map(
+            (x) =>
+              encodeURIComponent(x.key) +
+              "=" +
+              encodeURIComponent(String(x.value)),
+          )
+          .join("&");
+        return base + path + (q ? (path.includes("?") ? "&" : "?") + q : "");
+      }
+      function requestHeaders(ep) {
+        const headers = {};
+        const body = bodyObject(ep);
+        if (body && !["GET", "HEAD"].includes(ep.method))
+          headers["Content-Type"] = "application/json";
+        return headers;
+      }
+      function requestBody(ep) {
+        const obj = bodyObject(ep);
+        return obj ? JSON.stringify(obj) : "";
+      }
+      function shellQuote(v) {
+        return "'" + String(v ?? "").replace(/'/g, "'\\''") + "'";
+      }
+      function curlCommand(ep) {
+        normalizeEndpoint(ep);
+        const url = resolvedEndpointUrl(ep);
+        const headers = requestHeaders(ep);
+        const body = requestBody(ep);
+        const parts = [];
+        const methodBit =
+          ep.method === "GET" && !body ? "" : ` -X ${ep.method}`;
+        parts.push(`curl${methodBit} ${shellQuote(url)}`);
+        if (ep.setsSession) parts.push(`  -c /tmp/matapon-cookie.txt`);
+        if (ep.auth) parts.push(`  -b /tmp/matapon-cookie.txt`);
+        Object.entries(headers).forEach(([k, v]) =>
+          parts.push(`  -H ${shellQuote(k + ": " + v)}`),
+        );
+        if (body) parts.push(`  --data-raw ${shellQuote(body)}`);
+        return parts.join(" \\\n");
+      }
+      function missingRequired(ep) {
+        return ep.inputs.filter(
+          (x) => x.required && String(x.value ?? "").trim() === "",
+        );
+      }
+      function promptForMissing(ep) {
+        const missing = missingRequired(ep);
+        for (const input of missing) {
+          const label = input.label || humanizeKey(input.key);
+          const entered = prompt(`${ep.name}: ${label}`, "");
+          if (entered === null) return false;
+          input.value = entered;
+          state.curl.values[valueKey(ep, input)] = entered;
+        }
+        save();
+        renderEndpointCards();
+        return true;
+      }
+      function inputControl(ep, input) {
+        const value = esc(input.value || "");
+        const req = input.required
+          ? '<span class="required-dot">required</span>'
+          : "";
+        const type = input.secret
+          ? "password"
+          : input.type === "number" || input.type === "integer"
+            ? "number"
+            : "text";
+        if (input.options?.length) {
+          return `<div class="simple-input"><label>${esc(input.label)} ${req}</label><select data-ep-input="${esc(ep.id)}" data-input-id="${esc(input.id)}"><option value=""></option>${input.options.map((v) => `<option value="${esc(v)}" ${String(v) === String(input.value) ? "selected" : ""}>${esc(v)}</option>`).join("")}</select></div>`;
+        }
+        return `<div class="simple-input"><label>${esc(input.label)} ${req}</label><input class="${input.secret ? "secret-input" : ""}" type="${type}" data-ep-input="${esc(ep.id)}" data-input-id="${esc(input.id)}" value="${value}" placeholder="${esc(input.placeholder || "Enter value")}"></div>`;
+      }
+      function renderSyncStatus() {
+        const node = document.getElementById("curlSyncStatus");
+        if (!node) return;
+        if (state.curl.syncError) {
+          node.className = "curl-sync-status error";
+          node.textContent = `BACKEND SYNC FAILED — ${state.curl.syncError}`;
+          return;
+        }
+        if (!state.curl.lastSync) {
+          node.className = "curl-sync-status warn";
+          node.textContent =
+            "NOT SYNCED YET — start the backend, then Sync Backend.";
+          return;
+        }
+        node.className = "curl-sync-status ok";
+        node.textContent = `SYNCED FROM BACKEND — ${state.curl.endpoints.length} ENDPOINTS`;
+      }
+      async function syncDynamicEndpoints(silent = false) {
+        const base = String(state.curl.baseUrl || "http://localhost:3001")
+          .replace(/\/+$/, " ")
+          .trim();
+        try {
+          const res = await fetch(base + "/__matapon/endpoints", {
+            credentials: "include",
+          });
+          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+          const data = await res.json();
+          if (!Array.isArray(data.endpoints))
+            throw new Error("Backend did not return endpoint definitions");
+          const manual = (state.curl.endpoints || []).filter(
+            (x) => x.source === "manual",
+          );
+          const dynamic = data.endpoints.map((x) =>
+            normalizeEndpoint({ ...x, source: "backend" }),
+          );
+          state.curl.endpoints = [...dynamic, ...manual];
+          state.curl.lastSync = new Date().toISOString();
+          state.curl.syncError = "";
+          save();
+          renderEndpointCards();
+          renderSyncStatus();
+          return true;
+        } catch (err) {
+          state.curl.syncError = String(err?.message || err);
+          save();
+          renderSyncStatus();
+          if (!silent)
+            alert(
+              "Could not sync backend endpoints. Make sure npm run dev -w backend is running.",
+            );
+          return false;
+        }
+      }
+      function renderEndpointCards() {
+        const root = document.getElementById("endpointCards");
+        if (!root) return;
+        const endpoints = allEndpoints();
+        if (!endpoints.length) {
+          root.innerHTML =
+            '<div class="endpoint-empty">NO ENDPOINTS YET — SYNC BACKEND</div>';
+          return;
+        }
+        root.innerHTML = endpoints
+          .map((ep) => {
+            const visible = ep.inputs.filter((x) =>
+              ["path", "query", "body"].includes(x.location),
+            );
+            const needs = visible.length;
+            const requiredCount = missingRequired(ep).length;
+            return `<section class="simple-endpoint" data-card-id="${esc(ep.id)}">
       <div class="simple-endpoint-main"><div>
         <div class="simple-endpoint-name">${esc(ep.name)}</div>
-        <div class="simple-endpoint-route"><span class="method">${esc(ep.method)}</span><span class="route-path">${esc(ep.path)}</span><span class="source-badge">${ep.source==="backend"?"AUTO":"MANUAL"}</span>${ep.auth?'<span class="badge">LOGIN REQUIRED</span>':""}${requiredCount?`<span class="badge warning">${requiredCount} TO ENTER</span>`:""}</div>
-        ${ep.notes?`<div class="small" style="margin-top:5px">${esc(ep.notes)}</div>`:""}
+        <div class="simple-endpoint-route"><span class="method">${esc(ep.method)}</span><span class="route-path">${esc(ep.path)}</span><span class="source-badge">${ep.source === "backend" ? "AUTO" : "MANUAL"}</span>${ep.auth ? '<span class="badge">LOGIN REQUIRED</span>' : ""}${requiredCount ? `<span class="badge warning">${requiredCount} TO ENTER</span>` : ""}</div>
+        ${ep.notes ? `<div class="small" style="margin-top:5px">${esc(ep.notes)}</div>` : ""}
       </div><div class="endpoint-actions"><button class="btn primary" data-copy-endpoint="${esc(ep.id)}">COPY CURL</button><button class="btn" data-run-endpoint="${esc(ep.id)}">RUN</button></div></div>
-      ${needs?`<div class="input-zone"><div class="input-zone-title">What this request needs</div><div class="simple-inputs">${visible.map(x=>inputControl(ep,x)).join("")}</div></div>`:""}
+      ${needs ? `<div class="input-zone"><div class="input-zone-title">What this request needs</div><div class="simple-inputs">${visible.map((x) => inputControl(ep, x)).join("")}</div></div>` : ""}
       <div class="generated-curl"><code data-curl-preview="${esc(ep.id)}">${esc(curlCommand(ep))}</code><button class="mini" data-copy-endpoint="${esc(ep.id)}">COPY</button></div>
       <div class="endpoint-response" data-response="${esc(ep.id)}"><div data-response-meta="${esc(ep.id)}"></div><pre data-response-body="${esc(ep.id)}"></pre></div>
-      <details class="advanced-box"><summary>Advanced / endpoint contract</summary><div class="advanced-inner"><div class="small">Source: ${esc(ep.source)} · Auth: ${ep.auth?"yes":"no"} · Inputs are derived from backend endpoint contracts/Zod schemas.</div></div></details>
-    </section>`
-  }).join("");
-  root.querySelectorAll("[data-ep-input]").forEach(el=>{
-    const evt=el.tagName==="SELECT"?"change":"input";
-    el.addEventListener(evt,()=>{
-      const ep=state.curl.endpoints.find(x=>x.id===el.dataset.epInput);
-      const inp=ep?.inputs.find(x=>x.id===el.dataset.inputId); if(!ep||!inp)return;
-      inp.value=el.value; state.curl.values[valueKey(ep,inp)]=el.value; save(); refreshCurlPreview(ep)
-    })
-  });
-  root.querySelectorAll("[data-copy-endpoint]").forEach(b=>b.onclick=async()=>{
-    const ep=state.curl.endpoints.find(x=>x.id===b.dataset.copyEndpoint); if(!ep)return;
-    if(missingRequired(ep).length&&!promptForMissing(ep))return;
-    await navigator.clipboard.writeText(curlCommand(ep));
-    const old=b.textContent;b.textContent="COPIED";setTimeout(()=>b.textContent=old,900)
-  });
-  root.querySelectorAll("[data-run-endpoint]").forEach(b=>b.onclick=()=>{
-    const ep=state.curl.endpoints.find(x=>x.id===b.dataset.runEndpoint); if(ep)runEndpoint(ep,b)
-  })
-}
-function refreshCurlPreview(ep){const node=document.querySelector(`[data-curl-preview="${CSS.escape(ep.id)}"]`);if(node)node.textContent=curlCommand(ep)}
-async function runEndpoint(ep,button){
-  if(missingRequired(ep).length&&!promptForMissing(ep))return;
-  if(location.protocol==="file:" && (ep.auth||ep.setsSession)){
-    const ok=confirm("Auth RUN works reliably from the Live Builder because cookies are same-origin. Open it now?");
-    if(ok)window.open(String(state.curl.baseUrl||"http://localhost:3001").replace(/\/+$/," ").trim()+"/__matapon/builder","_blank");
-    return
-  }
-  const response=document.querySelector(`[data-response="${CSS.escape(ep.id)}"]`);
-  const meta=document.querySelector(`[data-response-meta="${CSS.escape(ep.id)}"]`);
-  const bodyNode=document.querySelector(`[data-response-body="${CSS.escape(ep.id)}"]`);
-  if(!response||!meta||!bodyNode)return;
-  response.classList.add("show"); const old=button.textContent;button.disabled=true;button.textContent="RUNNING…";meta.innerHTML="";bodyNode.textContent="Waiting…";
-  const started=performance.now();
-  try{
-    const body=requestBody(ep); const options={method:ep.method,headers:requestHeaders(ep),credentials:"include"};
-    if(body&&!["GET","HEAD"].includes(ep.method))options.body=body;
-    const res=await fetch(resolvedEndpointUrl(ep),options);
-    const elapsed=Math.round(performance.now()-started); const raw=await res.text(); let pretty=raw;
-    try{pretty=JSON.stringify(JSON.parse(raw),null,2)}catch(e){}
-    meta.innerHTML=`<span class="badge ${res.ok?"ok":"error"}">${res.status} ${esc(res.statusText)}</span> <span class="badge">${elapsed} ms</span>`;
-    bodyNode.textContent=pretty||"(empty response)"
-  }catch(err){
-    const elapsed=Math.round(performance.now()-started);
-    meta.innerHTML=`<span class="badge error">REQUEST FAILED</span> <span class="badge">${elapsed} ms</span>`;
-    bodyNode.textContent=location.protocol==="file:"?"Browser blocked this request from file://. Open the Live Builder at "+String(state.curl.baseUrl||"http://localhost:3001").replace(/\/+$/," ").trim()+"/__matapon/builder\n\n"+String(err):String(err)
-  }finally{button.disabled=false;button.textContent=old}
-}
-function renderCurl(){
-  if(!state.curl)state.curl=structuredClone(defaultState.curl);
-  if(!Array.isArray(state.curl.endpoints))state.curl.endpoints=[];
-  if(!state.curl.values)state.curl.values={};
-  const base=document.getElementById("curlBaseUrl"); if(base)base.value=state.curl.baseUrl||"http://localhost:3001";
-  renderSyncStatus(); renderEndpointCards();
-  syncDynamicEndpoints(true)
-}
+      <details class="advanced-box"><summary>Advanced / endpoint contract</summary><div class="advanced-inner"><div class="small">Source: ${esc(ep.source)} · Auth: ${ep.auth ? "yes" : "no"} · Inputs are derived from backend endpoint contracts/Zod schemas.</div></div></details>
+    </section>`;
+          })
+          .join("");
+        root.querySelectorAll("[data-ep-input]").forEach((el) => {
+          const evt = el.tagName === "SELECT" ? "change" : "input";
+          el.addEventListener(evt, () => {
+            const ep = state.curl.endpoints.find(
+              (x) => x.id === el.dataset.epInput,
+            );
+            const inp = ep?.inputs.find((x) => x.id === el.dataset.inputId);
+            if (!ep || !inp) return;
+            inp.value = el.value;
+            state.curl.values[valueKey(ep, inp)] = el.value;
+            save();
+            refreshCurlPreview(ep);
+          });
+        });
+        root.querySelectorAll("[data-copy-endpoint]").forEach(
+          (b) =>
+            (b.onclick = async () => {
+              const ep = state.curl.endpoints.find(
+                (x) => x.id === b.dataset.copyEndpoint,
+              );
+              if (!ep) return;
+              if (missingRequired(ep).length && !promptForMissing(ep)) return;
+              await navigator.clipboard.writeText(curlCommand(ep));
+              const old = b.textContent;
+              b.textContent = "COPIED";
+              setTimeout(() => (b.textContent = old), 900);
+            }),
+        );
+        root.querySelectorAll("[data-run-endpoint]").forEach(
+          (b) =>
+            (b.onclick = () => {
+              const ep = state.curl.endpoints.find(
+                (x) => x.id === b.dataset.runEndpoint,
+              );
+              if (ep) runEndpoint(ep, b);
+            }),
+        );
+      }
+      function refreshCurlPreview(ep) {
+        const node = document.querySelector(
+          `[data-curl-preview="${CSS.escape(ep.id)}"]`,
+        );
+        if (node) node.textContent = curlCommand(ep);
+      }
+      async function runEndpoint(ep, button) {
+        if (missingRequired(ep).length && !promptForMissing(ep)) return;
+        if (location.protocol === "file:" && (ep.auth || ep.setsSession)) {
+          const ok = confirm(
+            "Auth RUN works reliably from the Live Builder because cookies are same-origin. Open it now?",
+          );
+          if (ok)
+            window.open(
+              String(state.curl.baseUrl || "http://localhost:3001")
+                .replace(/\/+$/, " ")
+                .trim() + "/__matapon/builder",
+              "_blank",
+            );
+          return;
+        }
+        const response = document.querySelector(
+          `[data-response="${CSS.escape(ep.id)}"]`,
+        );
+        const meta = document.querySelector(
+          `[data-response-meta="${CSS.escape(ep.id)}"]`,
+        );
+        const bodyNode = document.querySelector(
+          `[data-response-body="${CSS.escape(ep.id)}"]`,
+        );
+        if (!response || !meta || !bodyNode) return;
+        response.classList.add("show");
+        const old = button.textContent;
+        button.disabled = true;
+        button.textContent = "RUNNING…";
+        meta.innerHTML = "";
+        bodyNode.textContent = "Waiting…";
+        const started = performance.now();
+        try {
+          const body = requestBody(ep);
+          const options = {
+            method: ep.method,
+            headers: requestHeaders(ep),
+            credentials: "include",
+          };
+          if (body && !["GET", "HEAD"].includes(ep.method)) options.body = body;
+          const res = await fetch(resolvedEndpointUrl(ep), options);
+          const elapsed = Math.round(performance.now() - started);
+          const raw = await res.text();
+          let pretty = raw;
+          try {
+            pretty = JSON.stringify(JSON.parse(raw), null, 2);
+          } catch (e) {}
+          meta.innerHTML = `<span class="badge ${res.ok ? "ok" : "error"}">${res.status} ${esc(res.statusText)}</span> <span class="badge">${elapsed} ms</span>`;
+          bodyNode.textContent = pretty || "(empty response)";
+        } catch (err) {
+          const elapsed = Math.round(performance.now() - started);
+          meta.innerHTML = `<span class="badge error">REQUEST FAILED</span> <span class="badge">${elapsed} ms</span>`;
+          bodyNode.textContent =
+            location.protocol === "file:"
+              ? "Browser blocked this request from file://. Open the Live Builder at " +
+                String(state.curl.baseUrl || "http://localhost:3001")
+                  .replace(/\/+$/, " ")
+                  .trim() +
+                "/__matapon/builder\n\n" +
+                String(err)
+              : String(err);
+        } finally {
+          button.disabled = false;
+          button.textContent = old;
+        }
+      }
+      function renderCurl() {
+        if (!state.curl) state.curl = structuredClone(defaultState.curl);
+        if (!Array.isArray(state.curl.endpoints)) state.curl.endpoints = [];
+        if (!state.curl.values) state.curl.values = {};
+        const base = document.getElementById("curlBaseUrl");
+        if (base) base.value = state.curl.baseUrl || "http://localhost:3001";
+        renderSyncStatus();
+        renderEndpointCards();
+        syncDynamicEndpoints(true);
+      }
 
-document.addEventListener("input",e=>{
-  const a=e.target.dataset.a;
-  if(a){
-    const ti=+e.target.dataset.ti, fi=+e.target.dataset.fi;
-    if(a==="table-name")state.tables[ti].name=e.target.value;
-    if(a==="table-note")state.tables[ti].note=e.target.value;
-    if(a==="field-name")state.tables[ti].fields[fi].name=e.target.value;
-    if(a==="field-details")state.tables[ti].fields[fi].details=e.target.value;
-    if(a==="field-tags")state.tables[ti].fields[fi].tags=e.target.value;
-    save();
-  }else if(e.target.id==="projectName"||e.target.id==="productTruths"||Object.keys(state.platform).includes(e.target.id)){
-    syncPlatform()
-  }
-});
-document.addEventListener("change",e=>{
-  const a=e.target.dataset.a;
-  if(a==="field-definition"){
-    const ti=+e.target.dataset.ti,fi=+e.target.dataset.fi;
-    state.tables[ti].fields[fi].definition=e.target.value;
-    if(e.target.value!=="FK" && state.tables[ti].fields[fi].details?.includes(".")) state.tables[ti].fields[fi].details="";
-    save();renderSchema()
-  }
-});
-document.addEventListener("click",e=>{
-  const b=e.target.closest("[data-a]");
-  if(b){
-    const a=b.dataset.a,ti=+b.dataset.ti,fi=+b.dataset.fi;
-    if(a==="add-field"){state.tables[ti].fields.push(field("new_field","TEXT"));renderSchema()}
-    if(a==="delete-field"){state.tables[ti].fields.splice(fi,1);renderSchema()}
-    if(a==="delete-table"&&confirm(`Delete table "${state.tables[ti].name}"?`)){state.tables.splice(ti,1);renderSchema()}
-    if(a==="up"&&ti>0){[state.tables[ti-1],state.tables[ti]]=[state.tables[ti],state.tables[ti-1]];renderSchema()}
-    if(a==="down"&&ti<state.tables.length-1){[state.tables[ti+1],state.tables[ti]]=[state.tables[ti],state.tables[ti+1]];renderSchema()}
-    if(a==="fix-table"){state.tables[ti].name=b.dataset.value;renderSchema()}
-    if(a==="fix-field"){state.tables[ti].fields[fi].name=b.dataset.value;renderSchema()}
-    save()
-  }
-});
+      document.addEventListener("input", (e) => {
+        const a = e.target.dataset.a;
+        if (a) {
+          const ti = +e.target.dataset.ti,
+            fi = +e.target.dataset.fi;
+          if (a === "table-name") state.tables[ti].name = e.target.value;
+          if (a === "table-note") state.tables[ti].note = e.target.value;
+          if (a === "field-name")
+            state.tables[ti].fields[fi].name = e.target.value;
+          if (a === "field-details")
+            state.tables[ti].fields[fi].details = e.target.value;
+          if (a === "field-tags")
+            state.tables[ti].fields[fi].tags = e.target.value;
+          save();
+        } else if (
+          e.target.id === "projectName" ||
+          e.target.id === "productTruths" ||
+          Object.keys(state.platform).includes(e.target.id)
+        ) {
+          syncPlatform();
+        }
+      });
+      document.addEventListener("change", (e) => {
+        const a = e.target.dataset.a;
+        if (a === "field-definition") {
+          const ti = +e.target.dataset.ti,
+            fi = +e.target.dataset.fi;
+          state.tables[ti].fields[fi].definition = e.target.value;
+          if (
+            e.target.value !== "FK" &&
+            state.tables[ti].fields[fi].details?.includes(".")
+          )
+            state.tables[ti].fields[fi].details = "";
+          save();
+          renderSchema();
+        }
+      });
+      document.addEventListener("click", (e) => {
+        const b = e.target.closest("[data-a]");
+        if (b) {
+          const a = b.dataset.a,
+            ti = +b.dataset.ti,
+            fi = +b.dataset.fi;
+          if (a === "add-field") {
+            state.tables[ti].fields.push(field("new_field", "TEXT"));
+            renderSchema();
+          }
+          if (a === "delete-field") {
+            state.tables[ti].fields.splice(fi, 1);
+            renderSchema();
+          }
+          if (
+            a === "delete-table" &&
+            confirm(`Delete table "${state.tables[ti].name}"?`)
+          ) {
+            state.tables.splice(ti, 1);
+            renderSchema();
+          }
+          if (a === "up" && ti > 0) {
+            [state.tables[ti - 1], state.tables[ti]] = [
+              state.tables[ti],
+              state.tables[ti - 1],
+            ];
+            renderSchema();
+          }
+          if (a === "down" && ti < state.tables.length - 1) {
+            [state.tables[ti + 1], state.tables[ti]] = [
+              state.tables[ti],
+              state.tables[ti + 1],
+            ];
+            renderSchema();
+          }
+          if (a === "fix-table") {
+            state.tables[ti].name = b.dataset.value;
+            renderSchema();
+          }
+          if (a === "fix-field") {
+            state.tables[ti].fields[fi].name = b.dataset.value;
+            renderSchema();
+          }
+          save();
+        }
+      });
 
-document.getElementById("addTableBtn").onclick=()=>{
-  state.tables.push({name:"new_tables",note:"",fields:[
-    field("id","PK"),
-    field("created_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
-    field("updated_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
-  ]});
-  save();renderSchema()
-};
-document.getElementById("validateBtn").onclick=renderSchema;
+      document.getElementById("addTableBtn").onclick = () => {
+        state.tables.push({
+          name: "new_tables",
+          note: "",
+          fields: [
+            field("id", "PK"),
+            field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+            field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+          ],
+        });
+        save();
+        renderSchema();
+      };
+      document.getElementById("validateBtn").onclick = renderSchema;
 
-document.querySelectorAll(".tab").forEach(tab=>tab.onclick=()=>{
-  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
-  tab.classList.add("active");
-  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
-  document.getElementById(tab.dataset.screen+"Screen").classList.add("active");
-  if(tab.dataset.screen==="platform")renderPlatform();
-  if(tab.dataset.screen==="curl")renderCurl()
-});
+      document.querySelectorAll(".tab").forEach(
+        (tab) =>
+          (tab.onclick = () => {
+            document
+              .querySelectorAll(".tab")
+              .forEach((x) => x.classList.remove("active"));
+            tab.classList.add("active");
+            document
+              .querySelectorAll(".screen")
+              .forEach((x) => x.classList.remove("active"));
+            document
+              .getElementById(tab.dataset.screen + "Screen")
+              .classList.add("active");
+            if (tab.dataset.screen === "platform") renderPlatform();
+            if (tab.dataset.screen === "curl") renderCurl();
+          }),
+      );
 
-document.getElementById("copyBriefBtn").onclick=async()=>{
-  syncPlatform();
-  await navigator.clipboard.writeText(document.getElementById("buildBrief").value);
-  const b=document.getElementById("copyBriefBtn");const old=b.textContent;b.textContent="COPIED";setTimeout(()=>b.textContent=old,1000)
-};
-document.getElementById("copyAllBtn").onclick=async()=>{
-  syncPlatform(); await navigator.clipboard.writeText(buildBrief());
-  const b=document.getElementById("copyAllBtn");const old=b.textContent;b.textContent="COPIED";setTimeout(()=>b.textContent=old,1000)
-};
-document.getElementById("exportBtn").onclick=()=>{
-  syncPlatform();
-  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
-  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`${state.projectName}-builder.json`;a.click();URL.revokeObjectURL(a.href)
-};
-document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
-document.getElementById("importFile").onchange=async e=>{
-  const file=e.target.files[0];if(!file)return;
-  try{
-    const next=JSON.parse(await file.text());
-    state=next;
-    if(!state.curl)state.curl=structuredClone(defaultState.curl);
-    if(!Array.isArray(state.curl.endpoints))state.curl.endpoints=structuredClone(defaultState.curl.endpoints);
-    save();renderSchema();renderPlatform();renderCurl()
-  }catch(err){alert("Could not import that JSON file.")}
-};
+      document.getElementById("copyBriefBtn").onclick = async () => {
+        syncPlatform();
+        await navigator.clipboard.writeText(
+          document.getElementById("buildBrief").value,
+        );
+        const b = document.getElementById("copyBriefBtn");
+        const old = b.textContent;
+        b.textContent = "COPIED";
+        setTimeout(() => (b.textContent = old), 1000);
+      };
+      document.getElementById("copyAllBtn").onclick = async () => {
+        syncPlatform();
+        await navigator.clipboard.writeText(buildBrief());
+        const b = document.getElementById("copyAllBtn");
+        const old = b.textContent;
+        b.textContent = "COPIED";
+        setTimeout(() => (b.textContent = old), 1000);
+      };
+      document.getElementById("exportBtn").onclick = () => {
+        syncPlatform();
+        const blob = new Blob([JSON.stringify(state, null, 2)], {
+          type: "application/json",
+        });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `${state.projectName}-builder.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      };
+      document.getElementById("importBtn").onclick = () =>
+        document.getElementById("importFile").click();
+      document.getElementById("importFile").onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          const next = JSON.parse(await file.text());
+          state = next;
+          if (!state.curl) state.curl = structuredClone(defaultState.curl);
+          if (!Array.isArray(state.curl.endpoints))
+            state.curl.endpoints = structuredClone(defaultState.curl.endpoints);
+          save();
+          renderSchema();
+          renderPlatform();
+          renderCurl();
+        } catch (err) {
+          alert("Could not import that JSON file.");
+        }
+      };
 
+      document.getElementById("curlBaseUrl").addEventListener("input", (e) => {
+        state.curl.baseUrl = e.target.value;
+        save();
+        allEndpoints().forEach(refreshCurlPreview);
+        renderSyncStatus();
+      });
+      document.getElementById("syncEndpointsBtn").onclick = () =>
+        syncDynamicEndpoints(false);
+      document.getElementById("openLiveBuilderBtn").onclick = () => {
+        const base = String(state.curl.baseUrl || "http://localhost:3001")
+          .replace(/\/+$/, " ")
+          .trim();
+        window.open(base + "/__matapon/builder", "_blank");
+      };
+      document.getElementById("addEndpointBtn").onclick = () => {
+        const name = prompt("Endpoint name?", "New Endpoint");
+        if (name === null) return;
+        const method = (
+          prompt("Method? GET, POST, PATCH, PUT, DELETE", "GET") || "GET"
+        ).toUpperCase();
+        const path = prompt("Path?", "/api/") || "/api/";
+        const ep = {
+          id: uid(),
+          name: name.trim() || "New Endpoint",
+          method,
+          path,
+          notes: "",
+          source: "manual",
+          auth: false,
+          setsSession: false,
+          inputs: [],
+        };
+        normalizeEndpoint(ep);
+        state.curl.endpoints.push(ep);
+        save();
+        renderEndpointCards();
+      };
+      document.getElementById("copyAllCurlsBtn").onclick = async () => {
+        const endpoints = allEndpoints();
+        for (const ep of endpoints) {
+          if (missingRequired(ep).length && !promptForMissing(ep)) return;
+        }
+        const text = endpoints
+          .map((ep) => `# ${ep.name}\n${curlCommand(ep)}`)
+          .join("\n\n");
+        await navigator.clipboard.writeText(text);
+        const b = document.getElementById("copyAllCurlsBtn"),
+          old = b.textContent;
+        b.textContent = "COPIED";
+        setTimeout(() => (b.textContent = old), 900);
+      };
 
-document.getElementById("curlBaseUrl").addEventListener("input",e=>{
-  state.curl.baseUrl=e.target.value;
-  save();
-  allEndpoints().forEach(refreshCurlPreview);
-  renderSyncStatus()
-});
-document.getElementById("syncEndpointsBtn").onclick=()=>syncDynamicEndpoints(false);
-document.getElementById("openLiveBuilderBtn").onclick=()=>{
-  const base=String(state.curl.baseUrl||"http://localhost:3001").replace(/\/+$/," ").trim();
-  window.open(base+"/__matapon/builder","_blank")
-};
-document.getElementById("addEndpointBtn").onclick=()=>{
-  const name=prompt("Endpoint name?","New Endpoint");
-  if(name===null)return;
-  const method=(prompt("Method? GET, POST, PATCH, PUT, DELETE","GET")||"GET").toUpperCase();
-  const path=prompt("Path?","/api/")||"/api/";
-  const ep={
-    id:uid(),
-    name:name.trim()||"New Endpoint",
-    method,
-    path,
-    notes:"",
-    source:"manual",
-    auth:false,
-    setsSession:false,
-    inputs:[]
-  };
-  normalizeEndpoint(ep);
-  state.curl.endpoints.push(ep);
-  save();
-  renderEndpointCards()
-};
-document.getElementById("copyAllCurlsBtn").onclick=async()=>{
-  const endpoints=allEndpoints();
-  for(const ep of endpoints){
-    if(missingRequired(ep).length&&!promptForMissing(ep))return;
-  }
-  const text=endpoints.map(ep=>`# ${ep.name}\n${curlCommand(ep)}`).join("\n\n");
-  await navigator.clipboard.writeText(text);
-  const b=document.getElementById("copyAllCurlsBtn"),old=b.textContent;
-  b.textContent="COPIED";setTimeout(()=>b.textContent=old,900)
-};
+      document
+        .getElementById("projectName")
+        .addEventListener("input", syncPlatform);
+      document
+        .getElementById("productTruths")
+        .addEventListener("input", syncPlatform);
 
-document.getElementById("projectName").addEventListener("input",syncPlatform);
-document.getElementById("productTruths").addEventListener("input",syncPlatform);
-
-renderSchema();
-renderPlatform();
-renderCurl();
-</script>
-</body>
+      renderSchema();
+      renderPlatform();
+      renderCurl();
+    </script>
+  </body>
 </html>

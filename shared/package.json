@@ -47,6 +47,10 @@
     "./schemas/eventActivityStaff": {
       "types": "./dist/schemas/eventActivityStaff.d.ts",
       "import": "./dist/schemas/eventActivityStaff.js"
+    },
+    "./schemas/resetTestData": {
+      "types": "./dist/schemas/resetTestData.d.ts",
+      "import": "./dist/schemas/resetTestData.js"
     }
   },
   "dependencies": {

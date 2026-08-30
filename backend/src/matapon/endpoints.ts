@@ -13,6 +13,7 @@ import { createStaffAreaSchema } from "@matapon/shared/schemas/staffAreas";
 import { createStaffMemberAreaSchema } from "@matapon/shared/schemas/staffMemberAreas";
 import { createStaffActivitySchema } from "@matapon/shared/schemas/staffActivities";
 import { createEventActivityStaffSchema } from "@matapon/shared/schemas/eventActivityStaff";
+import { resetTestDataSchema } from "@matapon/shared/schemas/resetTestData";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 type InputLocation = "path" | "query" | "body";
@@ -254,6 +255,16 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Books a capable staff member to a scheduled activity.",
     auth: true,
     bodySchema: createEventActivityStaffSchema,
+  },
+
+  resetTestData: {
+    id: "reset-test-data",
+    name: "Reset Test Data — Keep Admin",
+    method: "POST",
+    path: "/api/dev/reset-test-data",
+    notes: "Deletes all development data except the admin account. Disabled in production.",
+    auth: true,
+    bodySchema: resetTestDataSchema,
   },
 };
 

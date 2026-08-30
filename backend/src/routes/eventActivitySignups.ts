@@ -1,6 +1,9 @@
 import { Router } from "express";
 
-import { createEventActivitySignupSchema } from "@matapon/shared/schemas/eventActivitySignups";
+import {
+  createEventActivitySignupSchema,
+  eventActivitySignupIdParamsSchema,
+} from "@matapon/shared/schemas/eventActivitySignups";
 
 import { query } from "../db/db.js";
 import {
@@ -32,11 +35,9 @@ eventActivitySignupsRouter.get(
   "/",
   requireAuth,
   requirePasswordChanged,
-  requireRole("member", "admin"),
+  requireRole("member", "staff", "admin"),
   async (req, res) => {
     try {
-      const isAdmin = req.auth!.user_type === "admin";
-
       const result = await query<EventActivitySignupRow>(
         `
           SELECT
@@ -67,13 +68,8 @@ eventActivitySignupsRouter.get(
             ON um.id = ma.member_id
           JOIN users u
             ON u.id = um.user_id
-          WHERE ($1::boolean = true OR um.user_id = $2)
           ORDER BY ea.starts_at, um.full_name, eas.id
-        `,
-        [
-          isAdmin,
-          req.auth!.sub,
-        ]
+        `
       );
 
       res.json({
@@ -84,6 +80,292 @@ eventActivitySignupsRouter.get(
 
       res.status(500).json({
         error: "Could not load activity signups",
+      });
+    }
+  }
+);
+
+eventActivitySignupsRouter.delete(
+  "/:id",
+  requireAuth,
+  requirePasswordChanged,
+  requireRole("member", "admin"),
+  async (req, res) => {
+    const parsed = eventActivitySignupIdParamsSchema.safeParse(req.params);
+
+    if (!parsed.success) {
+      res.status(400).json({
+        error: "Invalid activity signup id",
+      });
+      return;
+    }
+
+    try {
+      const existingResult = await query<{
+        id: string;
+        user_id: string;
+        checked_in_at: string | null;
+      }>(
+        `
+          SELECT
+            eas.id,
+            um.user_id,
+            eas.checked_in_at
+          FROM event_activity_signups eas
+          JOIN member_attendees ma
+            ON ma.id = eas.member_attendee_id
+          JOIN user_members um
+            ON um.id = ma.member_id
+          WHERE eas.id = $1
+          LIMIT 1
+        `,
+        [parsed.data.id]
+      );
+
+      const existing = existingResult.rows[0];
+
+      if (!existing) {
+        res.status(404).json({
+          error: "Activity signup does not exist",
+        });
+        return;
+      }
+
+      if (
+        req.auth!.user_type === "member" &&
+        String(existing.user_id) !== String(req.auth!.sub)
+      ) {
+        res.status(403).json({
+          error: "Cannot remove another household's signup",
+        });
+        return;
+      }
+
+      if (existing.checked_in_at) {
+        res.status(409).json({
+          error: "Cannot remove a checked-in participant. Undo check-in first.",
+        });
+        return;
+      }
+
+      const deleted = await query<{ id: string }>(
+        `
+          DELETE FROM event_activity_signups
+          WHERE id = $1
+            AND checked_in_at IS NULL
+          RETURNING id
+        `,
+        [parsed.data.id]
+      );
+
+      if (!deleted.rows[0]) {
+        res.status(409).json({
+          error: "Signup changed before it could be removed",
+        });
+        return;
+      }
+
+      res.json({
+        ok: true,
+        removed_signup_id: deleted.rows[0].id,
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        error: "Could not remove activity signup",
+      });
+    }
+  }
+);
+
+eventActivitySignupsRouter.patch(
+  "/:id/check-in",
+  requireAuth,
+  requirePasswordChanged,
+  requireRole("staff", "admin"),
+  async (req, res) => {
+    const parsed = eventActivitySignupIdParamsSchema.safeParse(req.params);
+
+    if (!parsed.success) {
+      res.status(400).json({
+        error: "Invalid activity signup id",
+      });
+      return;
+    }
+
+    try {
+      const result = await query<EventActivitySignupRow>(
+        `
+          WITH updated AS (
+            UPDATE event_activity_signups
+            SET
+              checked_in_at = CURRENT_TIMESTAMP::text,
+              updated_at = CURRENT_TIMESTAMP::text
+            WHERE id = $1
+              AND checked_in_at IS NULL
+            RETURNING *
+          )
+          SELECT
+            u2.id,
+            u2.event_activity_id,
+            ea.event_id,
+            e.name AS event_name,
+            ea.activity_id,
+            a.name AS activity_name,
+            u2.member_attendee_id,
+            ma.member_id,
+            um.full_name AS member_name,
+            um.user_id,
+            u.username AS household_name,
+            u2.checked_in_at,
+            u2.created_at,
+            u2.updated_at
+          FROM updated u2
+          JOIN event_activities ea
+            ON ea.id = u2.event_activity_id
+          JOIN events e
+            ON e.id = ea.event_id
+          JOIN activities a
+            ON a.id = ea.activity_id
+          JOIN member_attendees ma
+            ON ma.id = u2.member_attendee_id
+          JOIN user_members um
+            ON um.id = ma.member_id
+          JOIN users u
+            ON u.id = um.user_id
+        `,
+        [parsed.data.id]
+      );
+
+      if (result.rows[0]) {
+        res.json({
+          event_activity_signup: result.rows[0],
+        });
+        return;
+      }
+
+      const existing = await query<{ checked_in_at: string | null }>(
+        `
+          SELECT checked_in_at
+          FROM event_activity_signups
+          WHERE id = $1
+          LIMIT 1
+        `,
+        [parsed.data.id]
+      );
+
+      if (!existing.rows[0]) {
+        res.status(404).json({
+          error: "Activity signup does not exist",
+        });
+        return;
+      }
+
+      res.status(409).json({
+        error: "Participant is already checked in",
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        error: "Could not check participant in",
+      });
+    }
+  }
+);
+
+eventActivitySignupsRouter.patch(
+  "/:id/undo-check-in",
+  requireAuth,
+  requirePasswordChanged,
+  requireRole("staff", "admin"),
+  async (req, res) => {
+    const parsed = eventActivitySignupIdParamsSchema.safeParse(req.params);
+
+    if (!parsed.success) {
+      res.status(400).json({
+        error: "Invalid activity signup id",
+      });
+      return;
+    }
+
+    try {
+      const result = await query<EventActivitySignupRow>(
+        `
+          WITH updated AS (
+            UPDATE event_activity_signups
+            SET
+              checked_in_at = NULL,
+              updated_at = CURRENT_TIMESTAMP::text
+            WHERE id = $1
+              AND checked_in_at IS NOT NULL
+            RETURNING *
+          )
+          SELECT
+            u2.id,
+            u2.event_activity_id,
+            ea.event_id,
+            e.name AS event_name,
+            ea.activity_id,
+            a.name AS activity_name,
+            u2.member_attendee_id,
+            ma.member_id,
+            um.full_name AS member_name,
+            um.user_id,
+            u.username AS household_name,
+            u2.checked_in_at,
+            u2.created_at,
+            u2.updated_at
+          FROM updated u2
+          JOIN event_activities ea
+            ON ea.id = u2.event_activity_id
+          JOIN events e
+            ON e.id = ea.event_id
+          JOIN activities a
+            ON a.id = ea.activity_id
+          JOIN member_attendees ma
+            ON ma.id = u2.member_attendee_id
+          JOIN user_members um
+            ON um.id = ma.member_id
+          JOIN users u
+            ON u.id = um.user_id
+        `,
+        [parsed.data.id]
+      );
+
+      if (result.rows[0]) {
+        res.json({
+          event_activity_signup: result.rows[0],
+        });
+        return;
+      }
+
+      const existing = await query<{ checked_in_at: string | null }>(
+        `
+          SELECT checked_in_at
+          FROM event_activity_signups
+          WHERE id = $1
+          LIMIT 1
+        `,
+        [parsed.data.id]
+      );
+
+      if (!existing.rows[0]) {
+        res.status(404).json({
+          error: "Activity signup does not exist",
+        });
+        return;
+      }
+
+      res.status(409).json({
+        error: "Participant is not checked in",
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        error: "Could not undo participant check-in",
       });
     }
   }

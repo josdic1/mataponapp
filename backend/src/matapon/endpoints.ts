@@ -16,7 +16,10 @@ import { createEventActivityStaffSchema } from "@matapon/shared/schemas/eventAct
 import { resetTestDataSchema } from "@matapon/shared/schemas/resetTestData";
 import { createUserSchema, createUserMemberSchema } from "@matapon/shared/schemas/users";
 import { createMemberAttendeeSchema } from "@matapon/shared/schemas/memberAttendees";
-import { createEventActivitySignupSchema } from "@matapon/shared/schemas/eventActivitySignups";
+import {
+  createEventActivitySignupSchema,
+  eventActivitySignupIdParamsSchema,
+} from "@matapon/shared/schemas/eventActivitySignups";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 type InputLocation = "path" | "query" | "body";
@@ -344,6 +347,36 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Signs an event attendee up for a scheduled activity in the same event.",
     auth: true,
     bodySchema: createEventActivitySignupSchema,
+  },
+
+  eventActivitySignupsDelete: {
+    id: "event-activity-signups-delete",
+    name: "Remove Activity Signup",
+    method: "DELETE",
+    path: "/api/event-activity-signups/:id",
+    notes: "Removes an unchecked signup. Members may remove only their own household signups.",
+    auth: true,
+    paramsSchema: eventActivitySignupIdParamsSchema,
+  },
+
+  eventActivitySignupsCheckIn: {
+    id: "event-activity-signups-check-in",
+    name: "Confirm Activity Participant",
+    method: "PATCH",
+    path: "/api/event-activity-signups/:id/check-in",
+    notes: "Staff or admin confirms that a signed-up member actually participated.",
+    auth: true,
+    paramsSchema: eventActivitySignupIdParamsSchema,
+  },
+
+  eventActivitySignupsUndoCheckIn: {
+    id: "event-activity-signups-undo-check-in",
+    name: "Undo Activity Check-In",
+    method: "PATCH",
+    path: "/api/event-activity-signups/:id/undo-check-in",
+    notes: "Staff or admin reverses an accidental activity check-in.",
+    auth: true,
+    paramsSchema: eventActivitySignupIdParamsSchema,
   },
 };
 

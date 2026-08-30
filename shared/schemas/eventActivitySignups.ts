@@ -5,5 +5,9 @@ export const createEventActivitySignupSchema = z.object({
   member_attendee_id: z.number().int().positive(),
 });
 
+export const eventActivitySignupIdParamsSchema = z.object({
+  id: z.coerce.number().int().positive(),
+});
+
 export type CreateEventActivitySignupInput =
   z.infer<typeof createEventActivitySignupSchema>;

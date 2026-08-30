@@ -8,6 +8,7 @@ import { createEventTypeSchema } from "@matapon/shared/schemas/eventTypes";
 import { createEventSchema } from "@matapon/shared/schemas/events";
 import { createActivitySchema } from "@matapon/shared/schemas/activities";
 import { createEventActivitySchema } from "@matapon/shared/schemas/eventActivities";
+import { createStaffMemberSchema } from "@matapon/shared/schemas/staffMembers";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 type InputLocation = "path" | "query" | "body";
@@ -154,6 +155,25 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Schedules an activity inside an event.",
     auth: true,
     bodySchema: createEventActivitySchema,
+  },
+
+  staffMembersList: {
+    id: "staff-members-list",
+    name: "Staff Members",
+    method: "GET",
+    path: "/api/staff-members",
+    notes: "Lists staff members.",
+    auth: true,
+  },
+
+  staffMembersCreate: {
+    id: "staff-members-create",
+    name: "Create Staff Member",
+    method: "POST",
+    path: "/api/staff-members",
+    notes: "Creates a staff profile for a staff account.",
+    auth: true,
+    bodySchema: createStaffMemberSchema,
   },
 };
 

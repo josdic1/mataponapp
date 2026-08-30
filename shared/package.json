@@ -27,6 +27,10 @@
     "./schemas/eventActivities": {
       "types": "./dist/schemas/eventActivities.d.ts",
       "import": "./dist/schemas/eventActivities.js"
+    },
+    "./schemas/staffMembers": {
+      "types": "./dist/schemas/staffMembers.d.ts",
+      "import": "./dist/schemas/staffMembers.js"
     }
   },
   "dependencies": {

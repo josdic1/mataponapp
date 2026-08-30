@@ -55,10 +55,6 @@
     "./schemas/userMembers": {
       "types": "./dist/schemas/userMembers.d.ts",
       "import": "./dist/schemas/userMembers.js"
-    },
-    "./schemas/adminUsers": {
-      "types": "./dist/schemas/adminUsers.d.ts",
-      "import": "./dist/schemas/adminUsers.js"
     }
   },
   "dependencies": {

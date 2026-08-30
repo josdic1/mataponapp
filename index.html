@@ -708,6 +708,60 @@
         flex-direction: column;
         gap: 10px;
       }
+      .curl-results-layout {
+        display: grid;
+        grid-template-columns: 76px minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+      }
+      .curl-jump-rail {
+        position: sticky;
+        top: 78px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        z-index: 5;
+      }
+      .curl-jump-btn {
+        width: 100%;
+        border: 2px solid var(--line);
+        background: var(--panel);
+        padding: 8px 4px;
+        font-size: 10px;
+        font-weight: 1000;
+        letter-spacing: .04em;
+        cursor: pointer;
+      }
+      .curl-jump-btn.active {
+        background: var(--accent);
+      }
+      .curl-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        scroll-margin-top: 90px;
+      }
+      .curl-group + .curl-group {
+        margin-top: 22px;
+      }
+      .curl-group-header {
+        border-bottom: 3px solid var(--line);
+        padding: 5px 2px;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+      }
+      .curl-group-title {
+        font-size: 17px;
+        font-weight: 1000;
+        letter-spacing: .05em;
+      }
+      .curl-group-count {
+        font-size: 10px;
+        font-weight: 900;
+        opacity: .6;
+      }
       .simple-endpoint {
         background: var(--panel);
         border: 2px solid var(--line);
@@ -868,6 +922,21 @@
       @media (max-width: 850px) {
         .curl-topbar {
           grid-template-columns: 1fr;
+        }
+        .curl-results-layout {
+          grid-template-columns: 1fr;
+        }
+        .curl-jump-rail {
+          top: 0;
+          flex-direction: row;
+          overflow-x: auto;
+          background: var(--bg);
+          padding: 6px 0;
+        }
+        .curl-jump-btn {
+          width: auto;
+          flex: 0 0 auto;
+          min-width: 64px;
         }
         .simple-endpoint-main {
           grid-template-columns: 1fr;
@@ -1121,7 +1190,10 @@
           </div>
 
           <div id="curlSyncStatus" class="curl-sync-status"></div>
-          <div id="endpointCards" class="endpoint-cards"></div>
+          <div class="curl-results-layout">
+            <nav id="curlJumpRail" class="curl-jump-rail" aria-label="CURL sections"></nav>
+            <div id="endpointCards" class="endpoint-cards"></div>
+          </div>
         </div>
       </section>
     </div>
@@ -2049,23 +2121,205 @@ ${state.tables
           return false;
         }
       }
+      const CURL_GROUPS = [
+        { key: "system", label: "SYSTEM", short: "SYS" },
+        { key: "auth", label: "AUTH", short: "AUTH" },
+        { key: "users", label: "USERS + HOUSEHOLDS", short: "USERS" },
+        { key: "events", label: "EVENTS", short: "EVENTS" },
+        { key: "staff", label: "STAFF", short: "STAFF" },
+        { key: "attendance", label: "ATTENDANCE", short: "ATTEND" },
+        { key: "admin", label: "ADMIN / DEV", short: "ADMIN" },
+        { key: "manual", label: "MANUAL", short: "MANUAL" },
+        { key: "other", label: "OTHER", short: "OTHER" },
+      ];
+
+      const CURL_RESOURCE_ORDER = [
+        "/health",
+        "/db-check",
+        "/api/auth",
+        "/api/users",
+        "/api/user-members",
+        "/api/event-types",
+        "/api/events",
+        "/api/activities",
+        "/api/event-activities",
+        "/api/staff-members",
+        "/api/staff-areas",
+        "/api/staff-member-areas",
+        "/api/staff-activities",
+        "/api/event-activity-staff",
+        "/api/member-attendees",
+        "/api/event-activity-signups",
+        "/api/audit",
+        "/api/dev",
+      ];
+
+      function curlGroupKey(ep) {
+        const path = String(ep.path || "");
+
+        if (ep.source === "manual") return "manual";
+        if (path === "/health" || path === "/db-check") return "system";
+        if (path.startsWith("/api/auth")) return "auth";
+        if (
+          path.startsWith("/api/users") ||
+          path.startsWith("/api/user-members")
+        ) return "users";
+        if (
+          path.startsWith("/api/staff") ||
+          path.startsWith("/api/event-activity-staff")
+        ) return "staff";
+        if (
+          path.startsWith("/api/member-attendees") ||
+          path.startsWith("/api/event-activity-signups")
+        ) return "attendance";
+        if (
+          path.startsWith("/api/dev") ||
+          path.startsWith("/api/audit")
+        ) return "admin";
+        if (
+          path.startsWith("/api/event-types") ||
+          path.startsWith("/api/events") ||
+          path.startsWith("/api/activities") ||
+          path.startsWith("/api/event-activities")
+        ) return "events";
+
+        return "other";
+      }
+
+      function curlResourceRank(ep) {
+        const path = String(ep.path || "");
+        const rank = CURL_RESOURCE_ORDER.findIndex(
+          (base) => path === base || path.startsWith(base + "/"),
+        );
+        return rank === -1 ? 999 : rank;
+      }
+
+      function curlActionRank(ep) {
+        const method = String(ep.method || "GET").toUpperCase();
+        const hasId =
+          String(ep.path || "").includes(":id") ||
+          String(ep.path || "").includes("{id}");
+
+        if (method === "GET" && !hasId) return 0;
+        if (method === "GET" && hasId) return 1;
+        if (method === "POST") return 2;
+        if (method === "PATCH" || method === "PUT") return 3;
+        if (method === "DELETE") return 4;
+
+        return 9;
+      }
+
+      function curlEndpointSort(a, b) {
+        const ga = CURL_GROUPS.findIndex((g) => g.key === curlGroupKey(a));
+        const gb = CURL_GROUPS.findIndex((g) => g.key === curlGroupKey(b));
+
+        return (
+          ga - gb ||
+          curlResourceRank(a) - curlResourceRank(b) ||
+          curlActionRank(a) - curlActionRank(b) ||
+          String(a.name).localeCompare(String(b.name))
+        );
+      }
+
+      let curlJumpObserver = null;
+
+      function setupCurlJumpRail(groups) {
+        const rail = document.getElementById("curlJumpRail");
+        if (!rail) return;
+
+        rail.innerHTML = groups
+          .map(
+            (group, index) =>
+              `<button class="curl-jump-btn${index === 0 ? " active" : ""}" data-curl-jump="${esc(group.key)}">${esc(group.short)}</button>`,
+          )
+          .join("");
+
+        rail.querySelectorAll("[data-curl-jump]").forEach((button) => {
+          button.addEventListener("click", () => {
+            document
+              .getElementById(`curl-group-${button.dataset.curlJump}`)
+              ?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
+          });
+        });
+
+        if (curlJumpObserver) curlJumpObserver.disconnect();
+
+        curlJumpObserver = new IntersectionObserver(
+          (entries) => {
+            const visible = entries
+              .filter((entry) => entry.isIntersecting)
+              .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+
+            if (!visible.length) return;
+
+            const key = visible[0].target.dataset.curlGroup;
+
+            rail.querySelectorAll("[data-curl-jump]").forEach((button) => {
+              button.classList.toggle(
+                "active",
+                button.dataset.curlJump === key,
+              );
+            });
+          },
+          {
+            rootMargin: "-80px 0px -65% 0px",
+            threshold: [0, 0.01],
+          },
+        );
+
+        groups.forEach((group) => {
+          const section = document.getElementById(`curl-group-${group.key}`);
+          if (section) curlJumpObserver.observe(section);
+        });
+      }
+
       function renderEndpointCards() {
         const root = document.getElementById("endpointCards");
         if (!root) return;
-        const endpoints = allEndpoints();
+        const endpoints = [...allEndpoints()].sort(curlEndpointSort);
+
         if (!endpoints.length) {
           root.innerHTML =
             '<div class="endpoint-empty">NO ENDPOINTS YET — SYNC BACKEND</div>';
+          const rail = document.getElementById("curlJumpRail");
+          if (rail) rail.innerHTML = "";
           return;
         }
-        root.innerHTML = endpoints
-          .map((ep) => {
-            const visible = ep.inputs.filter((x) =>
-              ["path", "query", "body"].includes(x.location),
-            );
-            const needs = visible.length;
-            const requiredCount = missingRequired(ep).length;
-            return `<section class="simple-endpoint" data-card-id="${esc(ep.id)}">
+
+        const groups = CURL_GROUPS
+          .map((group) => ({
+            ...group,
+            endpoints: endpoints.filter(
+              (ep) => curlGroupKey(ep) === group.key,
+            ),
+          }))
+          .filter((group) => group.endpoints.length);
+
+        root.innerHTML = groups
+          .map(
+            (group) => `
+              <section
+                class="curl-group"
+                id="curl-group-${esc(group.key)}"
+                data-curl-group="${esc(group.key)}"
+              >
+                <div class="curl-group-header">
+                  <div class="curl-group-title">${esc(group.label)}</div>
+                  <div class="curl-group-count">${group.endpoints.length} ENDPOINT${group.endpoints.length === 1 ? "" : "S"}</div>
+                </div>
+
+                ${group.endpoints
+                  .map((ep) => {
+                    const visible = ep.inputs.filter((x) =>
+                      ["path", "query", "body"].includes(x.location),
+                    );
+                    const needs = visible.length;
+                    const requiredCount = missingRequired(ep).length;
+
+                    return `<section class="simple-endpoint" data-card-id="${esc(ep.id)}">
       <div class="simple-endpoint-main"><div>
         <div class="simple-endpoint-name">${esc(ep.name)}</div>
         <div class="simple-endpoint-route"><span class="method">${esc(ep.method)}</span><span class="route-path">${esc(ep.path)}</span><span class="source-badge">${ep.source === "backend" ? "AUTO" : "MANUAL"}</span>${ep.auth ? '<span class="badge">LOGIN REQUIRED</span>' : ""}${requiredCount ? `<span class="badge warning">${requiredCount} TO ENTER</span>` : ""}</div>
@@ -2076,8 +2330,15 @@ ${state.tables
       <div class="endpoint-response" data-response="${esc(ep.id)}"><div data-response-meta="${esc(ep.id)}"></div><pre data-response-body="${esc(ep.id)}"></pre></div>
       <details class="advanced-box"><summary>Advanced / endpoint contract</summary><div class="advanced-inner"><div class="small">Source: ${esc(ep.source)} · Auth: ${ep.auth ? "yes" : "no"} · Inputs are derived from backend endpoint contracts/Zod schemas.</div></div></details>
     </section>`;
-          })
+                  })
+                  .join("")}
+              </section>
+            `,
+          )
           .join("");
+
+        setupCurlJumpRail(groups);
+
         root.querySelectorAll("[data-ep-input]").forEach((el) => {
           const evt = el.tagName === "SELECT" ? "change" : "input";
           el.addEventListener(evt, () => {

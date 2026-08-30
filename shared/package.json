@@ -35,6 +35,10 @@
     "./schemas/staffAreas": {
       "types": "./dist/schemas/staffAreas.d.ts",
       "import": "./dist/schemas/staffAreas.js"
+    },
+    "./schemas/staffMemberAreas": {
+      "types": "./dist/schemas/staffMemberAreas.d.ts",
+      "import": "./dist/schemas/staffMemberAreas.js"
     }
   },
   "dependencies": {

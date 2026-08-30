@@ -10,6 +10,7 @@ import { createActivitySchema } from "@matapon/shared/schemas/activities";
 import { createEventActivitySchema } from "@matapon/shared/schemas/eventActivities";
 import { createStaffMemberSchema } from "@matapon/shared/schemas/staffMembers";
 import { createStaffAreaSchema } from "@matapon/shared/schemas/staffAreas";
+import { createStaffMemberAreaSchema } from "@matapon/shared/schemas/staffMemberAreas";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 type InputLocation = "path" | "query" | "body";
@@ -194,6 +195,25 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Creates a staff area.",
     auth: true,
     bodySchema: createStaffAreaSchema,
+  },
+
+  staffMemberAreasList: {
+    id: "staff-member-areas-list",
+    name: "Staff Member Areas",
+    method: "GET",
+    path: "/api/staff-member-areas",
+    notes: "Lists staff-to-area assignments.",
+    auth: true,
+  },
+
+  staffMemberAreasCreate: {
+    id: "staff-member-areas-create",
+    name: "Assign Staff Area",
+    method: "POST",
+    path: "/api/staff-member-areas",
+    notes: "Assigns a staff member to a staff area.",
+    auth: true,
+    bodySchema: createStaffMemberAreaSchema,
   },
 };
 

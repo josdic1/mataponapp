@@ -80,6 +80,11 @@ eventsRouter.post(
     try {
       await client.query("BEGIN");
 
+      await client.query(
+        `SELECT set_config('matapon.actor_user_id', $1, true)`,
+        [req.auth!.sub]
+      );
+
       const typeResult = await client.query<{
         id: string;
         name: string;

@@ -7,6 +7,7 @@ import type {
 import type { UserType } from "@matapon/shared/schemas/users";
 
 import { query } from "../db/db.js";
+import { runWithAuditActor } from "../db/auditContext.js";
 import {
   SESSION_COOKIE_NAME,
   verifyAccessToken,
@@ -37,7 +38,11 @@ export function requireAuth(
 
   try {
     req.auth = verifyAccessToken(token);
-    next();
+
+    runWithAuditActor(
+      req.auth.sub,
+      next
+    );
   } catch {
     res.status(401).json({
       error: "Invalid or expired session",

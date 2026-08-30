@@ -19,7 +19,11 @@ import {
   updateActivitySchema,
   activityIdParamsSchema,
 } from "@matapon/shared/schemas/activities";
-import { createEventActivitySchema } from "@matapon/shared/schemas/eventActivities";
+import {
+  createEventActivitySchema,
+  updateEventActivitySchema,
+  eventActivityIdParamsSchema,
+} from "@matapon/shared/schemas/eventActivities";
 import { createStaffMemberSchema } from "@matapon/shared/schemas/staffMembers";
 import { createStaffAreaSchema } from "@matapon/shared/schemas/staffAreas";
 import { createStaffMemberAreaSchema } from "@matapon/shared/schemas/staffMemberAreas";
@@ -271,6 +275,37 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Schedules an activity inside an event.",
     auth: true,
     bodySchema: createEventActivitySchema,
+  },
+
+  eventActivitiesGetOne: {
+    id: "event-activities-get-one",
+    name: "Get Scheduled Activity",
+    method: "GET",
+    path: "/api/event-activities/:id",
+    notes: "Gets one scheduled activity.",
+    auth: true,
+    paramsSchema: eventActivityIdParamsSchema,
+  },
+
+  eventActivitiesUpdate: {
+    id: "event-activities-update",
+    name: "Update Scheduled Activity",
+    method: "PATCH",
+    path: "/api/event-activities/:id",
+    notes: "Updates a scheduled activity without breaking existing participation or staff assignments.",
+    auth: true,
+    paramsSchema: eventActivityIdParamsSchema,
+    bodySchema: updateEventActivitySchema,
+  },
+
+  eventActivitiesDelete: {
+    id: "event-activities-delete",
+    name: "Delete Scheduled Activity",
+    method: "DELETE",
+    path: "/api/event-activities/:id",
+    notes: "Deletes a scheduled activity only when it has no assigned staff or member signups.",
+    auth: true,
+    paramsSchema: eventActivityIdParamsSchema,
   },
 
   staffMembersList: {

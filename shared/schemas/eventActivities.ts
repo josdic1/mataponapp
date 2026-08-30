@@ -7,5 +7,20 @@ export const createEventActivitySchema = z.object({
   ends_at: z.string().trim().min(1),
 });
 
+export const updateEventActivitySchema =
+  createEventActivitySchema
+    .partial()
+    .refine(
+      (value) => Object.keys(value).length > 0,
+      "At least one field is required"
+    );
+
+export const eventActivityIdParamsSchema = z.object({
+  id: z.coerce.number().int().positive(),
+});
+
 export type CreateEventActivityInput =
   z.infer<typeof createEventActivitySchema>;
+
+export type UpdateEventActivityInput =
+  z.infer<typeof updateEventActivitySchema>;

@@ -3,11 +3,10 @@ import "dotenv/config";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 
-import type { UserType } from "@matapon/shared/schemas/users";
+import { createUserSchema } from "@matapon/shared/schemas/users";
 
 import { pool } from "../db/pool.js";
-import { query } from "../db/db.js";
-import { hashPassword } from "../services/auth.js";
+import { createUserAccount } from "../services/users.js";
 
 const rl = createInterface({
   input,
@@ -16,59 +15,30 @@ const rl = createInterface({
 
 try {
   const username = (await rl.question("Username: ")).trim();
-  const temporaryPassword = await rl.question("Temporary password: ");
-  const userTypeInput = (
+  const password = await rl.question("Temporary password: ");
+  const userType = (
     await rl.question("User type [member/staff/admin]: ")
   )
     .trim()
     .toLowerCase();
 
-  if (!username) {
-    throw new Error("Username is required");
+  const parsed = createUserSchema.safeParse({
+    username,
+    password,
+    user_type: userType,
+  });
+
+  if (!parsed.success) {
+    throw new Error(
+      "Username, temporary password, and valid user type are required"
+    );
   }
 
-  if (!temporaryPassword) {
-    throw new Error("Temporary password is required");
-  }
-
-  if (!["member", "staff", "admin"].includes(userTypeInput)) {
-    throw new Error("User type must be member, staff, or admin");
-  }
-
-  const userType = userTypeInput as UserType;
-  const passwordHash = await hashPassword(temporaryPassword);
-
-  const result = await query<{
-    id: string;
-    username: string;
-    user_type: UserType;
-    must_change_password: boolean;
-  }>(
-    `
-      INSERT INTO users (
-        username,
-        password_hash,
-        user_type,
-        must_change_password
-      )
-      VALUES ($1, $2, $3, TRUE)
-
-      RETURNING
-        id,
-        username,
-        user_type,
-        must_change_password
-    `,
-    [
-      username,
-      passwordHash,
-      userType,
-    ]
-  );
+  const user = await createUserAccount(parsed.data);
 
   console.log("");
   console.log("USER CREATED");
-  console.log(result.rows[0]);
+  console.log(user);
 } finally {
   rl.close();
   await pool.end();

@@ -14,7 +14,7 @@ import { createStaffMemberAreaSchema } from "@matapon/shared/schemas/staffMember
 import { createStaffActivitySchema } from "@matapon/shared/schemas/staffActivities";
 import { createEventActivityStaffSchema } from "@matapon/shared/schemas/eventActivityStaff";
 import { resetTestDataSchema } from "@matapon/shared/schemas/resetTestData";
-import { createUserMemberSchema } from "@matapon/shared/schemas/userMembers";
+import { createUserSchema, createUserMemberSchema } from "@matapon/shared/schemas/users";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 type InputLocation = "path" | "query" | "body";
@@ -266,6 +266,25 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Deletes all development data except the admin account. Disabled in production.",
     auth: true,
     bodySchema: resetTestDataSchema,
+  },
+
+  usersList: {
+    id: "users-list",
+    name: "Users",
+    method: "GET",
+    path: "/api/users",
+    notes: "Lists login accounts. Password hashes are never returned.",
+    auth: true,
+  },
+
+  usersCreate: {
+    id: "users-create",
+    name: "Create User",
+    method: "POST",
+    path: "/api/users",
+    notes: "Creates a user with a temporary password. Password change is required on first login.",
+    auth: true,
+    bodySchema: createUserSchema,
   },
 
   userMembersList: {

@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { createUserMemberSchema } from "@matapon/shared/schemas/userMembers";
+import { createUserMemberSchema } from "@matapon/shared/schemas/users";
 
 import { query } from "../db/db.js";
 import {

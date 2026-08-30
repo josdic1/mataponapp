@@ -4,7 +4,11 @@ import {
   changePasswordSchema,
   loginSchema,
 } from "@matapon/shared/schemas/auth";
-import { createEventTypeSchema } from "@matapon/shared/schemas/eventTypes";
+import {
+  createEventTypeSchema,
+  updateEventTypeSchema,
+  eventTypeIdParamsSchema,
+} from "@matapon/shared/schemas/eventTypes";
 import { createEventSchema } from "@matapon/shared/schemas/events";
 import { createActivitySchema } from "@matapon/shared/schemas/activities";
 import { createEventActivitySchema } from "@matapon/shared/schemas/eventActivities";
@@ -109,6 +113,37 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Creates an event type.",
     auth: true,
     bodySchema: createEventTypeSchema,
+  },
+
+  eventTypesGetOne: {
+    id: "event-types-get-one",
+    name: "Get Event Type",
+    method: "GET",
+    path: "/api/event-types/:id",
+    notes: "Gets one event type.",
+    auth: true,
+    paramsSchema: eventTypeIdParamsSchema,
+  },
+
+  eventTypesUpdate: {
+    id: "event-types-update",
+    name: "Update Event Type",
+    method: "PATCH",
+    path: "/api/event-types/:id",
+    notes: "Renames an event type.",
+    auth: true,
+    paramsSchema: eventTypeIdParamsSchema,
+    bodySchema: updateEventTypeSchema,
+  },
+
+  eventTypesDelete: {
+    id: "event-types-delete",
+    name: "Delete Event Type",
+    method: "DELETE",
+    path: "/api/event-types/:id",
+    notes: "Deletes an unused event type.",
+    auth: true,
+    paramsSchema: eventTypeIdParamsSchema,
   },
 
   eventsList: {

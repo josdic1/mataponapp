@@ -22,6 +22,7 @@ import { usersRouter } from "./routes/users.js";
 import { userMembersRouter } from "./routes/userMembers.js";
 import { memberAttendeesRouter } from "./routes/memberAttendees.js";
 import { eventActivitySignupsRouter } from "./routes/eventActivitySignups.js";
+import { builderDataRouter } from "./routes/builderData.js";
 
 export const app = express();
 
@@ -81,6 +82,8 @@ app.get(endpointContracts.dbCheck.path, async (_req, res) => {
     });
   }
 });
+
+app.use("/__matapon/database", builderDataRouter);
 
 app.get("/__matapon/endpoints", (_req, res) => {
   res.json({

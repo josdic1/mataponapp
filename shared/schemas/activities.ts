@@ -13,8 +13,22 @@ export const createActivitySchema = z.object({
   other_reason: z.string().trim().min(1).optional(),
 });
 
+export const updateActivitySchema = createActivitySchema
+  .partial()
+  .refine(
+    (value) => Object.keys(value).length > 0,
+    "At least one field is required"
+  );
+
+export const activityIdParamsSchema = z.object({
+  id: z.coerce.number().int().positive(),
+});
+
 export type ActivitySetting =
   z.infer<typeof activitySettingSchema>;
 
 export type CreateActivityInput =
   z.infer<typeof createActivitySchema>;
+
+export type UpdateActivityInput =
+  z.infer<typeof updateActivitySchema>;

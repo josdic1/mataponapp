@@ -19,6 +19,10 @@
     "./schemas/events": {
       "types": "./dist/schemas/events.d.ts",
       "import": "./dist/schemas/events.js"
+    },
+    "./schemas/activities": {
+      "types": "./dist/schemas/activities.d.ts",
+      "import": "./dist/schemas/activities.js"
     }
   },
   "dependencies": {

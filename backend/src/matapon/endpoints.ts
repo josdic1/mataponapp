@@ -6,6 +6,7 @@ import {
 } from "@matapon/shared/schemas/auth";
 import { createEventTypeSchema } from "@matapon/shared/schemas/eventTypes";
 import { createEventSchema } from "@matapon/shared/schemas/events";
+import { createActivitySchema } from "@matapon/shared/schemas/activities";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 type InputLocation = "path" | "query" | "body";
@@ -114,6 +115,25 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Creates an event.",
     auth: true,
     bodySchema: createEventSchema,
+  },
+
+  activitiesList: {
+    id: "activities-list",
+    name: "Activities",
+    method: "GET",
+    path: "/api/activities",
+    notes: "Lists activities.",
+    auth: true,
+  },
+
+  activitiesCreate: {
+    id: "activities-create",
+    name: "Create Activity",
+    method: "POST",
+    path: "/api/activities",
+    notes: "Creates an activity.",
+    auth: true,
+    bodySchema: createActivitySchema,
   },
 };
 

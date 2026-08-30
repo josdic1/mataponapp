@@ -10,6 +10,7 @@ import { getPublicEndpointContracts, endpointContracts } from "./matapon/endpoin
 import { authRouter } from "./routes/auth.js";
 import { eventTypesRouter } from "./routes/eventTypes.js";
 import { eventsRouter } from "./routes/events.js";
+import { activitiesRouter } from "./routes/activities.js";
 
 export const app = express();
 
@@ -86,3 +87,4 @@ app.get("/__matapon/builder", (_req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/event-types", eventTypesRouter);
 app.use("/api/events", eventsRouter);
+app.use("/api/activities", activitiesRouter);

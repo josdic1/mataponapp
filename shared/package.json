@@ -23,6 +23,10 @@
     "./schemas/activities": {
       "types": "./dist/schemas/activities.d.ts",
       "import": "./dist/schemas/activities.js"
+    },
+    "./schemas/eventActivities": {
+      "types": "./dist/schemas/eventActivities.d.ts",
+      "import": "./dist/schemas/eventActivities.js"
     }
   },
   "dependencies": {

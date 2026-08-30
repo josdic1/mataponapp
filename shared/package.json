@@ -43,6 +43,10 @@
     "./schemas/staffActivities": {
       "types": "./dist/schemas/staffActivities.d.ts",
       "import": "./dist/schemas/staffActivities.js"
+    },
+    "./schemas/eventActivityStaff": {
+      "types": "./dist/schemas/eventActivityStaff.d.ts",
+      "import": "./dist/schemas/eventActivityStaff.js"
     }
   },
   "dependencies": {

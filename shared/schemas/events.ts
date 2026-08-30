@@ -9,5 +9,19 @@ export const createEventSchema = z.object({
   other_reason: z.string().trim().min(1).optional(),
 });
 
+export const updateEventSchema = createEventSchema
+  .partial()
+  .refine(
+    (value) => Object.keys(value).length > 0,
+    "At least one field is required"
+  );
+
+export const eventIdParamsSchema = z.object({
+  id: z.coerce.number().int().positive(),
+});
+
 export type CreateEventInput =
   z.infer<typeof createEventSchema>;
+
+export type UpdateEventInput =
+  z.infer<typeof updateEventSchema>;

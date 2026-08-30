@@ -9,7 +9,11 @@ import {
   updateEventTypeSchema,
   eventTypeIdParamsSchema,
 } from "@matapon/shared/schemas/eventTypes";
-import { createEventSchema } from "@matapon/shared/schemas/events";
+import {
+  createEventSchema,
+  updateEventSchema,
+  eventIdParamsSchema,
+} from "@matapon/shared/schemas/events";
 import { createActivitySchema } from "@matapon/shared/schemas/activities";
 import { createEventActivitySchema } from "@matapon/shared/schemas/eventActivities";
 import { createStaffMemberSchema } from "@matapon/shared/schemas/staffMembers";
@@ -163,6 +167,37 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Creates an event.",
     auth: true,
     bodySchema: createEventSchema,
+  },
+
+  eventsGetOne: {
+    id: "events-get-one",
+    name: "Get Event",
+    method: "GET",
+    path: "/api/events/:id",
+    notes: "Gets one event.",
+    auth: true,
+    paramsSchema: eventIdParamsSchema,
+  },
+
+  eventsUpdate: {
+    id: "events-update",
+    name: "Update Event",
+    method: "PATCH",
+    path: "/api/events/:id",
+    notes: "Updates an event.",
+    auth: true,
+    paramsSchema: eventIdParamsSchema,
+    bodySchema: updateEventSchema,
+  },
+
+  eventsDelete: {
+    id: "events-delete",
+    name: "Delete Event",
+    method: "DELETE",
+    path: "/api/events/:id",
+    notes: "Deletes an event only when it has no scheduled activities or attendees.",
+    auth: true,
+    paramsSchema: eventIdParamsSchema,
   },
 
   activitiesList: {

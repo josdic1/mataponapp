@@ -9,6 +9,7 @@ import { pool } from "./db/pool.js";
 import { getPublicEndpointContracts, endpointContracts } from "./matapon/endpoints.js";
 import { authRouter } from "./routes/auth.js";
 import { eventTypesRouter } from "./routes/eventTypes.js";
+import { eventsRouter } from "./routes/events.js";
 
 export const app = express();
 
@@ -84,3 +85,4 @@ app.get("/__matapon/builder", (_req, res) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/event-types", eventTypesRouter);
+app.use("/api/events", eventsRouter);

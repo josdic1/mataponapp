@@ -5,6 +5,7 @@ import {
   loginSchema,
 } from "@matapon/shared/schemas/auth";
 import { createEventTypeSchema } from "@matapon/shared/schemas/eventTypes";
+import { createEventSchema } from "@matapon/shared/schemas/events";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 type InputLocation = "path" | "query" | "body";
@@ -30,6 +31,7 @@ export const endpointContracts: Record<string, EndpointContract> = {
     path: "/health",
     notes: "Basic API health check.",
   },
+
   dbCheck: {
     id: "db-check",
     name: "Database Check",
@@ -37,6 +39,7 @@ export const endpointContracts: Record<string, EndpointContract> = {
     path: "/db-check",
     notes: "Confirms PostgreSQL connectivity and returns database time.",
   },
+
   login: {
     id: "auth-login",
     name: "Login",
@@ -46,6 +49,7 @@ export const endpointContracts: Record<string, EndpointContract> = {
     bodySchema: loginSchema,
     setsSession: true,
   },
+
   me: {
     id: "auth-me",
     name: "Who Am I",
@@ -54,6 +58,7 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Returns the currently signed-in user.",
     auth: true,
   },
+
   changePassword: {
     id: "auth-change-password",
     name: "Change Password",
@@ -63,6 +68,7 @@ export const endpointContracts: Record<string, EndpointContract> = {
     auth: true,
     bodySchema: changePasswordSchema,
   },
+
   logout: {
     id: "auth-logout",
     name: "Logout",
@@ -71,6 +77,7 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Clears the secure session cookie.",
     auth: true,
   },
+
   eventTypesList: {
     id: "event-types-list",
     name: "Event Types",
@@ -79,6 +86,7 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Lists event types.",
     auth: true,
   },
+
   eventTypesCreate: {
     id: "event-types-create",
     name: "Create Event Type",
@@ -87,6 +95,25 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Creates an event type.",
     auth: true,
     bodySchema: createEventTypeSchema,
+  },
+
+  eventsList: {
+    id: "events-list",
+    name: "Events",
+    method: "GET",
+    path: "/api/events",
+    notes: "Lists events.",
+    auth: true,
+  },
+
+  eventsCreate: {
+    id: "events-create",
+    name: "Create Event",
+    method: "POST",
+    path: "/api/events",
+    notes: "Creates an event.",
+    auth: true,
+    bodySchema: createEventSchema,
   },
 };
 

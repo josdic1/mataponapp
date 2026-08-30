@@ -51,6 +51,10 @@
     "./schemas/resetTestData": {
       "types": "./dist/schemas/resetTestData.d.ts",
       "import": "./dist/schemas/resetTestData.js"
+    },
+    "./schemas/userMembers": {
+      "types": "./dist/schemas/userMembers.d.ts",
+      "import": "./dist/schemas/userMembers.js"
     }
   },
   "dependencies": {

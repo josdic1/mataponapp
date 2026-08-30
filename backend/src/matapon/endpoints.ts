@@ -14,6 +14,7 @@ import { createStaffMemberAreaSchema } from "@matapon/shared/schemas/staffMember
 import { createStaffActivitySchema } from "@matapon/shared/schemas/staffActivities";
 import { createEventActivityStaffSchema } from "@matapon/shared/schemas/eventActivityStaff";
 import { resetTestDataSchema } from "@matapon/shared/schemas/resetTestData";
+import { createUserMemberSchema } from "@matapon/shared/schemas/userMembers";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 type InputLocation = "path" | "query" | "body";
@@ -265,6 +266,25 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Deletes all development data except the admin account. Disabled in production.",
     auth: true,
     bodySchema: resetTestDataSchema,
+  },
+
+  userMembersList: {
+    id: "user-members-list",
+    name: "User Members",
+    method: "GET",
+    path: "/api/user-members",
+    notes: "Lists household members. Member accounts see only their own household; admins see all.",
+    auth: true,
+  },
+
+  userMembersCreate: {
+    id: "user-members-create",
+    name: "Create User Member",
+    method: "POST",
+    path: "/api/user-members",
+    notes: "Adds a person to a member household account.",
+    auth: true,
+    bodySchema: createUserMemberSchema,
   },
 };
 

@@ -224,6 +224,80 @@ eventActivitySignupsRouter.post(
         event_activity_signup: result.rows[0],
       });
     } catch (error) {
+      const dbError = error as Error & {
+        code?: string;
+        constraint?: string;
+        detail?: string;
+      };
+
+      if (
+        dbError.code === "23505" &&
+        dbError.constraint ===
+          "event_activity_signups_event_activity_member_attendee_unique"
+      ) {
+        res.status(409).json({
+          error: "Already signed up for this activity",
+        });
+        return;
+      }
+
+      if (
+        dbError.code === "P0001" &&
+        dbError.message === "ACTIVITY_SIGNUP_DUPLICATE"
+      ) {
+        let activityName: string | undefined;
+
+        try {
+          activityName = JSON.parse(
+            dbError.detail ?? "{}"
+          ).activity_name;
+        } catch {}
+
+        res.status(409).json({
+          error: activityName
+            ? `Already signed up for ${activityName}`
+            : "Already signed up for this activity",
+        });
+        return;
+      }
+
+      if (
+        dbError.code === "P0001" &&
+        dbError.message === "ACTIVITY_TIME_CONFLICT"
+      ) {
+        let conflict: {
+          activity_name?: string;
+          starts_at?: string;
+          ends_at?: string;
+        } = {};
+
+        try {
+          conflict = JSON.parse(dbError.detail ?? "{}");
+        } catch {}
+
+        res.status(409).json({
+          error: conflict.activity_name
+            ? `Activity conflicts with ${conflict.activity_name}`
+            : "Activity conflicts with another signup",
+          conflict: {
+            activity_name: conflict.activity_name ?? null,
+            starts_at: conflict.starts_at ?? null,
+            ends_at: conflict.ends_at ?? null,
+          },
+        });
+        return;
+      }
+
+      if (
+        dbError.code === "P0001" &&
+        dbError.message === "ACTIVITY_SIGNUP_EVENT_MISMATCH"
+      ) {
+        res.status(409).json({
+          error: "Member is not attending the event for this activity",
+        });
+        return;
+      }
+
       console.error(error);
 
       res.status(500).json({

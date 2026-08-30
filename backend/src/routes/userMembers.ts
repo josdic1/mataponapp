@@ -168,7 +168,43 @@ userMembersRouter.post(
       res.status(201).json({
         user_member: result.rows[0],
       });
-    } catch (error) {
+    } catch (error: any) {
+      if (
+        error?.code === "23505" &&
+        String(error?.constraint || "").includes(
+          "user_members_one_primary_per_household"
+        )
+      ) {
+        res.status(409).json({
+          error: "Household already has a primary member",
+        });
+        return;
+      }
+
+      if (
+        error?.code === "P0001" &&
+        String(error?.message || "").includes(
+          "FIRST_HOUSEHOLD_MEMBER_MUST_BE_PRIMARY"
+        )
+      ) {
+        res.status(409).json({
+          error: "First household member must be primary",
+        });
+        return;
+      }
+
+      if (
+        error?.code === "P0001" &&
+        String(error?.message || "").includes(
+          "HOUSEHOLD_PRIMARY_REQUIRED"
+        )
+      ) {
+        res.status(409).json({
+          error: "Household must have exactly one primary member",
+        });
+        return;
+      }
+
       console.error(error);
 
       res.status(500).json({

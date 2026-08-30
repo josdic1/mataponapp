@@ -11,6 +11,7 @@ import { createEventActivitySchema } from "@matapon/shared/schemas/eventActiviti
 import { createStaffMemberSchema } from "@matapon/shared/schemas/staffMembers";
 import { createStaffAreaSchema } from "@matapon/shared/schemas/staffAreas";
 import { createStaffMemberAreaSchema } from "@matapon/shared/schemas/staffMemberAreas";
+import { createStaffActivitySchema } from "@matapon/shared/schemas/staffActivities";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 type InputLocation = "path" | "query" | "body";
@@ -214,6 +215,25 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Assigns a staff member to a staff area.",
     auth: true,
     bodySchema: createStaffMemberAreaSchema,
+  },
+
+  staffActivitiesList: {
+    id: "staff-activities-list",
+    name: "Staff Activities",
+    method: "GET",
+    path: "/api/staff-activities",
+    notes: "Lists staff activity capabilities.",
+    auth: true,
+  },
+
+  staffActivitiesCreate: {
+    id: "staff-activities-create",
+    name: "Assign Staff Activity",
+    method: "POST",
+    path: "/api/staff-activities",
+    notes: "Marks a staff member as capable of an activity.",
+    auth: true,
+    bodySchema: createStaffActivitySchema,
   },
 };
 

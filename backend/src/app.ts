@@ -21,6 +21,7 @@ import { devRouter } from "./routes/dev.js";
 import { usersRouter } from "./routes/users.js";
 import { userMembersRouter } from "./routes/userMembers.js";
 import { memberAttendeesRouter } from "./routes/memberAttendees.js";
+import { eventActivitySignupsRouter } from "./routes/eventActivitySignups.js";
 
 export const app = express();
 
@@ -108,3 +109,4 @@ app.use("/api/dev", devRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/user-members", userMembersRouter);
 app.use("/api/member-attendees", memberAttendeesRouter);
+app.use("/api/event-activity-signups", eventActivitySignupsRouter);

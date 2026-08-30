@@ -55,6 +55,10 @@
     "./schemas/memberAttendees": {
       "types": "./dist/schemas/memberAttendees.d.ts",
       "import": "./dist/schemas/memberAttendees.js"
+    },
+    "./schemas/eventActivitySignups": {
+      "types": "./dist/schemas/eventActivitySignups.d.ts",
+      "import": "./dist/schemas/eventActivitySignups.js"
     }
   },
   "dependencies": {

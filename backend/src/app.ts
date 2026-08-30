@@ -20,6 +20,7 @@ import { eventActivityStaffRouter } from "./routes/eventActivityStaff.js";
 import { devRouter } from "./routes/dev.js";
 import { usersRouter } from "./routes/users.js";
 import { userMembersRouter } from "./routes/userMembers.js";
+import { memberAttendeesRouter } from "./routes/memberAttendees.js";
 
 export const app = express();
 
@@ -106,3 +107,4 @@ app.use("/api/event-activity-staff", eventActivityStaffRouter);
 app.use("/api/dev", devRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/user-members", userMembersRouter);
+app.use("/api/member-attendees", memberAttendeesRouter);

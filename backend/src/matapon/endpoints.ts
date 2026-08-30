@@ -15,6 +15,7 @@ import { createStaffActivitySchema } from "@matapon/shared/schemas/staffActiviti
 import { createEventActivityStaffSchema } from "@matapon/shared/schemas/eventActivityStaff";
 import { resetTestDataSchema } from "@matapon/shared/schemas/resetTestData";
 import { createUserSchema, createUserMemberSchema } from "@matapon/shared/schemas/users";
+import { createMemberAttendeeSchema } from "@matapon/shared/schemas/memberAttendees";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 type InputLocation = "path" | "query" | "body";
@@ -304,6 +305,25 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Adds a person to a member household account.",
     auth: true,
     bodySchema: createUserMemberSchema,
+  },
+
+  memberAttendeesList: {
+    id: "member-attendees-list",
+    name: "Member Attendees",
+    method: "GET",
+    path: "/api/member-attendees",
+    notes: "Lists household members attending events.",
+    auth: true,
+  },
+
+  memberAttendeesCreate: {
+    id: "member-attendees-create",
+    name: "Add Member To Event",
+    method: "POST",
+    path: "/api/member-attendees",
+    notes: "Registers a household member as attending an event.",
+    auth: true,
+    bodySchema: createMemberAttendeeSchema,
   },
 };
 

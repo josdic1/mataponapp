@@ -142,7 +142,14 @@ staffActivitiesRouter.post(
       res.status(201).json({
         staff_activity: result.rows[0],
       });
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.code === "23505") {
+        res.status(409).json({
+          error: "Staff member already has this activity",
+        });
+        return;
+      }
+
       console.error(error);
 
       res.status(500).json({

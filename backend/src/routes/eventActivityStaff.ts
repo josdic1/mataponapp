@@ -88,9 +88,7 @@ eventActivityStaffRouter.post(
         activity_id: string;
       }>(
         `
-          SELECT
-            id,
-            activity_id
+          SELECT id, activity_id
           FROM event_activities
           WHERE id = $1
           LIMIT 1

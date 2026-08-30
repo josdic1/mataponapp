@@ -1950,11 +1950,42 @@ ${state.tables
         renderEndpointCards();
         return true;
       }
+      function isDateTimeInput(input) {
+        return ["starts_at", "ends_at", "checked_in_at"].includes(
+          String(input.key || ""),
+        );
+      }
+      function padDateTime(n) {
+        return String(n).padStart(2, "0");
+      }
+      function dateTimeLocalValue(value) {
+        const raw = String(value || "").trim();
+        if (!raw) return "";
+        const match = raw.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/);
+        return match ? match[1] : "";
+      }
+      function dateTimeWithLocalOffset(value) {
+        const raw = String(value || "").trim();
+        if (!raw) return "";
+
+        const d = new Date(raw);
+        if (Number.isNaN(d.getTime())) return raw;
+
+        const offset = -d.getTimezoneOffset();
+        const sign = offset >= 0 ? "+" : "-";
+        const absolute = Math.abs(offset);
+
+        return `${raw}:00${sign}${padDateTime(Math.floor(absolute / 60))}:${padDateTime(absolute % 60)}`;
+      }
       function inputControl(ep, input) {
         const value = esc(input.value || "");
         const req = input.required
           ? '<span class="required-dot">required</span>'
           : "";
+        if (isDateTimeInput(input)) {
+          return `<div class="simple-input"><label>${esc(input.label)} ${req}</label><input type="datetime-local" step="60" data-ep-input="${esc(ep.id)}" data-input-id="${esc(input.id)}" value="${esc(dateTimeLocalValue(input.value))}"></div>`;
+        }
+
         const type = input.secret
           ? "password"
           : input.type === "number" || input.type === "integer"
@@ -2055,8 +2086,12 @@ ${state.tables
             );
             const inp = ep?.inputs.find((x) => x.id === el.dataset.inputId);
             if (!ep || !inp) return;
-            inp.value = el.value;
-            state.curl.values[valueKey(ep, inp)] = el.value;
+            const entered = isDateTimeInput(inp)
+              ? dateTimeWithLocalOffset(el.value)
+              : el.value;
+
+            inp.value = entered;
+            state.curl.values[valueKey(ep, inp)] = entered;
             save();
             refreshCurlPreview(ep);
           });

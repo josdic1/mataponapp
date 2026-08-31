@@ -1,6 +1,9 @@
 import { Router } from "express";
 
-import { createStaffMemberAreaSchema } from "@matapon/shared/schemas/staffMemberAreas";
+import {
+  createStaffMemberAreaSchema,
+  staffMemberAreaIdParamsSchema,
+} from "@matapon/shared/schemas/staffMemberAreas";
 
 import { query } from "../db/db.js";
 import {
@@ -147,6 +150,52 @@ staffMemberAreasRouter.post(
 
       res.status(500).json({
         error: "Could not assign staff area",
+      });
+    }
+  }
+);
+
+staffMemberAreasRouter.delete(
+  "/:id",
+  requireAuth,
+  requirePasswordChanged,
+  requireRole("admin"),
+  async (req, res) => {
+    const parsed = staffMemberAreaIdParamsSchema.safeParse(req.params);
+
+    if (!parsed.success) {
+      res.status(400).json({
+        error: "Invalid staff area assignment id",
+      });
+      return;
+    }
+
+    try {
+      const result = await query<{ id: string }>(
+        `
+          DELETE FROM staff_member_areas
+          WHERE id = $1
+          RETURNING id
+        `,
+        [parsed.data.id]
+      );
+
+      if (!result.rows[0]) {
+        res.status(404).json({
+          error: "Staff area assignment does not exist",
+        });
+        return;
+      }
+
+      res.json({
+        ok: true,
+        deleted_staff_member_area_id: String(parsed.data.id),
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        error: "Could not remove staff area assignment",
       });
     }
   }

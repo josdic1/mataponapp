@@ -1,7 +1,12 @@
 import { Router } from "express";
 
-import { createUserMemberSchema } from "@matapon/shared/schemas/users";
+import {
+  createUserMemberSchema,
+  updateUserMemberSchema,
+  userMemberIdParamsSchema,
+} from "@matapon/shared/schemas/users";
 
+import { pool } from "../db/pool.js";
 import { query } from "../db/db.js";
 import {
   requireAuth,
@@ -66,6 +71,73 @@ userMembersRouter.get(
 
       res.status(500).json({
         error: "Could not load user members",
+      });
+    }
+  }
+);
+
+userMembersRouter.get(
+  "/:id",
+  requireAuth,
+  requirePasswordChanged,
+  requireRole("member", "admin"),
+  async (req, res) => {
+    const parsed = userMemberIdParamsSchema.safeParse(req.params);
+
+    if (!parsed.success) {
+      res.status(400).json({
+        error: "Invalid household member id",
+      });
+      return;
+    }
+
+    try {
+      const isAdmin = req.auth!.user_type === "admin";
+
+      const result = await query<UserMemberRow>(
+        `
+          SELECT
+            um.id,
+            um.user_id,
+            u.username,
+            um.full_name,
+            um.email,
+            um.phone,
+            um.dietary_restrictions,
+            um.member_role,
+            um.created_at,
+            um.updated_at
+          FROM user_members um
+          JOIN users u
+            ON u.id = um.user_id
+          WHERE um.id = $1
+            AND ($2::boolean = true OR um.user_id = $3)
+          LIMIT 1
+        `,
+        [
+          parsed.data.id,
+          isAdmin,
+          req.auth!.sub,
+        ]
+      );
+
+      const userMember = result.rows[0];
+
+      if (!userMember) {
+        res.status(404).json({
+          error: "Household member does not exist",
+        });
+        return;
+      }
+
+      res.json({
+        user_member: userMember,
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        error: "Could not load household member",
       });
     }
   }
@@ -210,6 +282,319 @@ userMembersRouter.post(
       res.status(500).json({
         error: "Could not create user member",
       });
+    }
+  }
+);
+
+userMembersRouter.patch(
+  "/:id",
+  requireAuth,
+  requirePasswordChanged,
+  requireRole("member", "admin"),
+  async (req, res) => {
+    const params = userMemberIdParamsSchema.safeParse(req.params);
+    const body = updateUserMemberSchema.safeParse(req.body);
+
+    if (!params.success) {
+      res.status(400).json({
+        error: "Invalid household member id",
+      });
+      return;
+    }
+
+    if (!body.success) {
+      res.status(400).json({
+        error: "Invalid household member data",
+      });
+      return;
+    }
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      await client.query(
+        `SELECT set_config('matapon.actor_user_id', $1, true)`,
+        [req.auth!.sub]
+      );
+
+      const current = await client.query<{
+        id: string;
+        user_id: string;
+      }>(
+        `
+          SELECT
+            id,
+            user_id
+          FROM user_members
+          WHERE id = $1
+          FOR UPDATE
+        `,
+        [params.data.id]
+      );
+
+      const member = current.rows[0];
+
+      if (!member) {
+        await client.query("ROLLBACK");
+
+        res.status(404).json({
+          error: "Household member does not exist",
+        });
+        return;
+      }
+
+      if (
+        req.auth!.user_type === "member" &&
+        String(member.user_id) !== String(req.auth!.sub)
+      ) {
+        await client.query("ROLLBACK");
+
+        res.status(403).json({
+          error: "Cannot edit another household's member",
+        });
+        return;
+      }
+
+      const result = await client.query<UserMemberRow>(
+        `
+          WITH updated AS (
+            UPDATE user_members
+            SET
+              full_name = COALESCE($2, full_name),
+              email = CASE
+                WHEN $3::boolean THEN $4
+                ELSE email
+              END,
+              phone = CASE
+                WHEN $5::boolean THEN $6
+                ELSE phone
+              END,
+              dietary_restrictions = CASE
+                WHEN $7::boolean THEN $8
+                ELSE dietary_restrictions
+              END,
+              member_role = COALESCE($9, member_role),
+              updated_at = CURRENT_TIMESTAMP::text
+            WHERE id = $1
+            RETURNING *
+          )
+          SELECT
+            u2.id,
+            u2.user_id,
+            u.username,
+            u2.full_name,
+            u2.email,
+            u2.phone,
+            u2.dietary_restrictions,
+            u2.member_role,
+            u2.created_at,
+            u2.updated_at
+          FROM updated u2
+          JOIN users u
+            ON u.id = u2.user_id
+        `,
+        [
+          params.data.id,
+          body.data.full_name ?? null,
+          Object.prototype.hasOwnProperty.call(body.data, "email"),
+          body.data.email ?? null,
+          Object.prototype.hasOwnProperty.call(body.data, "phone"),
+          body.data.phone ?? null,
+          Object.prototype.hasOwnProperty.call(body.data, "dietary_restrictions"),
+          body.data.dietary_restrictions ?? null,
+          body.data.member_role ?? null,
+        ]
+      );
+
+      await client.query("COMMIT");
+
+      res.json({
+        user_member: result.rows[0],
+      });
+    } catch (error: any) {
+      await client.query("ROLLBACK");
+
+      if (
+        error?.code === "23505" &&
+        String(error?.constraint || "").includes(
+          "user_members_one_primary_per_household"
+        )
+      ) {
+        res.status(409).json({
+          error: "Household already has a primary member",
+        });
+        return;
+      }
+
+      if (
+        error?.code === "P0001" &&
+        String(error?.message || "").includes(
+          "HOUSEHOLD_PRIMARY_REQUIRED"
+        )
+      ) {
+        res.status(409).json({
+          error:
+            "A household must keep exactly one primary member",
+        });
+        return;
+      }
+
+      console.error(error);
+
+      res.status(500).json({
+        error: "Could not update household member",
+      });
+    } finally {
+      client.release();
+    }
+  }
+);
+
+userMembersRouter.delete(
+  "/:id",
+  requireAuth,
+  requirePasswordChanged,
+  requireRole("member", "admin"),
+  async (req, res) => {
+    const parsed = userMemberIdParamsSchema.safeParse(req.params);
+
+    if (!parsed.success) {
+      res.status(400).json({
+        error: "Invalid household member id",
+      });
+      return;
+    }
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      await client.query(
+        `SELECT set_config('matapon.actor_user_id', $1, true)`,
+        [req.auth!.sub]
+      );
+
+      const current = await client.query<{
+        id: string;
+        user_id: string;
+        member_role: "primary" | "adult" | "child";
+      }>(
+        `
+          SELECT
+            id,
+            user_id,
+            member_role
+          FROM user_members
+          WHERE id = $1
+          FOR UPDATE
+        `,
+        [parsed.data.id]
+      );
+
+      const member = current.rows[0];
+
+      if (!member) {
+        await client.query("ROLLBACK");
+
+        res.status(404).json({
+          error: "Household member does not exist",
+        });
+        return;
+      }
+
+      if (
+        req.auth!.user_type === "member" &&
+        String(member.user_id) !== String(req.auth!.sub)
+      ) {
+        await client.query("ROLLBACK");
+
+        res.status(403).json({
+          error: "Cannot delete another household's member",
+        });
+        return;
+      }
+
+      const attendance = await client.query<{ count: string }>(
+        `
+          SELECT COUNT(*)::text AS count
+          FROM member_attendees
+          WHERE member_id = $1
+        `,
+        [parsed.data.id]
+      );
+
+      if (Number(attendance.rows[0]?.count ?? 0) > 0) {
+        await client.query("ROLLBACK");
+
+        res.status(409).json({
+          error:
+            "Cannot delete a household member while they are still registered for events",
+        });
+        return;
+      }
+
+      const householdCount = await client.query<{ count: string }>(
+        `
+          SELECT COUNT(*)::text AS count
+          FROM user_members
+          WHERE user_id = $1
+        `,
+        [member.user_id]
+      );
+
+      if (
+        member.member_role === "primary" &&
+        Number(householdCount.rows[0]?.count ?? 0) > 1
+      ) {
+        await client.query("ROLLBACK");
+
+        res.status(409).json({
+          error:
+            "Cannot delete the primary member while other household members remain",
+        });
+        return;
+      }
+
+      await client.query(
+        `
+          DELETE FROM user_members
+          WHERE id = $1
+        `,
+        [parsed.data.id]
+      );
+
+      await client.query("COMMIT");
+
+      res.json({
+        ok: true,
+        deleted_user_member_id: String(parsed.data.id),
+      });
+    } catch (error: any) {
+      await client.query("ROLLBACK");
+
+      if (
+        error?.code === "P0001" &&
+        String(error?.message || "").includes(
+          "HOUSEHOLD_PRIMARY_REQUIRED"
+        )
+      ) {
+        res.status(409).json({
+          error:
+            "Cannot delete the primary member while other household members remain",
+        });
+        return;
+      }
+
+      console.error(error);
+
+      res.status(500).json({
+        error: "Could not delete household member",
+      });
+    } finally {
+      client.release();
     }
   }
 );

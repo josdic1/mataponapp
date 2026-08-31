@@ -7,3 +7,7 @@ export const createEventActivityStaffSchema = z.object({
 
 export type CreateEventActivityStaffInput =
   z.infer<typeof createEventActivityStaffSchema>;
+
+export const eventActivityStaffIdParamsSchema = z.object({
+  id: z.coerce.number().int().positive(),
+});

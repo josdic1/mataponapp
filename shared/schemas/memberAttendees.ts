@@ -7,3 +7,7 @@ export const createMemberAttendeeSchema = z.object({
 
 export type CreateMemberAttendeeInput =
   z.infer<typeof createMemberAttendeeSchema>;
+
+export const memberAttendeeIdParamsSchema = z.object({
+  id: z.coerce.number().int().positive(),
+});

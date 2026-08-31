@@ -1,7 +1,11 @@
 import { Router } from "express";
 
-import { createMemberAttendeeSchema } from "@matapon/shared/schemas/memberAttendees";
+import {
+  createMemberAttendeeSchema,
+  memberAttendeeIdParamsSchema,
+} from "@matapon/shared/schemas/memberAttendees";
 
+import { pool } from "../db/pool.js";
 import { query } from "../db/db.js";
 import {
   requireAuth,
@@ -181,6 +185,117 @@ memberAttendeesRouter.post(
       res.status(500).json({
         error: "Could not register event attendee",
       });
+    }
+  }
+);
+
+memberAttendeesRouter.delete(
+  "/:id",
+  requireAuth,
+  requirePasswordChanged,
+  requireRole("member", "admin"),
+  async (req, res) => {
+    const parsed = memberAttendeeIdParamsSchema.safeParse(req.params);
+
+    if (!parsed.success) {
+      res.status(400).json({
+        error: "Invalid event attendee id",
+      });
+      return;
+    }
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      await client.query(
+        `SELECT set_config('matapon.actor_user_id', $1, true)`,
+        [req.auth!.sub]
+      );
+
+      const current = await client.query<{
+        id: string;
+        user_id: string;
+      }>(
+        `
+          SELECT
+            ma.id,
+            um.user_id
+          FROM member_attendees ma
+          JOIN user_members um
+            ON um.id = ma.member_id
+          WHERE ma.id = $1
+          FOR UPDATE OF ma
+        `,
+        [parsed.data.id]
+      );
+
+      const attendee = current.rows[0];
+
+      if (!attendee) {
+        await client.query("ROLLBACK");
+
+        res.status(404).json({
+          error: "Event attendee does not exist",
+        });
+        return;
+      }
+
+      if (
+        req.auth!.user_type === "member" &&
+        String(attendee.user_id) !== String(req.auth!.sub)
+      ) {
+        await client.query("ROLLBACK");
+
+        res.status(403).json({
+          error: "Cannot remove another household's member from an event",
+        });
+        return;
+      }
+
+      const signups = await client.query<{ count: string }>(
+        `
+          SELECT COUNT(*)::text AS count
+          FROM event_activity_signups
+          WHERE member_attendee_id = $1
+        `,
+        [parsed.data.id]
+      );
+
+      if (Number(signups.rows[0]?.count ?? 0) > 0) {
+        await client.query("ROLLBACK");
+
+        res.status(409).json({
+          error:
+            "Cannot remove a member from an event while they still have activity signups",
+        });
+        return;
+      }
+
+      await client.query(
+        `
+          DELETE FROM member_attendees
+          WHERE id = $1
+        `,
+        [parsed.data.id]
+      );
+
+      await client.query("COMMIT");
+
+      res.json({
+        ok: true,
+        deleted_member_attendee_id: String(parsed.data.id),
+      });
+    } catch (error) {
+      await client.query("ROLLBACK");
+      console.error(error);
+
+      res.status(500).json({
+        error: "Could not remove member from event",
+      });
+    } finally {
+      client.release();
     }
   }
 );

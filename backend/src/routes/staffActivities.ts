@@ -1,7 +1,11 @@
 import { Router } from "express";
 
-import { createStaffActivitySchema } from "@matapon/shared/schemas/staffActivities";
+import {
+  createStaffActivitySchema,
+  staffActivityIdParamsSchema,
+} from "@matapon/shared/schemas/staffActivities";
 
+import { pool } from "../db/pool.js";
 import { query } from "../db/db.js";
 import {
   requireAuth,
@@ -155,6 +159,111 @@ staffActivitiesRouter.post(
       res.status(500).json({
         error: "Could not assign staff activity",
       });
+    }
+  }
+);
+
+staffActivitiesRouter.delete(
+  "/:id",
+  requireAuth,
+  requirePasswordChanged,
+  requireRole("admin"),
+  async (req, res) => {
+    const parsed = staffActivityIdParamsSchema.safeParse(req.params);
+
+    if (!parsed.success) {
+      res.status(400).json({
+        error: "Invalid staff activity assignment id",
+      });
+      return;
+    }
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      await client.query(
+        `SELECT set_config('matapon.actor_user_id', $1, true)`,
+        [req.auth!.sub]
+      );
+
+      const current = await client.query<{
+        id: string;
+        staff_member_id: string;
+        activity_id: string;
+      }>(
+        `
+          SELECT
+            id,
+            staff_member_id,
+            activity_id
+          FROM staff_activities
+          WHERE id = $1
+          FOR UPDATE
+        `,
+        [parsed.data.id]
+      );
+
+      const assignment = current.rows[0];
+
+      if (!assignment) {
+        await client.query("ROLLBACK");
+
+        res.status(404).json({
+          error: "Staff activity assignment does not exist",
+        });
+        return;
+      }
+
+      const scheduled = await client.query<{ count: string }>(
+        `
+          SELECT COUNT(*)::text AS count
+          FROM event_activity_staff eas
+          JOIN event_activities ea
+            ON ea.id = eas.event_activity_id
+          WHERE eas.staff_member_id = $1
+            AND ea.activity_id = $2
+        `,
+        [
+          assignment.staff_member_id,
+          assignment.activity_id,
+        ]
+      );
+
+      if (Number(scheduled.rows[0]?.count ?? 0) > 0) {
+        await client.query("ROLLBACK");
+
+        res.status(409).json({
+          error:
+            "Cannot remove this staff activity capability while the staff member is assigned to scheduled instances of that activity",
+        });
+        return;
+      }
+
+      await client.query(
+        `
+          DELETE FROM staff_activities
+          WHERE id = $1
+        `,
+        [parsed.data.id]
+      );
+
+      await client.query("COMMIT");
+
+      res.json({
+        ok: true,
+        deleted_staff_activity_id: String(parsed.data.id),
+      });
+    } catch (error) {
+      await client.query("ROLLBACK");
+      console.error(error);
+
+      res.status(500).json({
+        error: "Could not remove staff activity capability",
+      });
+    } finally {
+      client.release();
     }
   }
 );

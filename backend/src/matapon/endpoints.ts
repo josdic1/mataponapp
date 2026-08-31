@@ -24,14 +24,41 @@ import {
   updateEventActivitySchema,
   eventActivityIdParamsSchema,
 } from "@matapon/shared/schemas/eventActivities";
-import { createStaffMemberSchema } from "@matapon/shared/schemas/staffMembers";
-import { createStaffAreaSchema } from "@matapon/shared/schemas/staffAreas";
-import { createStaffMemberAreaSchema } from "@matapon/shared/schemas/staffMemberAreas";
-import { createStaffActivitySchema } from "@matapon/shared/schemas/staffActivities";
-import { createEventActivityStaffSchema } from "@matapon/shared/schemas/eventActivityStaff";
+import {
+  createStaffMemberSchema,
+  updateStaffMemberSchema,
+  staffMemberIdParamsSchema,
+} from "@matapon/shared/schemas/staffMembers";
+import {
+  createStaffAreaSchema,
+  updateStaffAreaSchema,
+  staffAreaIdParamsSchema,
+} from "@matapon/shared/schemas/staffAreas";
+import {
+  createStaffMemberAreaSchema,
+  staffMemberAreaIdParamsSchema,
+} from "@matapon/shared/schemas/staffMemberAreas";
+import {
+  createStaffActivitySchema,
+  staffActivityIdParamsSchema,
+} from "@matapon/shared/schemas/staffActivities";
+import {
+  createEventActivityStaffSchema,
+  eventActivityStaffIdParamsSchema,
+} from "@matapon/shared/schemas/eventActivityStaff";
 import { resetTestDataSchema } from "@matapon/shared/schemas/resetTestData";
-import { createUserSchema, createUserMemberSchema } from "@matapon/shared/schemas/users";
-import { createMemberAttendeeSchema } from "@matapon/shared/schemas/memberAttendees";
+import {
+  createUserSchema,
+  createUserMemberSchema,
+  updateUserSchema,
+  userIdParamsSchema,
+  updateUserMemberSchema,
+  userMemberIdParamsSchema,
+} from "@matapon/shared/schemas/users";
+import {
+  createMemberAttendeeSchema,
+  memberAttendeeIdParamsSchema,
+} from "@matapon/shared/schemas/memberAttendees";
 import {
   createEventActivitySignupSchema,
   eventActivitySignupIdParamsSchema,
@@ -327,6 +354,37 @@ export const endpointContracts: Record<string, EndpointContract> = {
     bodySchema: createStaffMemberSchema,
   },
 
+  staffMembersGetOne: {
+    id: "staff-members-get-one",
+    name: "Get Staff Member",
+    method: "GET",
+    path: "/api/staff-members/:id",
+    notes: "Gets one staff profile.",
+    auth: true,
+    paramsSchema: staffMemberIdParamsSchema,
+  },
+
+  staffMembersUpdate: {
+    id: "staff-members-update",
+    name: "Update Staff Member",
+    method: "PATCH",
+    path: "/api/staff-members/:id",
+    notes: "Updates staff profile details. The linked user account does not change.",
+    auth: true,
+    paramsSchema: staffMemberIdParamsSchema,
+    bodySchema: updateStaffMemberSchema,
+  },
+
+  staffMembersDelete: {
+    id: "staff-members-delete",
+    name: "Delete Staff Member",
+    method: "DELETE",
+    path: "/api/staff-members/:id",
+    notes: "Deletes an unassigned staff profile. The linked user account is not deleted.",
+    auth: true,
+    paramsSchema: staffMemberIdParamsSchema,
+  },
+
   staffAreasList: {
     id: "staff-areas-list",
     name: "Staff Areas",
@@ -344,6 +402,37 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Creates a staff area.",
     auth: true,
     bodySchema: createStaffAreaSchema,
+  },
+
+  staffAreasGetOne: {
+    id: "staff-areas-get-one",
+    name: "Get Staff Area",
+    method: "GET",
+    path: "/api/staff-areas/:id",
+    notes: "Gets one staff area.",
+    auth: true,
+    paramsSchema: staffAreaIdParamsSchema,
+  },
+
+  staffAreasUpdate: {
+    id: "staff-areas-update",
+    name: "Update Staff Area",
+    method: "PATCH",
+    path: "/api/staff-areas/:id",
+    notes: "Renames a staff area.",
+    auth: true,
+    paramsSchema: staffAreaIdParamsSchema,
+    bodySchema: updateStaffAreaSchema,
+  },
+
+  staffAreasDelete: {
+    id: "staff-areas-delete",
+    name: "Delete Staff Area",
+    method: "DELETE",
+    path: "/api/staff-areas/:id",
+    notes: "Deletes an unused staff area.",
+    auth: true,
+    paramsSchema: staffAreaIdParamsSchema,
   },
 
   staffMemberAreasList: {
@@ -365,6 +454,16 @@ export const endpointContracts: Record<string, EndpointContract> = {
     bodySchema: createStaffMemberAreaSchema,
   },
 
+  staffMemberAreasDelete: {
+    id: "staff-member-areas-delete",
+    name: "Remove Staff Area Assignment",
+    method: "DELETE",
+    path: "/api/staff-member-areas/:id",
+    notes: "Removes a staff member from a staff area.",
+    auth: true,
+    paramsSchema: staffMemberAreaIdParamsSchema,
+  },
+
   staffActivitiesList: {
     id: "staff-activities-list",
     name: "Staff Activities",
@@ -384,6 +483,16 @@ export const endpointContracts: Record<string, EndpointContract> = {
     bodySchema: createStaffActivitySchema,
   },
 
+  staffActivitiesDelete: {
+    id: "staff-activities-delete",
+    name: "Remove Staff Activity Capability",
+    method: "DELETE",
+    path: "/api/staff-activities/:id",
+    notes: "Removes an activity capability if the staff member is not assigned to scheduled instances of that activity.",
+    auth: true,
+    paramsSchema: staffActivityIdParamsSchema,
+  },
+
   eventActivityStaffList: {
     id: "event-activity-staff-list",
     name: "Event Activity Staff",
@@ -401,6 +510,16 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Books a capable staff member to a scheduled activity.",
     auth: true,
     bodySchema: createEventActivityStaffSchema,
+  },
+
+  eventActivityStaffDelete: {
+    id: "event-activity-staff-delete",
+    name: "Remove Staff From Scheduled Activity",
+    method: "DELETE",
+    path: "/api/event-activity-staff/:id",
+    notes: "Removes a staff assignment from a scheduled activity.",
+    auth: true,
+    paramsSchema: eventActivityStaffIdParamsSchema,
   },
 
   resetTestData: {
@@ -432,6 +551,37 @@ export const endpointContracts: Record<string, EndpointContract> = {
     bodySchema: createUserSchema,
   },
 
+  usersGetOne: {
+    id: "users-get-one",
+    name: "Get User",
+    method: "GET",
+    path: "/api/users/:id",
+    notes: "Gets one login account. Password hashes are never returned.",
+    auth: true,
+    paramsSchema: userIdParamsSchema,
+  },
+
+  usersUpdate: {
+    id: "users-update",
+    name: "Update User",
+    method: "PATCH",
+    path: "/api/users/:id",
+    notes: "Updates the account username. Account type stays fixed after creation.",
+    auth: true,
+    paramsSchema: userIdParamsSchema,
+    bodySchema: updateUserSchema,
+  },
+
+  usersDelete: {
+    id: "users-delete",
+    name: "Delete User",
+    method: "DELETE",
+    path: "/api/users/:id",
+    notes: "Deletes an unused login account. The current account cannot delete itself.",
+    auth: true,
+    paramsSchema: userIdParamsSchema,
+  },
+
   userMembersList: {
     id: "user-members-list",
     name: "User Members",
@@ -451,6 +601,37 @@ export const endpointContracts: Record<string, EndpointContract> = {
     bodySchema: createUserMemberSchema,
   },
 
+  userMembersGetOne: {
+    id: "user-members-get-one",
+    name: "Get User Member",
+    method: "GET",
+    path: "/api/user-members/:id",
+    notes: "Gets one household member. Member accounts can access only their own household.",
+    auth: true,
+    paramsSchema: userMemberIdParamsSchema,
+  },
+
+  userMembersUpdate: {
+    id: "user-members-update",
+    name: "Update User Member",
+    method: "PATCH",
+    path: "/api/user-members/:id",
+    notes: "Updates household-member profile details while preserving the one-primary-member rule.",
+    auth: true,
+    paramsSchema: userMemberIdParamsSchema,
+    bodySchema: updateUserMemberSchema,
+  },
+
+  userMembersDelete: {
+    id: "user-members-delete",
+    name: "Delete User Member",
+    method: "DELETE",
+    path: "/api/user-members/:id",
+    notes: "Deletes an unused household member. A primary member cannot be removed while other household members remain.",
+    auth: true,
+    paramsSchema: userMemberIdParamsSchema,
+  },
+
   memberAttendeesList: {
     id: "member-attendees-list",
     name: "Member Attendees",
@@ -468,6 +649,16 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Registers a household member as attending an event.",
     auth: true,
     bodySchema: createMemberAttendeeSchema,
+  },
+
+  memberAttendeesDelete: {
+    id: "member-attendees-delete",
+    name: "Remove Member From Event",
+    method: "DELETE",
+    path: "/api/member-attendees/:id",
+    notes: "Removes a household member from an event after their activity signups are removed.",
+    auth: true,
+    paramsSchema: memberAttendeeIdParamsSchema,
   },
 
   eventActivitySignupsList: {

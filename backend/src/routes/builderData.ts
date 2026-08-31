@@ -41,7 +41,12 @@ builderDataRouter.use((_req, res, next) => {
   next();
 });
 
-builderDataRouter.get("/schema", async (_req, res) => {
+builderDataRouter.get(
+  "/schema",
+  requireAuth,
+  requirePasswordChanged,
+  requireRole("admin"),
+  async (_req, res) => {
   try {
     const [columnsResult, foreignKeysResult, indexesResult] = await Promise.all([
       pool.query<{
@@ -174,7 +179,8 @@ builderDataRouter.get("/schema", async (_req, res) => {
       error: "Could not inspect live database schema",
     });
   }
-});
+  }
+);
 
 builderDataRouter.get(
   "/data/:table",

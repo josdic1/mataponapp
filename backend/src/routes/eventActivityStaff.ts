@@ -1,6 +1,9 @@
 import { Router } from "express";
 
-import { createEventActivityStaffSchema } from "@matapon/shared/schemas/eventActivityStaff";
+import {
+  createEventActivityStaffSchema,
+  eventActivityStaffIdParamsSchema,
+} from "@matapon/shared/schemas/eventActivityStaff";
 
 import { query } from "../db/db.js";
 import {
@@ -170,6 +173,52 @@ eventActivityStaffRouter.post(
 
       res.status(500).json({
         error: "Could not book staff to activity",
+      });
+    }
+  }
+);
+
+eventActivityStaffRouter.delete(
+  "/:id",
+  requireAuth,
+  requirePasswordChanged,
+  requireRole("admin"),
+  async (req, res) => {
+    const parsed = eventActivityStaffIdParamsSchema.safeParse(req.params);
+
+    if (!parsed.success) {
+      res.status(400).json({
+        error: "Invalid scheduled staff assignment id",
+      });
+      return;
+    }
+
+    try {
+      const result = await query<{ id: string }>(
+        `
+          DELETE FROM event_activity_staff
+          WHERE id = $1
+          RETURNING id
+        `,
+        [parsed.data.id]
+      );
+
+      if (!result.rows[0]) {
+        res.status(404).json({
+          error: "Scheduled staff assignment does not exist",
+        });
+        return;
+      }
+
+      res.json({
+        ok: true,
+        deleted_event_activity_staff_id: String(parsed.data.id),
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        error: "Could not remove staff from scheduled activity",
       });
     }
   }

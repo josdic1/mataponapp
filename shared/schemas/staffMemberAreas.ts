@@ -7,3 +7,7 @@ export const createStaffMemberAreaSchema = z.object({
 
 export type CreateStaffMemberAreaInput =
   z.infer<typeof createStaffMemberAreaSchema>;
+
+export const staffMemberAreaIdParamsSchema = z.object({
+  id: z.coerce.number().int().positive(),
+});

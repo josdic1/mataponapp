@@ -763,7 +763,7 @@
       <div class="grid"><div class="stack">
         <section class="card"><div class="card-head"><div><div class="card-title">Stack & deployment</div><div class="card-kicker">Project values only.</div></div></div><div class="card-body"><div class="config-groups">
           <div class="config-group"><div class="config-label">Repository</div><div class="field"><div class="field-name">Project name</div><div class="field-value"><input id="projectName" /></div></div><div class="field"><div class="field-name">Structure</div><div class="field-value"><input id="repoType" /></div></div><div class="field"><div class="field-name">Frontend folder</div><div class="field-value"><input id="frontendFolder" class="mono" /></div></div><div class="field"><div class="field-name">Backend folder</div><div class="field-value"><input id="backendFolder" class="mono" /></div></div></div>
-          <div class="config-group"><div class="config-label">Frontend</div><div class="field"><div class="field-name">Framework</div><div class="field-value"><input id="frontendStack" /></div></div><div class="field"><div class="field-name">CSS</div><div class="field-value"><input id="cssStrategy" /></div></div><div class="field"><div class="field-name">Deploy</div><div class="field-value"><input id="frontendDeploy" /></div></div></div>
+          <div class="config-group"><div class="config-label">Frontend</div><div class="field"><div class="field-name">Framework</div><div class="field-value"><input id="frontendStack" /></div></div><div class="field"><div class="field-name">Language</div><div class="field-value"><input id="frontendLanguage" /></div></div><div class="field"><div class="field-name">Build Tool</div><div class="field-value"><input id="frontendBuildTool" /></div></div><div class="field"><div class="field-name">Router</div><div class="field-value"><input id="frontendRouter" /></div></div><div class="field"><div class="field-name">Icons</div><div class="field-value"><input id="frontendIcons" /></div></div><div class="field"><div class="field-name">CSS</div><div class="field-value"><input id="cssStrategy" /></div></div><div class="field"><div class="field-name">Deploy</div><div class="field-value"><input id="frontendDeploy" /></div></div></div>
           <div class="config-group"><div class="config-label">Backend</div><div class="field"><div class="field-name">Runtime</div><div class="field-value"><input id="backendRuntime" /></div></div><div class="field"><div class="field-name">Server</div><div class="field-value"><input id="backendServer" /></div></div><div class="field"><div class="field-name">Language</div><div class="field-value"><input id="backendLanguage" /></div></div><div class="field"><div class="field-name">Validation</div><div class="field-value"><input id="validation" /></div></div><div class="field"><div class="field-name">Database access</div><div class="field-value"><input id="databaseAccess" /></div></div><div class="field"><div class="field-name">Deploy</div><div class="field-value"><input id="backendDeploy" /></div></div></div>
         </div></div></section>
         <section class="card"><div class="card-head"><div><div class="card-title">Naming contract</div><div class="card-kicker">Settled conventions.</div></div></div><div class="naming-table"><div class="head">Thing</div><div class="head">Rule</div><div class="head">Scope</div><div class="rule">React components</div><div class="example mono">PascalCase.tsx</div><div class="scope">fixed</div><div class="rule">TypeScript modules</div><div class="example mono">camelCase.ts</div><div class="scope">fixed</div><div class="rule">DB tables</div><div class="example mono">plural_snake_case</div><div class="scope">fixed</div><div class="rule">DB fields</div><div class="example mono">snake_case</div><div class="scope">fixed</div><div class="rule">Foreign keys</div><div class="example mono">singular_target_id</div><div class="scope">fixed</div><div class="rule">API routes</div><div class="example mono">/api/plural-resources</div><div class="scope">fixed</div><div class="rule">Environment vars</div><div class="example mono">UPPER_SNAKE_CASE</div><div class="scope">fixed</div></div></section>
@@ -921,7 +921,11 @@
       repoType: "monorepo",
       frontendFolder: "frontend",
       backendFolder: "backend",
-      frontendStack: "React + React Router",
+      frontendStack: "React",
+      frontendLanguage: "TypeScript",
+      frontendBuildTool: "Vite",
+      frontendRouter: "React Router",
+      frontendIcons: "Lucide",
       frontendDeploy: "Netlify",
       cssStrategy: "Reusable token-based CSS",
       backendRuntime: "Node.js",
@@ -965,6 +969,7 @@
   const OLD_PRODUCT_TRUTHS = "Users can be member, staff, or admin. Member accounts can contain multiple household people. Events have start/end windows. Activities are reusable and can be scheduled into events. Staff are staff or manager. Staff have activities they CAN do and can be booked to specific event activities. Event activity signups also store check-in. Activity setting is inside, outside, or other; OTHER stores the actual setting and reason.";
   if (!state.productTruths || state.productTruths === OLD_PRODUCT_TRUTHS) state.productTruths = defaultState.productTruths;
   state.platform = { ...defaultState.platform, ...(state.platform || {}) };
+  if (state.platform.frontendStack === "React + React Router") state.platform.frontendStack = "React";
   state.simulator = { ...defaultState.simulator, ...(state.simulator || {}) };
   state.curl = { ...defaultState.curl, ...(state.curl || {}) };
   state.curl.values ||= {};
@@ -1144,7 +1149,7 @@
 
   function buildBrief() {
     const p=state.platform;
-    return `PROJECT: ${state.projectName}\n\nPLATFORM\n- Repository: ${p.repoType}\n- Frontend folder: ${p.frontendFolder}/\n- Backend folder: ${p.backendFolder}/\n- Frontend: ${p.frontendStack}\n- Frontend deploy: ${p.frontendDeploy}\n- CSS: ${p.cssStrategy}\n- Backend runtime: ${p.backendRuntime}\n- Backend server: ${p.backendServer}\n- Backend language: ${p.backendLanguage}\n- Validation: ${p.validation}\n- Database: ${p.databaseAccess}\n- Backend deploy: ${p.backendDeploy}\n\nPRODUCT TRUTHS\n${state.productTruths}\n\nAPI ENDPOINTS\n${(state.curl.endpoints||[]).map(ep=>`- ${ep.method} ${ep.path} — ${ep.name}`).join("\n")}\n\nSCHEMA\n${state.tables.map(t=>`${t.name}\n${(t.fields||[]).map(f=>`  ${f.name} | ${f.definition}${f.details?` | ${f.details}`:""}`).join("\n")}`).join("\n\n")}`;
+    return `PROJECT: ${state.projectName}\n\nPLATFORM\n- Repository: ${p.repoType}\n- Frontend folder: ${p.frontendFolder}/\n- Backend folder: ${p.backendFolder}/\n- Frontend framework: ${p.frontendStack}\n- Frontend language: ${p.frontendLanguage}\n- Frontend build tool: ${p.frontendBuildTool}\n- Frontend router: ${p.frontendRouter}\n- Frontend icons: ${p.frontendIcons}\n- Frontend deploy: ${p.frontendDeploy}\n- CSS: ${p.cssStrategy}\n- Backend runtime: ${p.backendRuntime}\n- Backend server: ${p.backendServer}\n- Backend language: ${p.backendLanguage}\n- Validation: ${p.validation}\n- Database: ${p.databaseAccess}\n- Backend deploy: ${p.backendDeploy}\n\nPRODUCT TRUTHS\n${state.productTruths}\n\nAPI ENDPOINTS\n${(state.curl.endpoints||[]).map(ep=>`- ${ep.method} ${ep.path} — ${ep.name}`).join("\n")}\n\nSCHEMA\n${state.tables.map(t=>`${t.name}\n${(t.fields||[]).map(f=>`  ${f.name} | ${f.definition}${f.details?` | ${f.details}`:""}`).join("\n")}`).join("\n\n")}`;
   }
 
   function syncPlatformFromDom() {

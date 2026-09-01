@@ -106,9 +106,23 @@ eventsRouter.get(
           LEFT JOIN event_type_others eto
             ON eto.event_id = e.id
           WHERE e.id = $1
+            AND (
+              $2::boolean = false
+              OR EXISTS (
+                SELECT 1
+                FROM event_registrations er
+                WHERE er.event_id = e.id
+                  AND er.user_id = $2
+              )
+            )
           LIMIT 1
         `,
-        [parsed.data.id]
+        [
+          parsed.data.id,
+          req.auth!.user_type === "member"
+            ? req.auth!.sub
+            : false,
+        ]
       );
 
       const event = result.rows[0];
@@ -402,6 +416,7 @@ eventsRouter.delete(
       const dependencies = await client.query<{
         event_activities: string;
         member_attendees: string;
+        event_registrations: string;
       }>(
         `
           SELECT
@@ -414,7 +429,12 @@ eventsRouter.delete(
               SELECT COUNT(*)::text
               FROM member_attendees
               WHERE event_id = $1
-            ) AS member_attendees
+            ) AS member_attendees,
+            (
+              SELECT COUNT(*)::text
+              FROM event_registrations
+              WHERE event_id = $1
+            ) AS event_registrations
         `,
         [parsed.data.id]
       );
@@ -423,13 +443,14 @@ eventsRouter.delete(
 
       if (
         Number(counts.event_activities) > 0 ||
-        Number(counts.member_attendees) > 0
+        Number(counts.member_attendees) > 0 ||
+        Number(counts.event_registrations) > 0
       ) {
         await client.query("ROLLBACK");
 
         res.status(409).json({
           error:
-            "Cannot delete an event that has scheduled activities or attendees",
+            "Cannot delete an event that has scheduled activities, attendees, or registrations",
         });
         return;
       }

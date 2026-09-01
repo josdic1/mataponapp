@@ -125,9 +125,23 @@ eventActivitiesRouter.get(
           JOIN activities a
             ON a.id = ea.activity_id
           WHERE ea.id = $1
+            AND (
+              $2::boolean = false
+              OR EXISTS (
+                SELECT 1
+                FROM event_registrations er
+                WHERE er.event_id = ea.event_id
+                  AND er.user_id = $2
+              )
+            )
           LIMIT 1
         `,
-        [parsed.data.id]
+        [
+          parsed.data.id,
+          req.auth!.user_type === "member"
+            ? req.auth!.sub
+            : false,
+        ]
       );
 
       const eventActivity = result.rows[0];

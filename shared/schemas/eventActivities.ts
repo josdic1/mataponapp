@@ -24,3 +24,15 @@ export type CreateEventActivityInput =
 
 export type UpdateEventActivityInput =
   z.infer<typeof updateEventActivitySchema>;
+
+export type EventActivity = {
+  id: string;
+  event_id: string;
+  event_name: string;
+  activity_id: string;
+  activity_name: string;
+  starts_at: string;
+  ends_at: string;
+  created_at: string;
+  updated_at: string;
+};

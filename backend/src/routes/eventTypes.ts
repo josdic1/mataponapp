@@ -4,6 +4,7 @@ import {
   createEventTypeSchema,
   updateEventTypeSchema,
   eventTypeIdParamsSchema,
+  type EventType,
 } from "@matapon/shared/schemas/eventTypes";
 
 import { query } from "../db/db.js";
@@ -13,13 +14,6 @@ import {
   requireRole,
 } from "../middleware/auth.js";
 
-type EventTypeRow = {
-  id: string;
-  name: string;
-  created_at: string;
-  updated_at: string;
-};
-
 export const eventTypesRouter = Router();
 
 eventTypesRouter.get(
@@ -28,7 +22,7 @@ eventTypesRouter.get(
   requirePasswordChanged,
   async (_req, res) => {
     try {
-      const result = await query<EventTypeRow>(
+      const result = await query<EventType>(
         `
           SELECT id, name, created_at, updated_at
           FROM event_types
@@ -64,7 +58,7 @@ eventTypesRouter.get(
     }
 
     try {
-      const result = await query<EventTypeRow>(
+      const result = await query<EventType>(
         `
           SELECT id, name, created_at, updated_at
           FROM event_types
@@ -110,7 +104,7 @@ eventTypesRouter.post(
     }
 
     try {
-      const result = await query<EventTypeRow>(
+      const result = await query<EventType>(
         `
           INSERT INTO event_types (name)
           VALUES ($1)
@@ -163,7 +157,7 @@ eventTypesRouter.patch(
     }
 
     try {
-      const result = await query<EventTypeRow>(
+      const result = await query<EventType>(
         `
           UPDATE event_types
           SET

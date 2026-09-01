@@ -4,6 +4,7 @@ import {
   createEventSchema,
   updateEventSchema,
   eventIdParamsSchema,
+  type Event,
 } from "@matapon/shared/schemas/events";
 
 import { pool } from "../db/pool.js";
@@ -14,26 +15,17 @@ import {
   requireRole,
 } from "../middleware/auth.js";
 
-type EventRow = {
-  id: string;
-  name: string;
-  event_type_id: string;
-  event_type_name: string;
-  starts_at: string;
-  ends_at: string;
-  created_at: string;
-  updated_at: string;
-};
-
 export const eventsRouter = Router();
 
 eventsRouter.get(
   "/",
   requireAuth,
   requirePasswordChanged,
-  async (_req, res) => {
+  async (req, res) => {
     try {
-      const result = await query<EventRow>(
+      const isMember = req.auth!.user_type === "member";
+
+      const result = await query<Event>(
         `
           SELECT
             e.id,
@@ -47,8 +39,21 @@ eventsRouter.get(
           FROM events e
           JOIN event_types et
             ON et.id = e.event_type_id
+          WHERE (
+            $1::boolean = false
+            OR EXISTS (
+              SELECT 1
+              FROM event_registrations er
+              WHERE er.event_id = e.id
+                AND er.user_id = $2
+            )
+          )
           ORDER BY e.id DESC
-        `
+        `,
+        [
+          isMember,
+          req.auth!.sub,
+        ]
       );
 
       res.json({
@@ -79,7 +84,7 @@ eventsRouter.get(
     }
 
     try {
-      const result = await query<EventRow & {
+      const result = await query<Event & {
         other_value: string | null;
         other_reason: string | null;
       }>(
@@ -263,7 +268,7 @@ eventsRouter.patch(
         return;
       }
 
-      const eventResult = await client.query<EventRow>(
+      const eventResult = await client.query<Event>(
         `
           UPDATE events
           SET
@@ -528,7 +533,7 @@ eventsRouter.post(
         return;
       }
 
-      const eventResult = await client.query<EventRow>(
+      const eventResult = await client.query<Event>(
         `
           INSERT INTO events (
             name,

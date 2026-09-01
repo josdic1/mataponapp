@@ -40,10 +40,6 @@
       "types": "./dist/schemas/staffMemberAreas.d.ts",
       "import": "./dist/schemas/staffMemberAreas.js"
     },
-    "./schemas/staffActivities": {
-      "types": "./dist/schemas/staffActivities.d.ts",
-      "import": "./dist/schemas/staffActivities.js"
-    },
     "./schemas/eventActivityStaff": {
       "types": "./dist/schemas/eventActivityStaff.d.ts",
       "import": "./dist/schemas/eventActivityStaff.js"
@@ -59,6 +55,22 @@
     "./schemas/eventActivitySignups": {
       "types": "./dist/schemas/eventActivitySignups.d.ts",
       "import": "./dist/schemas/eventActivitySignups.js"
+    },
+    "./schemas/areas": {
+      "types": "./dist/schemas/areas.d.ts",
+      "import": "./dist/schemas/areas.js"
+    },
+    "./schemas/qualifications": {
+      "types": "./dist/schemas/qualifications.d.ts",
+      "import": "./dist/schemas/qualifications.js"
+    },
+    "./schemas/meals": {
+      "types": "./dist/schemas/meals.d.ts",
+      "import": "./dist/schemas/meals.js"
+    },
+    "./schemas/eventRegistrations": {
+      "types": "./dist/schemas/eventRegistrations.d.ts",
+      "import": "./dist/schemas/eventRegistrations.js"
     }
   },
   "dependencies": {

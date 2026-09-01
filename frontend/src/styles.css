@@ -1,0 +1,83 @@
+
+/* Household member actions */
+
+.member-person {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.member-person-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.member-person-actions > button {
+  appearance: none;
+  border: 1px solid #d9d9d4;
+  border-radius: 7px;
+  background: #fff;
+  color: #155f45;
+  padding: 7px 11px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.member-person-actions > button:hover {
+  background: #f3f8f5;
+  border-color: #b9d4c8;
+}
+
+.member-person-actions > button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.member-person-actions > label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+}
+
+.member-person-actions > label > span {
+  color: #6d716d;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.member-person-actions select {
+  appearance: none;
+  border: 1px solid #d9d9d4;
+  border-radius: 7px;
+  background: #fff;
+  color: #155f45;
+  padding: 7px 28px 7px 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.member-person-actions select:hover {
+  background: #f3f8f5;
+  border-color: #b9d4c8;
+}
+
+@media (max-width: 700px) {
+  .member-person {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .member-person-actions {
+    width: 100%;
+  }
+}

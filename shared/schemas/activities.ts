@@ -8,6 +8,7 @@ export const activitySettingSchema = z.enum([
 
 export const createActivitySchema = z.object({
   name: z.string().trim().min(1),
+  area_id: z.number().int().positive(),
   setting: activitySettingSchema,
   other_value: z.string().trim().min(1).optional(),
   other_reason: z.string().trim().min(1).optional(),
@@ -32,3 +33,13 @@ export type CreateActivityInput =
 
 export type UpdateActivityInput =
   z.infer<typeof updateActivitySchema>;
+
+export type Activity = {
+  id: string;
+  name: string;
+  area_id: string;
+  area_name: string;
+  setting: ActivitySetting;
+  created_at: string;
+  updated_at: string;
+};

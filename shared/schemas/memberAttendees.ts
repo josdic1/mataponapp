@@ -11,3 +11,15 @@ export type CreateMemberAttendeeInput =
 export const memberAttendeeIdParamsSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
+
+export type MemberAttendee = {
+  id: string;
+  member_id: string;
+  member_name: string;
+  user_id: string;
+  household_name: string;
+  event_id: string;
+  event_name: string;
+  created_at: string;
+  updated_at: string;
+};

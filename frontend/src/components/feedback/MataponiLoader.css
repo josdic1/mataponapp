@@ -1,0 +1,67 @@
+.loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  background: rgba(246, 245, 241, 0.94);
+}
+
+.mataponi-loader {
+  position: relative;
+  width: min(620px, 86vw);
+  aspect-ratio: 1774 / 887;
+  overflow: visible;
+}
+
+.mataponi-loader img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.mataponi-loader__hardware {
+  clip-path: inset(0 0 75.5% 0);
+}
+
+.mataponi-loader__sign {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 24.8%;
+  animation: mataponi-swing 2.35s cubic-bezier(.45, 0, .55, 1) infinite;
+  will-change: transform;
+}
+
+.mataponi-loader__sign img {
+  clip-path: inset(24% 0 0 0);
+  filter:
+    url("#mataponi-green")
+    drop-shadow(0 7px 8px rgba(0, 0, 0, 0.075));
+}
+
+@keyframes mataponi-swing {
+  0% {
+    transform: rotate(-0.72deg) translate3d(-0.5px, 0, 0);
+  }
+
+  50% {
+    transform: rotate(0.72deg) translate3d(0.5px, 1px, 0);
+  }
+
+  100% {
+    transform: rotate(-0.72deg) translate3d(-0.5px, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mataponi-loader__sign {
+    animation: none;
+    transform: none;
+  }
+}

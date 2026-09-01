@@ -2,6 +2,12 @@ import { Router } from "express";
 
 import { resetTestDataSchema } from "@matapon/shared/schemas/resetTestData";
 
+import {
+  createAccessToken,
+  SESSION_COOKIE_NAME,
+  sessionCookieOptions,
+} from "../services/auth.js";
+
 import { pool } from "../db/pool.js";
 import {
   requireAuth,
@@ -10,6 +16,113 @@ import {
 } from "../middleware/auth.js";
 
 export const devRouter = Router();
+
+
+function requireDevelopment(req: any, res: any, next: any) {
+  if (process.env.NODE_ENV === "production") {
+    res.status(403).json({
+      error: "Development tools are disabled in production",
+    });
+    return;
+  }
+
+  next();
+}
+
+devRouter.get(
+  "/users",
+  requireDevelopment,
+  async (_req, res) => {
+    try {
+      const result = await pool.query<{
+        id: string;
+        username: string;
+        user_type: "member" | "staff" | "admin";
+        must_change_password: boolean;
+      }>(
+        `
+          SELECT
+            id,
+            username,
+            user_type,
+            must_change_password
+          FROM users
+          ORDER BY
+            CASE user_type
+              WHEN 'member' THEN 1
+              WHEN 'staff' THEN 2
+              WHEN 'admin' THEN 3
+            END,
+            LOWER(username)
+        `
+      );
+
+      res.json({
+        users: result.rows,
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        error: "Could not load development users",
+      });
+    }
+  }
+);
+
+devRouter.post(
+  "/login/:id",
+  requireDevelopment,
+  async (req, res) => {
+    try {
+      const result = await pool.query<{
+        id: string;
+        username: string;
+        user_type: "member" | "staff" | "admin";
+        must_change_password: boolean;
+      }>(
+        `
+          SELECT
+            id,
+            username,
+            user_type,
+            must_change_password
+          FROM users
+          WHERE id = $1
+          LIMIT 1
+        `,
+        [req.params.id]
+      );
+
+      const user = result.rows[0];
+
+      if (!user) {
+        res.status(404).json({
+          error: "Development user does not exist",
+        });
+        return;
+      }
+
+      const token = createAccessToken(user);
+
+      res.cookie(
+        SESSION_COOKIE_NAME,
+        token,
+        sessionCookieOptions()
+      );
+
+      res.json({
+        user,
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        error: "Development login failed",
+      });
+    }
+  }
+);
 
 devRouter.post(
   "/reset-test-data",
@@ -71,11 +184,15 @@ devRouter.post(
         "event_activity_signups",
         "member_attendees",
         "event_activity_staff",
-        "staff_activities",
+        "event_meals",
+        "activity_qualifications",
+        "staff_qualifications",
+        "qualifications",
         "staff_member_areas",
         "event_activities",
         "activity_others",
         "activities",
+        "meal_types",
         "staff_areas",
         "staff_members",
         "event_type_others",
@@ -148,6 +265,11 @@ devRouter.post(
 
       res.status(500).json({
         error: "Could not reset test data",
+        detail:
+          process.env.NODE_ENV !== "production" &&
+          error instanceof Error
+            ? error.message
+            : undefined,
       });
     } finally {
       client.release();

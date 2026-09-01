@@ -4,6 +4,7 @@ import {
   createEventActivitySchema,
   updateEventActivitySchema,
   eventActivityIdParamsSchema,
+  type EventActivity,
 } from "@matapon/shared/schemas/eventActivities";
 
 import { pool } from "../db/pool.js";
@@ -14,19 +15,7 @@ import {
   requireRole,
 } from "../middleware/auth.js";
 
-type EventActivityRow = {
-  id: string;
-  event_id: string;
-  event_name: string;
-  activity_id: string;
-  activity_name: string;
-  starts_at: string;
-  ends_at: string;
-  created_at: string;
-  updated_at: string;
-};
-
-type CurrentEventActivityRow = {
+type CurrentEventActivity = {
   id: string;
   event_id: string;
   activity_id: string;
@@ -54,9 +43,11 @@ eventActivitiesRouter.get(
   "/",
   requireAuth,
   requirePasswordChanged,
-  async (_req, res) => {
+  async (req, res) => {
     try {
-      const result = await query<EventActivityRow>(
+      const isMember = req.auth!.user_type === "member";
+
+      const result = await query<EventActivity>(
         `
           SELECT
             ea.id,
@@ -73,8 +64,18 @@ eventActivitiesRouter.get(
             ON e.id = ea.event_id
           JOIN activities a
             ON a.id = ea.activity_id
+          WHERE (
+            $1::boolean = false
+            OR EXISTS (
+              SELECT 1
+              FROM event_registrations er
+              WHERE er.event_id = ea.event_id
+                AND er.user_id = $2
+            )
+          )
           ORDER BY ea.starts_at, ea.id
-        `
+        `,
+        [isMember, req.auth!.sub]
       );
 
       res.json({
@@ -106,7 +107,7 @@ eventActivitiesRouter.get(
     }
 
     try {
-      const result = await query<EventActivityRow>(
+      const result = await query<EventActivity>(
         `
           SELECT
             ea.id,
@@ -215,7 +216,7 @@ eventActivitiesRouter.post(
         return;
       }
 
-      const result = await query<EventActivityRow>(
+      const result = await query<EventActivity>(
         `
           WITH inserted AS (
             INSERT INTO event_activities (
@@ -305,7 +306,7 @@ eventActivitiesRouter.patch(
       );
 
       const currentResult =
-        await client.query<CurrentEventActivityRow>(
+        await client.query<CurrentEventActivity>(
           `
             SELECT
               id,
@@ -521,45 +522,8 @@ eventActivitiesRouter.patch(
         return;
       }
 
-      const incapableStaff =
-        await client.query<{
-          full_name: string;
-        }>(
-          `
-            SELECT
-              sm.full_name
-            FROM event_activity_staff eas
-            JOIN staff_members sm
-              ON sm.id =
-                 eas.staff_member_id
-            WHERE eas.event_activity_id = $1
-              AND NOT EXISTS (
-                SELECT 1
-                FROM staff_activities sa
-                WHERE sa.staff_member_id =
-                      eas.staff_member_id
-                  AND sa.activity_id = $2
-              )
-            LIMIT 1
-          `,
-          [
-            params.data.id,
-            nextActivityId,
-          ]
-        );
-
-      if (incapableStaff.rows[0]) {
-        await client.query("ROLLBACK");
-
-        res.status(409).json({
-          error:
-            `${incapableStaff.rows[0].full_name} is not capable of the replacement activity`,
-        });
-        return;
-      }
-
       const updated =
-        await client.query<EventActivityRow>(
+        await client.query<EventActivity>(
           `
             WITH changed AS (
               UPDATE event_activities

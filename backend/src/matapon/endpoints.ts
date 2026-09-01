@@ -39,10 +39,6 @@ import {
   staffMemberAreaIdParamsSchema,
 } from "@matapon/shared/schemas/staffMemberAreas";
 import {
-  createStaffActivitySchema,
-  staffActivityIdParamsSchema,
-} from "@matapon/shared/schemas/staffActivities";
-import {
   createEventActivityStaffSchema,
   eventActivityStaffIdParamsSchema,
 } from "@matapon/shared/schemas/eventActivityStaff";
@@ -59,6 +55,11 @@ import {
   createMemberAttendeeSchema,
   memberAttendeeIdParamsSchema,
 } from "@matapon/shared/schemas/memberAttendees";
+import {
+  createEventRegistrationSchema,
+  updateEventRegistrationSchema,
+  eventRegistrationIdParamsSchema,
+} from "@matapon/shared/schemas/eventRegistrations";
 import {
   createEventActivitySignupSchema,
   eventActivitySignupIdParamsSchema,
@@ -464,35 +465,6 @@ export const endpointContracts: Record<string, EndpointContract> = {
     paramsSchema: staffMemberAreaIdParamsSchema,
   },
 
-  staffActivitiesList: {
-    id: "staff-activities-list",
-    name: "Staff Activities",
-    method: "GET",
-    path: "/api/staff-activities",
-    notes: "Lists staff activity capabilities.",
-    auth: true,
-  },
-
-  staffActivitiesCreate: {
-    id: "staff-activities-create",
-    name: "Assign Staff Activity",
-    method: "POST",
-    path: "/api/staff-activities",
-    notes: "Marks a staff member as capable of an activity.",
-    auth: true,
-    bodySchema: createStaffActivitySchema,
-  },
-
-  staffActivitiesDelete: {
-    id: "staff-activities-delete",
-    name: "Remove Staff Activity Capability",
-    method: "DELETE",
-    path: "/api/staff-activities/:id",
-    notes: "Removes an activity capability if the staff member is not assigned to scheduled instances of that activity.",
-    auth: true,
-    paramsSchema: staffActivityIdParamsSchema,
-  },
-
   eventActivityStaffList: {
     id: "event-activity-staff-list",
     name: "Event Activity Staff",
@@ -630,6 +602,46 @@ export const endpointContracts: Record<string, EndpointContract> = {
     notes: "Deletes an unused household member. A primary member cannot be removed while other household members remain.",
     auth: true,
     paramsSchema: userMemberIdParamsSchema,
+  },
+
+  eventRegistrationsList: {
+    id: "event-registrations-list",
+    name: "Event Registrations",
+    method: "GET",
+    path: "/api/event-registrations",
+    notes: "Lists household event registrations and paid spot counts.",
+    auth: true,
+  },
+
+  eventRegistrationsCreate: {
+    id: "event-registrations-create",
+    name: "Create Event Registration",
+    method: "POST",
+    path: "/api/event-registrations",
+    notes: "Registers a household for an event with a paid spot count.",
+    auth: true,
+    bodySchema: createEventRegistrationSchema,
+  },
+
+  eventRegistrationsUpdate: {
+    id: "event-registrations-update",
+    name: "Update Event Registration",
+    method: "PATCH",
+    path: "/api/event-registrations/:id",
+    notes: "Changes the number of paid spots for a household event registration.",
+    auth: true,
+    paramsSchema: eventRegistrationIdParamsSchema,
+    bodySchema: updateEventRegistrationSchema,
+  },
+
+  eventRegistrationsDelete: {
+    id: "event-registrations-delete",
+    name: "Delete Event Registration",
+    method: "DELETE",
+    path: "/api/event-registrations/:id",
+    notes: "Removes an event registration when no household attendees remain.",
+    auth: true,
+    paramsSchema: eventRegistrationIdParamsSchema,
   },
 
   memberAttendeesList: {

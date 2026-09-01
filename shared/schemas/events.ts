@@ -25,3 +25,14 @@ export type CreateEventInput =
 
 export type UpdateEventInput =
   z.infer<typeof updateEventSchema>;
+
+export type Event = {
+  id: string;
+  name: string;
+  event_type_id: string;
+  event_type_name: string;
+  starts_at: string;
+  ends_at: string;
+  created_at: string;
+  updated_at: string;
+};

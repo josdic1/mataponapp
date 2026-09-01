@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   createEventActivitySignupSchema,
   eventActivitySignupIdParamsSchema,
+  type EventActivitySignup,
 } from "@matapon/shared/schemas/eventActivitySignups";
 
 import { query } from "../db/db.js";
@@ -11,23 +12,6 @@ import {
   requirePasswordChanged,
   requireRole,
 } from "../middleware/auth.js";
-
-type EventActivitySignupRow = {
-  id: string;
-  event_activity_id: string;
-  event_id: string;
-  event_name: string;
-  activity_id: string;
-  activity_name: string;
-  member_attendee_id: string;
-  member_id: string;
-  member_name: string;
-  user_id: string;
-  household_name: string;
-  checked_in_at: string | null;
-  created_at: string;
-  updated_at: string;
-};
 
 export const eventActivitySignupsRouter = Router();
 
@@ -38,7 +22,9 @@ eventActivitySignupsRouter.get(
   requireRole("member", "staff", "admin"),
   async (req, res) => {
     try {
-      const result = await query<EventActivitySignupRow>(
+      const isMember = req.auth!.user_type === "member";
+
+      const result = await query<EventActivitySignup>(
         `
           SELECT
             eas.id,
@@ -68,8 +54,16 @@ eventActivitySignupsRouter.get(
             ON um.id = ma.member_id
           JOIN users u
             ON u.id = um.user_id
+          WHERE (
+            $1::boolean = false
+            OR um.user_id = $2
+          )
           ORDER BY ea.starts_at, um.full_name, eas.id
-        `
+        `,
+        [
+          isMember,
+          req.auth!.sub,
+        ]
       );
 
       res.json({
@@ -195,7 +189,7 @@ eventActivitySignupsRouter.patch(
     }
 
     try {
-      const result = await query<EventActivitySignupRow>(
+      const result = await query<EventActivitySignup>(
         `
           WITH updated AS (
             UPDATE event_activity_signups
@@ -291,7 +285,7 @@ eventActivitySignupsRouter.patch(
     }
 
     try {
-      const result = await query<EventActivitySignupRow>(
+      const result = await query<EventActivitySignup>(
         `
           WITH updated AS (
             UPDATE event_activity_signups
@@ -457,7 +451,7 @@ eventActivitySignupsRouter.post(
         return;
       }
 
-      const result = await query<EventActivitySignupRow>(
+      const result = await query<EventActivitySignup>(
         `
           WITH inserted AS (
             INSERT INTO event_activity_signups (

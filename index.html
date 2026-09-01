@@ -310,6 +310,82 @@
   .hidden{display:none!important}
   .top-project{border:0;background:transparent;font-weight:700;color:var(--ink);padding:6px 8px;border-radius:7px}
   .top-project:hover{background:var(--surface-2)}
+
+  .brand-home{
+    border:0;
+    background:transparent;
+    padding:0;
+    font:inherit;
+    color:inherit;
+    text-align:left;
+    cursor:pointer;
+    border-radius:9px;
+  }
+
+  .brand-home:hover .brand-name{
+    color:var(--accent-ink);
+  }
+
+  .live-data-link{
+    height:34px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:0 10px;
+    border:1px solid transparent;
+    border-radius:8px;
+    background:transparent;
+    color:var(--ink);
+    font-weight:760;
+    white-space:nowrap;
+  }
+
+  .live-data-link:hover{
+    background:var(--surface-2);
+  }
+
+  .live-data-link.active{
+    background:var(--accent-soft);
+    color:var(--accent-ink);
+    border-color:#cbe5dc;
+  }
+
+  .live-data-dot{
+    position:relative;
+    width:7px;
+    height:7px;
+    flex:0 0 7px;
+    border-radius:50%;
+    background:var(--accent);
+  }
+
+  .live-data-dot::after{
+    content:"";
+    position:absolute;
+    inset:-4px;
+    border:1px solid rgba(0,120,84,.38);
+    border-radius:50%;
+    animation:live-data-pulse 2.2s ease-out infinite;
+  }
+
+  @keyframes live-data-pulse{
+    0%{
+      transform:scale(.55);
+      opacity:.75;
+    }
+    70%,
+    100%{
+      transform:scale(1.65);
+      opacity:0;
+    }
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .live-data-dot::after{
+      animation:none;
+      opacity:0;
+    }
+  }
   .schema-edit-grid{display:grid;grid-template-columns:1.05fr 1fr 1.35fr 44px}
   .schema-edit-grid>div{padding:9px 11px;border-bottom:1px solid var(--line);min-width:0}
   .schema-edit-grid .head{background:var(--surface-2);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:780}
@@ -329,6 +405,7 @@
   .api-layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}
   .api-layout .api-side{
     position:relative;
+    top:0;
     overflow:visible;
   }
   .api-side{position:sticky;top:82px;max-height:calc(100vh - 104px);overflow:hidden;display:flex;flex-direction:column}
@@ -609,6 +686,73 @@
   }
 
 
+  /* Consolidated Data workspace */
+  .data-workspace-bar{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin:0 0 16px;
+    padding:5px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+  }
+
+  .data-workspace-mode{
+    height:34px;
+    border:0;
+    border-radius:7px;
+    background:transparent;
+    padding:0 13px;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+
+  .data-workspace-mode:hover{
+    color:var(--ink);
+    background:var(--surface-2);
+  }
+
+  .data-workspace-mode.active{
+    background:var(--accent-soft);
+    color:var(--accent-ink);
+  }
+
+  .data-workspace-hint{
+    margin-left:auto;
+    padding:0 8px;
+    color:var(--muted);
+    font-size:10px;
+    font-weight:650;
+  }
+
+  .data-workspace-view[hidden],
+  .data-workspace-status[hidden],
+  .data-workspace-hint[hidden]{
+    display:none!important;
+  }
+
+  @media(max-width:720px){
+    .data-workspace-bar{
+      align-items:stretch;
+      flex-wrap:wrap;
+    }
+
+    .data-workspace-mode{
+      flex:1;
+    }
+
+    .data-workspace-hint{
+      width:100%;
+      margin-left:0;
+      padding:3px 8px 1px;
+      text-align:center;
+    }
+  }
+
   /* Simulator */
   .sim-shell{display:flex;flex-direction:column;gap:16px}
   .sim-command .card-body{display:grid;grid-template-columns:minmax(240px,360px) minmax(0,1fr);gap:18px;align-items:end}
@@ -686,14 +830,32 @@
 
 <div class="app">
   <header class="topbar">
-    <div class="brand"><div class="mark">M</div><div class="brand-copy"><div class="brand-name">Matapon Builder</div><div class="brand-sub">architecture workspace</div></div></div>
-    <button class="top-project" id="projectBadge" data-open-tab="platform">mataponapp</button>
+    <button
+      class="brand brand-home"
+      type="button"
+      data-open-tab="platform"
+      aria-label="Matapon Builder home"
+    >
+      <div class="mark">M</div>
+      <div class="brand-copy">
+        <div class="brand-name">Matapon Builder</div>
+        <div class="brand-sub">architecture workspace</div>
+      </div>
+    </button>
+
+    <button
+      class="live-data-link"
+      type="button"
+      data-open-tab="data"
+    >
+      <span class="live-data-dot" aria-hidden="true"></span>
+      <span>Live Data</span>
+    </button>
+
     <nav class="tabs" aria-label="Builder sections">
+      <button class="tab" data-target="platform">Platform</button>
       <button class="tab active" data-target="schema">Schema</button>
       <button class="tab" data-target="database">Database</button>
-      <button class="tab" data-target="data">Data</button>
-      <button class="tab" data-target="platform">Platform</button>
-      <button class="tab" data-target="simulator">Simulator</button>
       <button class="tab" data-target="api">API Tester</button>
       <button class="tab" data-target="ideas">Idea Log</button>
     </nav>
@@ -750,41 +912,55 @@
     </section>
 
     <section class="screen" id="data">
-      <div class="page-head"><div><div class="eyebrow">Live row data</div><h1>Data browser</h1><div class="subtitle">Read-only row inspection. Password hashes are never returned. Mutations stay in explicit API/product workflows.</div></div><div class="summary"><span class="chip" id="dataLiveChip">Admin login required</span><span class="chip" id="dataTablesChip">0 tables</span><span class="chip good">Read only</span><button class="btn primary" id="refreshDataBtn">↻ Refresh data</button></div></div>
-      <div class="data-layout">
-        <aside class="card data-side"><div class="card-head"><div><div class="card-title">Tables</div><div class="card-kicker">Live PostgreSQL row counts.</div></div></div><div class="card-body"><input id="dataTableSearch" class="search" placeholder="Find table…" autocomplete="off" /><div id="dataTableList" class="data-table-list" style="margin-top:10px"></div></div></aside>
-        <section class="card data-main"><div class="card-head"><div><div class="card-kicker">Selected table</div><div class="db-table-name" id="dataTableName">—</div></div><div class="data-toolbar"><input id="rowSearch" class="search" placeholder="Search rows…" autocomplete="off" /><button class="btn" id="clearRowSearch">Clear</button></div></div><div class="snapshot-bar"><span><strong id="dataRowSummary">0 rows</strong> · <span id="dataColumnSummary">0 columns</span></span><span id="dataRedaction"></span></div><div id="dataError"></div><div class="data-table-shell"><table class="data-grid" id="dataGrid"><thead id="dataHead"></thead><tbody id="dataBody"></tbody></table><div class="data-empty" id="dataEmpty" hidden><strong>No matching rows</strong>Try a different search.</div></div><div class="data-footer"><span id="dataShowing">Showing rows</span><div class="pager"><button id="dataPrevBtn">‹</button><span id="dataPage">1</span><button id="dataNextBtn">›</button></div></div></section>
-        <aside class="card data-inspector"><div class="card-head"><div style="min-width:0"><div class="card-kicker">Selected row</div><div class="row-key" id="rowKey">—</div><div class="row-meta"><span class="chip" id="rowTableChip">—</span><span class="chip good">live row</span></div></div><button class="btn icon" id="copyRowBtn" title="Copy row JSON">⧉</button></div><div class="card-body"><div id="rowFields"></div><div class="db-detail-section"><div class="db-detail-label">Raw JSON</div><div class="raw-json" id="rowJson">{}</div></div></div></aside>
-      </div>
-    </section>
-
-    <section class="screen" id="platform">
-      <div class="page-head"><div><div class="eyebrow">Platform contract</div><h1>Architecture, without the noise.</h1><div class="subtitle">Editable project values are separated from settled conventions. The build brief is generated from this live state.</div></div><div class="summary"><span class="chip good" id="platformConfiguredChip">0 / 0 configured</span><span class="chip" id="platformConflictChip">0 conflicts</span><span class="chip" id="platformRepoChip">Monorepo</span></div></div>
-      <div class="grid"><div class="stack">
-        <section class="card"><div class="card-head"><div><div class="card-title">Stack & deployment</div><div class="card-kicker">Project values only.</div></div></div><div class="card-body"><div class="config-groups">
-          <div class="config-group"><div class="config-label">Repository</div><div class="field"><div class="field-name">Project name</div><div class="field-value"><input id="projectName" /></div></div><div class="field"><div class="field-name">Structure</div><div class="field-value"><input id="repoType" /></div></div><div class="field"><div class="field-name">Frontend folder</div><div class="field-value"><input id="frontendFolder" class="mono" /></div></div><div class="field"><div class="field-name">Backend folder</div><div class="field-value"><input id="backendFolder" class="mono" /></div></div></div>
-          <div class="config-group"><div class="config-label">Frontend</div><div class="field"><div class="field-name">Framework</div><div class="field-value"><input id="frontendStack" /></div></div><div class="field"><div class="field-name">Language</div><div class="field-value"><input id="frontendLanguage" /></div></div><div class="field"><div class="field-name">Build Tool</div><div class="field-value"><input id="frontendBuildTool" /></div></div><div class="field"><div class="field-name">Router</div><div class="field-value"><input id="frontendRouter" /></div></div><div class="field"><div class="field-name">Icons</div><div class="field-value"><input id="frontendIcons" /></div></div><div class="field"><div class="field-name">CSS</div><div class="field-value"><input id="cssStrategy" /></div></div><div class="field"><div class="field-name">Deploy</div><div class="field-value"><input id="frontendDeploy" /></div></div></div>
-          <div class="config-group"><div class="config-label">Backend</div><div class="field"><div class="field-name">Runtime</div><div class="field-value"><input id="backendRuntime" /></div></div><div class="field"><div class="field-name">Server</div><div class="field-value"><input id="backendServer" /></div></div><div class="field"><div class="field-name">Language</div><div class="field-value"><input id="backendLanguage" /></div></div><div class="field"><div class="field-name">Validation</div><div class="field-value"><input id="validation" /></div></div><div class="field"><div class="field-name">Database access</div><div class="field-value"><input id="databaseAccess" /></div></div><div class="field"><div class="field-name">Deploy</div><div class="field-value"><input id="backendDeploy" /></div></div></div>
-        </div></div></section>
-        <section class="card"><div class="card-head"><div><div class="card-title">Naming contract</div><div class="card-kicker">Settled conventions.</div></div></div><div class="naming-table"><div class="head">Thing</div><div class="head">Rule</div><div class="head">Scope</div><div class="rule">React components</div><div class="example mono">PascalCase.tsx</div><div class="scope">fixed</div><div class="rule">TypeScript modules</div><div class="example mono">camelCase.ts</div><div class="scope">fixed</div><div class="rule">DB tables</div><div class="example mono">plural_snake_case</div><div class="scope">fixed</div><div class="rule">DB fields</div><div class="example mono">snake_case</div><div class="scope">fixed</div><div class="rule">Foreign keys</div><div class="example mono">singular_target_id</div><div class="scope">fixed</div><div class="rule">API routes</div><div class="example mono">/api/plural-resources</div><div class="scope">fixed</div><div class="rule">Environment vars</div><div class="example mono">UPPER_SNAKE_CASE</div><div class="scope">fixed</div></div></section>
-        <section class="card"><div class="card-head"><div><div class="card-title">Build brief</div><div class="card-kicker">Generated from current Builder state.</div></div><button class="mini-action" id="copyPlatformBriefBtn">Copy brief</button></div><div class="card-body"><div class="brief" id="buildBrief"></div></div></section>
-      </div><aside class="stack"><section class="card health-card"><div class="card-head"><div><div class="card-title">Architecture health</div><div class="card-kicker">Required platform values.</div></div><span class="chip good" id="platformHealthChip">Healthy</span></div><div class="card-body"><div class="health-top"><div><div class="big-number" id="platformPercent">100<small>% configured</small></div><div class="meter"><span id="platformMeter"></span></div></div></div><div class="metric-list"><div class="label">Configured values</div><div class="value" id="platformMetricConfigured">0 / 0</div><div class="label">Schema errors</div><div class="value" id="platformMetricSchemaErrors">0</div><div class="label">Backend endpoints</div><div class="value" id="platformMetricEndpoints">0</div><div class="label">Live DB drift</div><div class="value" id="platformMetricDrift">—</div></div></div></section><section class="card"><div class="card-head"><div><div class="card-title">Fixed conventions</div></div></div><div class="card-body contract-list"><div class="contract-item"><span class="check">✓</span><div><div class="contract-main">One monorepo</div></div><span class="lock">locked</span></div><div class="contract-item"><span class="check">✓</span><div><div class="contract-main">Token-based CSS</div></div><span class="lock">locked</span></div><div class="contract-item"><span class="check">✓</span><div><div class="contract-main">Zod at boundaries</div></div><span class="lock">locked</span></div><div class="contract-item"><span class="check">✓</span><div><div class="contract-main">Pure SQL</div></div><span class="lock">locked</span></div><div class="contract-item"><span class="check">✓</span><div><div class="contract-main">PostgreSQL</div></div><span class="lock">locked</span></div></div></section><section class="card"><div class="card-head"><div><div class="card-title">Repo shape</div></div></div><div class="card-body"><div class="repo-tree" id="repoShape"></div></div></section></aside></div>
-    </section>
-
-
-    <section class="screen" id="simulator">
       <div class="page-head">
         <div>
-          <div class="eyebrow">Human workflow preview</div>
-          <h1>Simulator</h1>
-          <div class="subtitle">Use the real backend through a realistic interface. Pick what you are working with, then show, add, edit, or remove it without dealing with raw IDs or request bodies.</div>
+          <div class="eyebrow">Application records</div>
+          <h1>Live Data</h1>
+          <div class="subtitle">Work with real application records through the live API, or inspect the exact PostgreSQL rows in Tables.</div>
         </div>
-        <div class="summary">
+
+        <div class="summary data-workspace-status" data-data-status="records">
           <span class="chip" id="simLiveChip">Live data</span>
           <span class="chip" id="simActionChip">—</span>
         </div>
+
+        <div class="summary data-workspace-status" data-data-status="tables" hidden>
+          <span class="chip" id="dataLiveChip">Admin login required</span>
+          <span class="chip" id="dataTablesChip">0 tables</span>
+          <span class="chip good">Database · read only</span>
+          <button class="btn primary" id="refreshDataBtn">↻ Refresh</button>
+        </div>
       </div>
 
+      <div class="data-workspace-bar" role="tablist" aria-label="Data view">
+        <button
+          class="data-workspace-mode active"
+          type="button"
+          data-data-mode="records"
+        >Records</button>
+
+        <button
+          class="data-workspace-mode"
+          type="button"
+          data-data-mode="tables"
+        >Tables</button>
+
+        <div
+          class="data-workspace-hint"
+          data-data-hint="records"
+        >Human-readable · API-backed · editable</div>
+
+        <div
+          class="data-workspace-hint"
+          data-data-hint="tables"
+          hidden
+        >PostgreSQL tables · rows · read only</div>
+      </div>
+
+      <div
+        class="data-workspace-view"
+        data-data-view="records"
+      >
       <div class="sim-shell">
         <section class="card sim-command">
           <div class="card-body">
@@ -797,6 +973,19 @@
         </section>
 
         <div id="simulatorContent"></div>
+      </div>
+      </div>
+
+      <div
+        class="data-workspace-view"
+        data-data-view="tables"
+        hidden
+      >
+      <div class="data-layout">
+        <aside class="card data-side"><div class="card-head"><div><div class="card-title">Tables</div><div class="card-kicker">Live PostgreSQL row counts.</div></div></div><div class="card-body"><input id="dataTableSearch" class="search" placeholder="Find table…" autocomplete="off" /><div id="dataTableList" class="data-table-list" style="margin-top:10px"></div></div></aside>
+        <section class="card data-main"><div class="card-head"><div><div class="card-kicker">Selected table</div><div class="db-table-name" id="dataTableName">—</div></div><div class="data-toolbar"><input id="rowSearch" class="search" placeholder="Search rows…" autocomplete="off" /><button class="btn" id="clearRowSearch">Clear</button></div></div><div class="snapshot-bar"><span><strong id="dataRowSummary">0 rows</strong> · <span id="dataColumnSummary">0 columns</span></span><span id="dataRedaction"></span></div><div id="dataError"></div><div class="data-table-shell"><table class="data-grid" id="dataGrid"><thead id="dataHead"></thead><tbody id="dataBody"></tbody></table><div class="data-empty" id="dataEmpty" hidden><strong>No matching rows</strong>Try a different search.</div></div><div class="data-footer"><span id="dataShowing">Showing rows</span><div class="pager"><button id="dataPrevBtn">‹</button><span id="dataPage">1</span><button id="dataNextBtn">›</button></div></div></section>
+        <aside class="card data-inspector"><div class="card-head"><div style="min-width:0"><div class="card-kicker">Selected row</div><div class="row-key" id="rowKey">—</div><div class="row-meta"><span class="chip" id="rowTableChip">—</span><span class="chip good">live row</span></div></div><button class="btn icon" id="copyRowBtn" title="Copy row JSON">⧉</button></div><div class="card-body"><div id="rowFields"></div><div class="db-detail-section"><div class="db-detail-label">Raw JSON</div><div class="raw-json" id="rowJson">{}</div></div></div></aside>
+      </div>
       </div>
 
       <div class="sim-modal-backdrop" id="simDeleteModal" hidden>
@@ -817,6 +1006,20 @@
         </div>
       </div>
     </section>
+
+    <section class="screen" id="platform">
+      <div class="page-head"><div><div class="eyebrow">Platform contract</div><h1>Architecture, without the noise.</h1><div class="subtitle">Editable project values are separated from settled conventions. The build brief is generated from this live state.</div></div><div class="summary"><span class="chip good" id="platformConfiguredChip">0 / 0 configured</span><span class="chip" id="platformConflictChip">0 conflicts</span><span class="chip" id="platformRepoChip">Monorepo</span></div></div>
+      <div class="grid"><div class="stack">
+        <section class="card"><div class="card-head"><div><div class="card-title">Stack & deployment</div><div class="card-kicker">Project values only.</div></div></div><div class="card-body"><div class="config-groups">
+          <div class="config-group"><div class="config-label">Repository</div><div class="field"><div class="field-name">Project name</div><div class="field-value"><input id="projectName" /></div></div><div class="field"><div class="field-name">Structure</div><div class="field-value"><input id="repoType" /></div></div><div class="field"><div class="field-name">Frontend folder</div><div class="field-value"><input id="frontendFolder" class="mono" /></div></div><div class="field"><div class="field-name">Backend folder</div><div class="field-value"><input id="backendFolder" class="mono" /></div></div></div>
+          <div class="config-group"><div class="config-label">Frontend</div><div class="field"><div class="field-name">Framework</div><div class="field-value"><input id="frontendStack" /></div></div><div class="field"><div class="field-name">Language</div><div class="field-value"><input id="frontendLanguage" /></div></div><div class="field"><div class="field-name">Build Tool</div><div class="field-value"><input id="frontendBuildTool" /></div></div><div class="field"><div class="field-name">Router</div><div class="field-value"><input id="frontendRouter" /></div></div><div class="field"><div class="field-name">Icons</div><div class="field-value"><input id="frontendIcons" /></div></div><div class="field"><div class="field-name">CSS</div><div class="field-value"><input id="cssStrategy" /></div></div><div class="field"><div class="field-name">Deploy</div><div class="field-value"><input id="frontendDeploy" /></div></div></div>
+          <div class="config-group"><div class="config-label">Backend</div><div class="field"><div class="field-name">Runtime</div><div class="field-value"><input id="backendRuntime" /></div></div><div class="field"><div class="field-name">Server</div><div class="field-value"><input id="backendServer" /></div></div><div class="field"><div class="field-name">Language</div><div class="field-value"><input id="backendLanguage" /></div></div><div class="field"><div class="field-name">Validation</div><div class="field-value"><input id="validation" /></div></div><div class="field"><div class="field-name">Database access</div><div class="field-value"><input id="databaseAccess" /></div></div><div class="field"><div class="field-name">Deploy</div><div class="field-value"><input id="backendDeploy" /></div></div></div>
+        </div></div></section>
+        <section class="card"><div class="card-head"><div><div class="card-title">Naming contract</div><div class="card-kicker">Settled conventions.</div></div></div><div class="naming-table"><div class="head">Thing</div><div class="head">Rule</div><div class="head">Scope</div><div class="rule">React components</div><div class="example mono">PascalCase.tsx</div><div class="scope">fixed</div><div class="rule">TypeScript modules</div><div class="example mono">camelCase.ts</div><div class="scope">fixed</div><div class="rule">DB tables</div><div class="example mono">plural_snake_case</div><div class="scope">fixed</div><div class="rule">DB fields</div><div class="example mono">snake_case</div><div class="scope">fixed</div><div class="rule">Foreign keys</div><div class="example mono">singular_target_id</div><div class="scope">fixed</div><div class="rule">API routes</div><div class="example mono">/api/plural-resources</div><div class="scope">fixed</div><div class="rule">Environment vars</div><div class="example mono">UPPER_SNAKE_CASE</div><div class="scope">fixed</div></div></section>
+        <section class="card"><div class="card-head"><div><div class="card-title">Build brief</div><div class="card-kicker">Generated from current Builder state.</div></div><button class="mini-action" id="copyPlatformBriefBtn">Copy brief</button></div><div class="card-body"><div class="brief" id="buildBrief"></div></div></section>
+      </div><aside class="stack"><section class="card health-card"><div class="card-head"><div><div class="card-title">Architecture health</div><div class="card-kicker">Required platform values.</div></div><span class="chip good" id="platformHealthChip">Healthy</span></div><div class="card-body"><div class="health-top"><div><div class="big-number" id="platformPercent">100<small>% configured</small></div><div class="meter"><span id="platformMeter"></span></div></div></div><div class="metric-list"><div class="label">Configured values</div><div class="value" id="platformMetricConfigured">0 / 0</div><div class="label">Schema errors</div><div class="value" id="platformMetricSchemaErrors">0</div><div class="label">Backend endpoints</div><div class="value" id="platformMetricEndpoints">0</div><div class="label">Live DB drift</div><div class="value" id="platformMetricDrift">—</div></div></div></section><section class="card"><div class="card-head"><div><div class="card-title">Fixed conventions</div></div></div><div class="card-body contract-list"><div class="contract-item"><span class="check">✓</span><div><div class="contract-main">One monorepo</div></div><span class="lock">locked</span></div><div class="contract-item"><span class="check">✓</span><div><div class="contract-main">Token-based CSS</div></div><span class="lock">locked</span></div><div class="contract-item"><span class="check">✓</span><div><div class="contract-main">Zod at boundaries</div></div><span class="lock">locked</span></div><div class="contract-item"><span class="check">✓</span><div><div class="contract-main">Pure SQL</div></div><span class="lock">locked</span></div><div class="contract-item"><span class="check">✓</span><div><div class="contract-main">PostgreSQL</div></div><span class="lock">locked</span></div></div></section><section class="card"><div class="card-head"><div><div class="card-title">Repo shape</div></div></div><div class="card-body"><div class="repo-tree" id="repoShape"></div></div></section></aside></div>
+    </section>
+
 
     <section class="screen" id="api">
       <div class="page-head"><div><div class="eyebrow">Contract tester</div><h1>API tester</h1><div class="subtitle">Synced from the running backend. One endpoint list, one focused request workspace, no giant repeated cards.</div></div><div class="summary"><span class="chip" id="apiSyncChip">Not synced</span><span class="chip" id="apiCountChip">0 endpoints</span></div></div>
@@ -893,9 +1096,6 @@
     ]},
     { name: "activity_others", note: "Actual setting when normal activity setting does not fit.", fields: [
       field("id", "PK"), field("activity_id", "FK", "activities.id"), field("value", "TEXT NOT NULL"), field("reason", "TEXT NOT NULL"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
-    ]},
-    { name: "staff_activities", note: "Activities a staff member can do.", fields: [
-      field("id", "PK"), field("staff_member_id", "FK", "staff_members.id"), field("activity_id", "FK", "activities.id"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"), field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
     ]},
     { name: "event_activities", note: "A reusable activity scheduled into a specific event.", fields: [
       field("id", "PK"), field("event_id", "FK", "events.id"), field("activity_id", "FK", "activities.id"), field("starts_at", "TEXT NOT NULL"), field("ends_at", "TEXT NOT NULL"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"), field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
@@ -1157,7 +1357,7 @@
     state.projectName=document.getElementById("projectName").value.trim()||"mataponapp";
     keys.forEach(k=>{const el=document.getElementById(k);if(el)state.platform[k]=el.value.trim();});
     save();
-    document.getElementById("projectBadge").textContent=state.projectName;
+    
     renderPlatformSummary();
   }
 
@@ -1340,7 +1540,6 @@
     "/api/staff-members",
     "/api/staff-areas",
     "/api/staff-member-areas",
-    "/api/staff-activities",
     "/api/event-activity-staff",
     "/api/member-attendees",
     "/api/event-activity-signups",
@@ -1851,7 +2050,10 @@
     const base=String(state.curl.baseUrl||API_DEFAULT).replace(/\/+$/,"").trim();
     try{
       const res=await fetch(base+"/__matapon/endpoints",{credentials:"include"}); if(!res.ok)throw new Error(`${res.status} ${res.statusText}`); const data=await res.json(); if(!Array.isArray(data.endpoints))throw new Error("Backend did not return endpoint definitions");
-      const manual=(state.curl.endpoints||[]).filter(x=>x.source==="manual"); const dynamic=data.endpoints.map(x=>normalizeEndpoint({...x,source:"backend"})); state.curl.endpoints=[...dynamic,...manual]; if(!state.curl.endpoints.some(x=>x.id===state.curl.selectedId))state.curl.selectedId=state.curl.endpoints[0]?.id||null; state.curl.lastSync=new Date().toISOString(); state.curl.syncError=""; save(); renderApi(); renderPlatformSummary(); if(currentBuilderTab()==="simulator")renderSimulator(); return true;
+      const manual=(state.curl.endpoints||[]).filter(x=>x.source==="manual"); const dynamic=data.endpoints.map(x=>normalizeEndpoint({...x,source:"backend"})); state.curl.endpoints=[...dynamic,...manual]; if(!state.curl.endpoints.some(x=>x.id===state.curl.selectedId))state.curl.selectedId=state.curl.endpoints[0]?.id||null; state.curl.lastSync=new Date().toISOString(); state.curl.syncError=""; save(); renderApi(); renderPlatformSummary(); if(
+        currentBuilderTab()==="data" &&
+        dataWorkspaceMode==="records"
+      )renderSimulator(); return true;
     }catch(err){state.curl.syncError=String(err?.message||err);save();renderApi();if(!silent)toast("Backend sync failed");return false;}
   }
 
@@ -1871,7 +2073,7 @@
   function tableGroup(name){
     if(["users","user_members","staff_members","staff_areas"].includes(name))return 0;
     if(["member_attendees","event_activity_signups","staff_member_areas"].includes(name))return 1;
-    if(["events","event_activities","event_activity_staff","staff_activities"].includes(name))return 2;
+    if(["events","event_activities","event_activity_staff"].includes(name))return 2;
     return 3;
   }
   function groupLabel(group){return ["Identity + people","Attendance + links","Events + bookings","Taxonomy + audit"][group];}
@@ -2080,18 +2282,6 @@
       ],
     },
     {
-      key:"staff_activities",
-      table:"staff_activities",
-      label:"Staff Activity Capabilities",
-      singular:"Staff Activity Capability",
-      group:"staff",
-      basePath:"/api/staff-activities",
-      columns:[
-        ["staff_member_id","Staff Member"],
-        ["activity_id","Activity"],
-      ],
-    },
-    {
       key:"event_activity_staff",
       table:"event_activity_staff",
       label:"Scheduled Activity Staff",
@@ -2101,6 +2291,19 @@
       columns:[
         ["event_activity_id","Scheduled Activity"],
         ["staff_member_id","Staff Member"],
+      ],
+    },
+    {
+      key:"event_registrations",
+      table:"event_registrations",
+      label:"Event Registrations",
+      singular:"Event Registration",
+      group:"attendance",
+      basePath:"/api/event-registrations",
+      columns:[
+        ["user_id","Household"],
+        ["event_id","Event"],
+        ["spots_paid_for","Paid Spots"],
       ],
     },
     {
@@ -2134,6 +2337,7 @@
     user_id:"users",
     event_type_id:"event_types",
     event_id:"events",
+    user_id:"users",
     activity_id:"activities",
     staff_member_id:"staff_members",
     staff_area_id:"staff_areas",
@@ -2352,10 +2556,6 @@
 
     if(table==="staff_member_areas"){
       return `${simRowLabel("staff_members",simFind("staff_members",row.staff_member_id))} · ${simRowLabel("staff_areas",simFind("staff_areas",row.staff_area_id))}`;
-    }
-
-    if(table==="staff_activities"){
-      return `${simRowLabel("staff_members",simFind("staff_members",row.staff_member_id))} · ${simRowLabel("activities",simFind("activities",row.activity_id))}`;
     }
 
     if(table==="event_activity_staff"){
@@ -2903,9 +3103,14 @@
     const mode=state.simulator.mode;
 
     if(!simModeAvailable(resource,mode)){
-      state.simulator.mode="show";
-      save();
-      renderSimulator();
+      root.innerHTML=`
+        <section class="card">
+          <div class="sim-empty">
+            <strong>Backend action not loaded</strong>
+            Syncing backend actions…
+          </div>
+        </section>
+      `;
       return;
     }
 
@@ -3318,7 +3523,12 @@
       simResetDraft();
       save();
       renderSimulator();
-      renderFloatingSectionRail("simulator");
+      if(
+        currentBuilderTab()==="data" &&
+        dataWorkspaceMode==="records"
+      ){
+        renderFloatingSectionRail("data");
+      }
     };
 
     modeRoot.querySelectorAll("[data-sim-mode]").forEach(button=>{
@@ -3349,12 +3559,32 @@
   async function refreshTopHealth(){const base=String(state.curl.baseUrl||API_DEFAULT).replace(/\/+$/,"").trim();const node=document.getElementById("topHealth");try{const [health,db]=await Promise.all([fetch(base+"/health",{credentials:"include"}),fetch(base+"/db-check",{credentials:"include"})]);if(health.ok&&db.ok){node.innerHTML='<span class="dot"></span> API + PostgreSQL healthy · local';}else throw new Error();}catch{node.innerHTML='<span class="dot" style="background:#b63a33"></span> Local backend unavailable';}}
 
   const ACTIVE_BUILDER_TAB_KEY="matapon_builder_active_tab_v1";
+  const DATA_WORKSPACE_MODE_KEY="matapon_builder_data_mode_v1";
+  let dataWorkspaceMode="records";
+
+  try{
+    const savedDataMode=localStorage.getItem(DATA_WORKSPACE_MODE_KEY);
+
+    if(
+      savedDataMode==="records" ||
+      savedDataMode==="tables"
+    ){
+      dataWorkspaceMode=savedDataMode;
+    }
+  }catch{}
+
 
   if("scrollRestoration" in history){
     history.scrollRestoration="manual";
   }
 
   function currentBuilderTab(){
+    if(
+      document.querySelector(".live-data-link.active")
+    ){
+      return "data";
+    }
+
     return document.querySelector(".tab.active")?.dataset.target || "schema";
   }
 
@@ -3469,7 +3699,14 @@
 
   function currentRailSections(tab=currentBuilderTab()){
     if(tab==="api")return apiRailSections();
-    if(tab==="simulator")return simulatorRailSections();
+
+    if(
+      tab==="data" &&
+      dataWorkspaceMode==="records"
+    ){
+      return simulatorRailSections();
+    }
+
     if(tab==="ideas")return ideaRailSections();
 
     return staticRailSections(tab).filter(section=>section.target);
@@ -3576,7 +3813,10 @@
 
     let activeIndex=0;
 
-    if(tab==="simulator"){
+    if(
+      tab==="data" &&
+      dataWorkspaceMode==="records"
+    ){
       const group=simResource().group;
       const found=sections.findIndex(
         section=>section.simulatorGroup===group
@@ -3608,7 +3848,14 @@
   function updateWindowRailActive(){
     const tab=currentBuilderTab();
 
-    if(tab==="api"||tab==="simulator"||tab==="ideas")return;
+    if(
+      tab==="api" ||
+      tab==="ideas" ||
+      (
+        tab==="data" &&
+        dataWorkspaceMode==="records"
+      )
+    )return;
 
     const sections=currentRailSections(tab);
     if(!sections.length)return;
@@ -3706,9 +3953,80 @@
     });
   }
 
+  function renderDataWorkspace(
+    mode=dataWorkspaceMode,
+    {persist=true}={}
+  ){
+    dataWorkspaceMode =
+      mode==="tables"
+        ? "tables"
+        : "records";
+
+    document
+      .querySelectorAll("[data-data-mode]")
+      .forEach(button=>{
+        button.classList.toggle(
+          "active",
+          button.dataset.dataMode===dataWorkspaceMode
+        );
+      });
+
+    document
+      .querySelectorAll("[data-data-view]")
+      .forEach(view=>{
+        view.hidden =
+          view.dataset.dataView!==dataWorkspaceMode;
+      });
+
+    document
+      .querySelectorAll("[data-data-status]")
+      .forEach(status=>{
+        status.hidden =
+          status.dataset.dataStatus!==dataWorkspaceMode;
+      });
+
+    document
+      .querySelectorAll("[data-data-hint]")
+      .forEach(hint=>{
+        hint.hidden =
+          hint.dataset.dataHint!==dataWorkspaceMode;
+      });
+
+    if(persist){
+      try{
+        localStorage.setItem(
+          DATA_WORKSPACE_MODE_KEY,
+          dataWorkspaceMode
+        );
+      }catch{}
+    }
+
+    if(dataWorkspaceMode==="records"){
+      renderSimulator();
+    }else{
+      loadDatabaseSchema().then(ok=>{
+        if(ok){
+          if(!dataTable){
+            dataTable =
+              liveDb.tables[0]?.name || null;
+          }
+
+          renderDataTableList();
+          loadDataRows();
+        }
+      });
+    }
+
+    requestAnimationFrame(()=>{
+      renderFloatingSectionRail("data");
+    });
+  }
+
   function openTab(name,{persist=true,resetRoot=true}={}){
-    const valid=[...document.querySelectorAll(".tab")]
-      .some(tab=>tab.dataset.target===name);
+    const valid=
+      name==="data" ||
+      [...document.querySelectorAll(".tab")]
+        .some(tab=>tab.dataset.target===name);
 
     if(!valid)name="schema";
 
@@ -3718,6 +4036,13 @@
         tab.dataset.target===name
       )
     );
+
+    document
+      .querySelector(".live-data-link")
+      ?.classList.toggle(
+        "active",
+        name==="data"
+      );
 
     document.querySelectorAll(".screen").forEach(screen=>
       screen.classList.toggle(
@@ -3737,21 +4062,14 @@
 
     if(name==="schema")renderSchema();
     if(name==="platform")renderPlatform();
-    if(name==="simulator")renderSimulator();
     if(name==="api")renderApi();
     if(name==="database")loadDatabaseSchema();
 
     if(name==="data"){
-      loadDatabaseSchema().then(ok=>{
-        if(ok){
-          if(!dataTable){
-            dataTable=liveDb.tables[0]?.name||null;
-          }
-
-          renderDataTableList();
-          loadDataRows();
-        }
-      });
+      renderDataWorkspace(
+        dataWorkspaceMode,
+        {persist:false}
+      );
     }
 
     if(name==="ideas")renderIdeas();
@@ -3773,7 +4091,14 @@
         ACTIVE_BUILDER_TAB_KEY
       );
 
-      if(candidate)saved=candidate;
+      if(candidate){
+        if(candidate==="simulator"){
+          saved="data";
+          dataWorkspaceMode="records";
+        }else{
+          saved=candidate;
+        }
+      }
     }catch{}
 
     openTab(saved,{
@@ -3796,6 +4121,19 @@
     );
   });
 
+  document
+    .querySelectorAll("[data-data-mode]")
+    .forEach(button=>{
+      button.onclick=()=>{
+        renderDataWorkspace(
+          button.dataset.dataMode,
+          {persist:true}
+        );
+
+        resetTabToRoot("data");
+      };
+    });
+
   document.getElementById("schemaSearch").addEventListener("input",renderSchemaList);
   document.getElementById("selectedTableName").addEventListener("input",e=>{const t=state.tables[selectedSchemaIndex];if(!t)return;t.name=e.target.value;save();renderSchemaList();renderSchemaHealth();});
   document.getElementById("selectedTableNote").addEventListener("input",e=>{const t=state.tables[selectedSchemaIndex];if(!t)return;t.note=e.target.value;save();});
@@ -3813,7 +4151,7 @@
 
   document.getElementById("exportBtn").onclick=()=>{save();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`${state.projectName}-builder.json`;a.click();URL.revokeObjectURL(a.href);};
   document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
-  document.getElementById("importFile").onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{const next=JSON.parse(await file.text());if(!next||!Array.isArray(next.tables))throw new Error("Missing tables");state={...clone(defaultState),...next,platform:{...defaultState.platform,...(next.platform||{})},curl:{...defaultState.curl,...(next.curl||{})}};state.curl.values||={};state.curl.endpoints=Array.isArray(state.curl.endpoints)?state.curl.endpoints.map(normalizeEndpoint):[];if(!state.tables.some(t=>t.name==="audit_log"))state.tables.push(clone(defaultTables.find(t=>t.name==="audit_log")));save();selectedSchemaIndex=0;document.getElementById("projectBadge").textContent=state.projectName;renderSchema();renderPlatform();renderApi();toast("Builder state imported");}catch{toast("Could not import that Builder JSON");}finally{e.target.value="";}};
+  document.getElementById("importFile").onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{const next=JSON.parse(await file.text());if(!next||!Array.isArray(next.tables))throw new Error("Missing tables");state={...clone(defaultState),...next,platform:{...defaultState.platform,...(next.platform||{})},curl:{...defaultState.curl,...(next.curl||{})}};state.curl.values||={};state.curl.endpoints=Array.isArray(state.curl.endpoints)?state.curl.endpoints.map(normalizeEndpoint):[];if(!state.tables.some(t=>t.name==="audit_log"))state.tables.push(clone(defaultTables.find(t=>t.name==="audit_log")));save();selectedSchemaIndex=0;renderSchema();renderPlatform();renderApi();toast("Builder state imported");}catch{toast("Could not import that Builder JSON");}finally{e.target.value="";}};
 
   document.getElementById("curlBaseUrl").addEventListener("input",e=>{state.curl.baseUrl=e.target.value.trim()||API_DEFAULT;save();renderApiWorkspace();refreshTopHealth();});
   document.getElementById("apiSearch").addEventListener("input",renderApiList);
@@ -3843,11 +4181,12 @@
   document.getElementById("ideaInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addIdea();}});
   document.querySelectorAll("[data-idea-filter]").forEach(btn=>btn.onclick=()=>{ideaFilter=btn.dataset.ideaFilter;renderIdeas();});
 
-  document.getElementById("projectBadge").textContent=state.projectName;
+  
   renderSchema();renderPlatform();renderApi();renderIdeas();refreshTopHealth();
-  syncDynamicEndpoints(true);
-  restoreBuilderLocation();
-  save();
+  syncDynamicEndpoints(true).finally(()=>{
+    restoreBuilderLocation();
+    save();
+  });
 })();
 
 </script>

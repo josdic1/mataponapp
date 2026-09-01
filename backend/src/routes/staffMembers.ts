@@ -4,6 +4,7 @@ import {
   createStaffMemberSchema,
   updateStaffMemberSchema,
   staffMemberIdParamsSchema,
+  type StaffMember,
 } from "@matapon/shared/schemas/staffMembers";
 
 import { pool } from "../db/pool.js";
@@ -14,27 +15,18 @@ import {
   requireRole,
 } from "../middleware/auth.js";
 
-type StaffMemberRow = {
-  id: string;
-  user_id: string;
-  username: string;
-  full_name: string;
-  email: string | null;
-  phone: string | null;
-  role: "staff" | "manager";
-  created_at: string;
-  updated_at: string;
-};
-
 export const staffMembersRouter = Router();
 
 staffMembersRouter.get(
   "/",
   requireAuth,
   requirePasswordChanged,
-  async (_req, res) => {
+  requireRole("staff", "admin"),
+  async (req, res) => {
     try {
-      const result = await query<StaffMemberRow>(
+      const isAdmin = req.auth!.user_type === "admin";
+
+      const result = await query<StaffMember>(
         `
           SELECT
             sm.id,
@@ -49,8 +41,13 @@ staffMembersRouter.get(
           FROM staff_members sm
           JOIN users u
             ON u.id = sm.user_id
+          WHERE ($1::boolean = true OR sm.user_id = $2)
           ORDER BY sm.full_name, sm.id
-        `
+        `,
+        [
+          isAdmin,
+          req.auth!.sub,
+        ]
       );
 
       res.json({
@@ -70,6 +67,7 @@ staffMembersRouter.get(
   "/:id",
   requireAuth,
   requirePasswordChanged,
+  requireRole("staff", "admin"),
   async (req, res) => {
     const parsed = staffMemberIdParamsSchema.safeParse(req.params);
 
@@ -81,7 +79,9 @@ staffMembersRouter.get(
     }
 
     try {
-      const result = await query<StaffMemberRow>(
+      const isAdmin = req.auth!.user_type === "admin";
+
+      const result = await query<StaffMember>(
         `
           SELECT
             sm.id,
@@ -97,9 +97,14 @@ staffMembersRouter.get(
           JOIN users u
             ON u.id = sm.user_id
           WHERE sm.id = $1
+            AND ($2::boolean = true OR sm.user_id = $3)
           LIMIT 1
         `,
-        [parsed.data.id]
+        [
+          parsed.data.id,
+          isAdmin,
+          req.auth!.sub,
+        ]
       );
 
       const staffMember = result.rows[0];
@@ -173,7 +178,7 @@ staffMembersRouter.post(
         return;
       }
 
-      const result = await query<StaffMemberRow>(
+      const result = await query<StaffMember>(
         `
           WITH inserted AS (
             INSERT INTO staff_members (
@@ -246,7 +251,7 @@ staffMembersRouter.patch(
     }
 
     try {
-      const result = await query<StaffMemberRow>(
+      const result = await query<StaffMember>(
         `
           WITH updated AS (
             UPDATE staff_members
@@ -358,7 +363,6 @@ staffMembersRouter.delete(
 
       const dependencies = await client.query<{
         staff_member_areas: string;
-        staff_activities: string;
         event_activity_staff: string;
       }>(
         `
@@ -368,11 +372,6 @@ staffMembersRouter.delete(
               FROM staff_member_areas
               WHERE staff_member_id = $1
             ) AS staff_member_areas,
-            (
-              SELECT COUNT(*)::text
-              FROM staff_activities
-              WHERE staff_member_id = $1
-            ) AS staff_activities,
             (
               SELECT COUNT(*)::text
               FROM event_activity_staff
@@ -386,14 +385,13 @@ staffMembersRouter.delete(
 
       if (
         Number(counts.staff_member_areas) > 0 ||
-        Number(counts.staff_activities) > 0 ||
         Number(counts.event_activity_staff) > 0
       ) {
         await client.query("ROLLBACK");
 
         res.status(409).json({
           error:
-            "Cannot delete a staff member while they have area, activity, or scheduled-event assignments",
+            "Cannot delete a staff member while they have area or scheduled-event assignments",
         });
         return;
       }

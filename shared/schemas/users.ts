@@ -13,7 +13,7 @@ export const memberRoleSchema = z.enum([
 ]);
 
 export const createUserSchema = z.object({
-  username: z.string().min(1),
+  username: z.string().trim().min(1),
   password: z.string().min(1),
   user_type: userTypeSchema,
 });
@@ -64,5 +64,32 @@ export const userMemberIdParamsSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
 
+export const transferPrimaryMemberSchema = z.object({
+  target_member_id: z.coerce.number().int().positive(),
+});
+
 export type UpdateUserMemberInput =
   z.infer<typeof updateUserMemberSchema>;
+
+export type TransferPrimaryMemberInput =
+  z.infer<typeof transferPrimaryMemberSchema>;
+
+export type SessionUser = {
+  id: string;
+  username: string;
+  user_type: UserType;
+  must_change_password: boolean;
+};
+
+export type UserMember = {
+  id: string;
+  user_id: string;
+  username: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  dietary_restrictions: string | null;
+  member_role: MemberRole;
+  created_at: string;
+  updated_at: string;
+};

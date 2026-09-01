@@ -2,8 +2,10 @@ import { Router } from "express";
 
 import {
   createUserMemberSchema,
+  transferPrimaryMemberSchema,
   updateUserMemberSchema,
   userMemberIdParamsSchema,
+  type UserMember,
 } from "@matapon/shared/schemas/users";
 
 import { pool } from "../db/pool.js";
@@ -13,19 +15,6 @@ import {
   requirePasswordChanged,
   requireRole,
 } from "../middleware/auth.js";
-
-type UserMemberRow = {
-  id: string;
-  user_id: string;
-  username: string;
-  full_name: string;
-  email: string | null;
-  phone: string | null;
-  dietary_restrictions: string | null;
-  member_role: "primary" | "adult" | "child";
-  created_at: string;
-  updated_at: string;
-};
 
 export const userMembersRouter = Router();
 
@@ -38,7 +27,7 @@ userMembersRouter.get(
     try {
       const isAdmin = req.auth!.user_type === "admin";
 
-      const result = await query<UserMemberRow>(
+      const result = await query<UserMember>(
         `
           SELECT
             um.id,
@@ -94,7 +83,7 @@ userMembersRouter.get(
     try {
       const isAdmin = req.auth!.user_type === "admin";
 
-      const result = await query<UserMemberRow>(
+      const result = await query<UserMember>(
         `
           SELECT
             um.id,
@@ -198,7 +187,7 @@ userMembersRouter.post(
         return;
       }
 
-      const result = await query<UserMemberRow>(
+      const result = await query<UserMember>(
         `
           WITH inserted AS (
             INSERT INTO user_members (
@@ -357,7 +346,7 @@ userMembersRouter.patch(
         return;
       }
 
-      const result = await client.query<UserMemberRow>(
+      const result = await client.query<UserMember>(
         `
           WITH updated AS (
             UPDATE user_members
@@ -445,6 +434,214 @@ userMembersRouter.patch(
 
       res.status(500).json({
         error: "Could not update household member",
+      });
+    } finally {
+      client.release();
+    }
+  }
+);
+
+
+userMembersRouter.post(
+  "/:id/transfer-primary",
+  requireAuth,
+  requirePasswordChanged,
+  requireRole("member", "admin"),
+  async (req, res) => {
+    const params = userMemberIdParamsSchema.safeParse(req.params);
+    const body = transferPrimaryMemberSchema.safeParse(req.body);
+
+    if (!params.success) {
+      res.status(400).json({
+        error: "Invalid primary member id",
+      });
+      return;
+    }
+
+    if (!body.success) {
+      res.status(400).json({
+        error: "Invalid primary transfer",
+      });
+      return;
+    }
+
+    if (params.data.id === body.data.target_member_id) {
+      res.status(400).json({
+        error: "Primary member and target member must be different",
+      });
+      return;
+    }
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      await client.query(
+        `SELECT set_config('matapon.actor_user_id', $1, true)`,
+        [req.auth!.sub]
+      );
+
+      const sourceResult = await client.query<{
+        id: string;
+        user_id: string;
+        member_role: "primary" | "adult" | "child";
+      }>(
+        `
+          SELECT
+            id,
+            user_id,
+            member_role
+          FROM user_members
+          WHERE id = $1
+          FOR UPDATE
+        `,
+        [params.data.id]
+      );
+
+      const source = sourceResult.rows[0];
+
+      if (!source) {
+        await client.query("ROLLBACK");
+
+        res.status(404).json({
+          error: "Primary member does not exist",
+        });
+        return;
+      }
+
+      if (source.member_role !== "primary") {
+        await client.query("ROLLBACK");
+
+        res.status(409).json({
+          error: "Only the current primary member can transfer primary",
+        });
+        return;
+      }
+
+      if (
+        req.auth!.user_type === "member" &&
+        String(source.user_id) !== String(req.auth!.sub)
+      ) {
+        await client.query("ROLLBACK");
+
+        res.status(403).json({
+          error: "Cannot transfer primary for another household",
+        });
+        return;
+      }
+
+      const targetResult = await client.query<{
+        id: string;
+        user_id: string;
+        member_role: "primary" | "adult" | "child";
+      }>(
+        `
+          SELECT
+            id,
+            user_id,
+            member_role
+          FROM user_members
+          WHERE id = $1
+          FOR UPDATE
+        `,
+        [body.data.target_member_id]
+      );
+
+      const target = targetResult.rows[0];
+
+      if (!target) {
+        await client.query("ROLLBACK");
+
+        res.status(404).json({
+          error: "Target household member does not exist",
+        });
+        return;
+      }
+
+      if (String(target.user_id) !== String(source.user_id)) {
+        await client.query("ROLLBACK");
+
+        res.status(409).json({
+          error: "Primary can only be transferred within the same household",
+        });
+        return;
+      }
+
+      if (target.member_role !== "adult") {
+        await client.query("ROLLBACK");
+
+        res.status(409).json({
+          error: "Primary can only be transferred to another adult",
+        });
+        return;
+      }
+
+      await client.query(
+        `SELECT set_config('matapon.primary_transfer', 'on', true)`
+      );
+
+      await client.query(
+        `
+          UPDATE user_members
+          SET
+            member_role = 'adult',
+            updated_at = CURRENT_TIMESTAMP::text
+          WHERE id = $1
+        `,
+        [source.id]
+      );
+
+      await client.query(
+        `
+          UPDATE user_members
+          SET
+            member_role = 'primary',
+            updated_at = CURRENT_TIMESTAMP::text
+          WHERE id = $1
+        `,
+        [target.id]
+      );
+
+      const result = await client.query<UserMember>(
+        `
+          SELECT
+            um.id,
+            um.user_id,
+            u.username,
+            um.full_name,
+            um.email,
+            um.phone,
+            um.dietary_restrictions,
+            um.member_role,
+            um.created_at,
+            um.updated_at
+          FROM user_members um
+          JOIN users u
+            ON u.id = um.user_id
+          WHERE um.user_id = $1
+          ORDER BY
+            CASE um.member_role
+              WHEN 'primary' THEN 0
+              WHEN 'adult' THEN 1
+              ELSE 2
+            END,
+            um.id
+        `,
+        [source.user_id]
+      );
+
+      await client.query("COMMIT");
+
+      res.json({
+        user_members: result.rows,
+      });
+    } catch (error) {
+      await client.query("ROLLBACK");
+      console.error(error);
+
+      res.status(500).json({
+        error: "Could not transfer primary member",
       });
     } finally {
       client.release();

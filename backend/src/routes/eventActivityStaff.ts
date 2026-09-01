@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   createEventActivityStaffSchema,
   eventActivityStaffIdParamsSchema,
+  type EventActivityStaff,
 } from "@matapon/shared/schemas/eventActivityStaff";
 
 import { query } from "../db/db.js";
@@ -12,27 +13,18 @@ import {
   requireRole,
 } from "../middleware/auth.js";
 
-type EventActivityStaffRow = {
-  id: string;
-  event_activity_id: string;
-  event_name: string;
-  activity_id: string;
-  activity_name: string;
-  staff_member_id: string;
-  staff_member_name: string;
-  created_at: string;
-  updated_at: string;
-};
-
 export const eventActivityStaffRouter = Router();
 
 eventActivityStaffRouter.get(
   "/",
   requireAuth,
   requirePasswordChanged,
-  async (_req, res) => {
+  requireRole("staff", "admin"),
+  async (req, res) => {
     try {
-      const result = await query<EventActivityStaffRow>(
+      const isAdmin = req.auth!.user_type === "admin";
+
+      const result = await query<EventActivityStaff>(
         `
           SELECT
             eas.id,
@@ -53,8 +45,13 @@ eventActivityStaffRouter.get(
             ON a.id = ea.activity_id
           JOIN staff_members sm
             ON sm.id = eas.staff_member_id
+          WHERE ($1::boolean = true OR sm.user_id = $2)
           ORDER BY ea.starts_at, sm.full_name, eas.id
-        `
+        `,
+        [
+          isAdmin,
+          req.auth!.sub,
+        ]
       );
 
       res.json({
@@ -108,28 +105,7 @@ eventActivityStaffRouter.post(
         return;
       }
 
-      const capabilityResult = await query<{ id: string }>(
-        `
-          SELECT id
-          FROM staff_activities
-          WHERE staff_member_id = $1
-            AND activity_id = $2
-          LIMIT 1
-        `,
-        [
-          parsed.data.staff_member_id,
-          eventActivity.activity_id,
-        ]
-      );
-
-      if (!capabilityResult.rows[0]) {
-        res.status(400).json({
-          error: "Staff member is not capable of this activity",
-        });
-        return;
-      }
-
-      const result = await query<EventActivityStaffRow>(
+      const result = await query<EventActivityStaff>(
         `
           WITH inserted AS (
             INSERT INTO event_activity_staff (
@@ -194,21 +170,55 @@ eventActivityStaffRouter.delete(
     }
 
     try {
-      const result = await query<{ id: string }>(
+      const assignmentResult = await query<{
+        id: string;
+        event_activity_id: string;
+      }>(
         `
-          DELETE FROM event_activity_staff
+          SELECT
+            id,
+            event_activity_id
+          FROM event_activity_staff
           WHERE id = $1
-          RETURNING id
+          LIMIT 1
         `,
         [parsed.data.id]
       );
 
-      if (!result.rows[0]) {
+      const assignment = assignmentResult.rows[0];
+
+      if (!assignment) {
         res.status(404).json({
           error: "Scheduled staff assignment does not exist",
         });
         return;
       }
+
+      const checkedInResult = await query<{ count: string }>(
+        `
+          SELECT COUNT(*)::text AS count
+          FROM event_activity_signups
+          WHERE event_activity_id = $1
+            AND checked_in_at IS NOT NULL
+        `,
+        [assignment.event_activity_id]
+      );
+
+      if (Number(checkedInResult.rows[0]?.count ?? 0) > 0) {
+        res.status(409).json({
+          error:
+            "Cannot remove staff after participation has been confirmed",
+        });
+        return;
+      }
+
+      await query(
+        `
+          DELETE FROM event_activity_staff
+          WHERE id = $1
+        `,
+        [parsed.data.id]
+      );
 
       res.json({
         ok: true,

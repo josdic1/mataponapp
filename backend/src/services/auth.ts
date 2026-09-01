@@ -22,7 +22,7 @@ function getJwtSecret(): string {
 }
 
 function getSessionHours(): number {
-  const value = Number(process.env.SESSION_HOURS || "12");
+  const value = Number(process.env.SESSION_HOURS || "720");
 
   if (!Number.isFinite(value) || value <= 0) {
     throw new Error("SESSION_HOURS must be a positive number");
@@ -33,6 +33,16 @@ function getSessionHours(): number {
 
 export function getSessionMaxAgeMs(): number {
   return getSessionHours() * 60 * 60 * 1000;
+}
+
+export function sessionCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    maxAge: getSessionMaxAgeMs(),
+    path: "/",
+  };
 }
 
 export async function hashPassword(password: string): Promise<string> {

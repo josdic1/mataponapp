@@ -2,7 +2,7 @@ import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 
 import { loginSchema, changePasswordSchema } from "@matapon/shared/schemas/auth";
-import type { UserType } from "@matapon/shared/schemas/users";
+import type { SessionUser, UserType } from "@matapon/shared/schemas/users";
 
 import { query } from "../db/db.js";
 import { endpointContracts } from "../matapon/endpoints.js";
@@ -10,7 +10,7 @@ import { requireAuth } from "../middleware/auth.js";
 import {
   SESSION_COOKIE_NAME,
   createAccessToken,
-  getSessionMaxAgeMs,
+  sessionCookieOptions,
   hashPassword,
   verifyPassword,
 } from "../services/auth.js";
@@ -19,13 +19,6 @@ type AuthUserRow = {
   id: string;
   username: string;
   password_hash: string;
-  user_type: UserType;
-  must_change_password: boolean;
-};
-
-type PublicUserRow = {
-  id: string;
-  username: string;
   user_type: UserType;
   must_change_password: boolean;
 };
@@ -40,15 +33,7 @@ const loginLimiter = rateLimit({
   skipSuccessfulRequests: true,
 });
 
-function sessionCookieOptions() {
-  return {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax" as const,
-    maxAge: getSessionMaxAgeMs(),
-    path: "/",
-  };
-}
+
 
 authRouter.post(endpointContracts.login.path.replace("/api/auth", ""), loginLimiter, async (req, res) => {
   const parsed = loginSchema.safeParse(req.body);
@@ -70,7 +55,17 @@ authRouter.post(endpointContracts.login.path.replace("/api/auth", ""), loginLimi
           user_type,
           must_change_password
         FROM users
-        WHERE username = $1
+        WHERE regexp_replace(
+          lower(username),
+          '[[:space:]]+',
+          '',
+          'g'
+        ) = regexp_replace(
+          lower($1),
+          '[[:space:]]+',
+          '',
+          'g'
+        )
         LIMIT 1
       `,
       [parsed.data.username]
@@ -124,7 +119,7 @@ authRouter.post(endpointContracts.login.path.replace("/api/auth", ""), loginLimi
 
 authRouter.get(endpointContracts.me.path.replace("/api/auth", ""), requireAuth, async (req, res) => {
   try {
-    const result = await query<PublicUserRow>(
+    const result = await query<SessionUser>(
       `
         SELECT
           id,

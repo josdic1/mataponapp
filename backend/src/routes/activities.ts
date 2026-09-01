@@ -4,6 +4,7 @@ import {
   createActivitySchema,
   updateActivitySchema,
   activityIdParamsSchema,
+  type Activity,
 } from "@matapon/shared/schemas/activities";
 
 import { pool } from "../db/pool.js";
@@ -14,15 +15,7 @@ import {
   requireRole,
 } from "../middleware/auth.js";
 
-type ActivityRow = {
-  id: string;
-  name: string;
-  setting: "inside" | "outside" | "other";
-  created_at: string;
-  updated_at: string;
-};
-
-type ActivityDetailRow = ActivityRow & {
+type ActivityDetailRow = Activity & {
   other_id: string | null;
   other_value: string | null;
   other_reason: string | null;
@@ -36,16 +29,20 @@ activitiesRouter.get(
   requirePasswordChanged,
   async (_req, res) => {
     try {
-      const result = await query<ActivityRow>(
+      const result = await query<Activity>(
         `
           SELECT
-            id,
-            name,
-            setting,
-            created_at,
-            updated_at
-          FROM activities
-          ORDER BY name
+            a.id,
+            a.name,
+            a.area_id,
+            ar.name AS area_name,
+            a.setting,
+            a.created_at,
+            a.updated_at
+          FROM activities a
+          JOIN areas ar
+            ON ar.id = a.area_id
+          ORDER BY a.name
         `
       );
 
@@ -82,6 +79,8 @@ activitiesRouter.get(
           SELECT
             a.id,
             a.name,
+            a.area_id,
+            ar.name AS area_name,
             a.setting,
             a.created_at,
             a.updated_at,
@@ -89,6 +88,8 @@ activitiesRouter.get(
             ao.value AS other_value,
             ao.reason AS other_reason
           FROM activities a
+          JOIN areas ar
+            ON ar.id = a.area_id
           LEFT JOIN LATERAL (
             SELECT
               id,
@@ -180,22 +181,32 @@ activitiesRouter.post(
         [req.auth!.sub]
       );
 
-      const result = await client.query<ActivityRow>(
+      const result = await client.query<Activity>(
         `
-          INSERT INTO activities (
-            name,
-            setting
+          WITH inserted AS (
+            INSERT INTO activities (
+              name,
+              area_id,
+              setting
+            )
+            VALUES ($1, $2, $3)
+            RETURNING *
           )
-          VALUES ($1, $2)
-          RETURNING
-            id,
-            name,
-            setting,
-            created_at,
-            updated_at
+          SELECT
+            i.id,
+            i.name,
+            i.area_id,
+            ar.name AS area_name,
+            i.setting,
+            i.created_at,
+            i.updated_at
+          FROM inserted i
+          JOIN areas ar
+            ON ar.id = i.area_id
         `,
         [
           parsed.data.name,
+          parsed.data.area_id,
           parsed.data.setting,
         ]
       );
@@ -241,6 +252,13 @@ activitiesRouter.post(
       if (error?.code === "23505") {
         res.status(409).json({
           error: "Activity already exists",
+        });
+        return;
+      }
+
+      if (error?.code === "23503") {
+        res.status(400).json({
+          error: "Area does not exist",
         });
         return;
       }
@@ -329,6 +347,9 @@ activitiesRouter.patch(
         return;
       }
 
+      const nextAreaId =
+        body.data.area_id ?? Number(current.area_id);
+
       const nextSetting =
         body.data.setting ?? current.setting;
 
@@ -355,24 +376,34 @@ activitiesRouter.patch(
       }
 
       const activityResult =
-        await client.query<ActivityRow>(
+        await client.query<Activity>(
           `
-            UPDATE activities
-            SET
-              name = $2,
-              setting = $3,
-              updated_at = CURRENT_TIMESTAMP::text
-            WHERE id = $1
-            RETURNING
-              id,
-              name,
-              setting,
-              created_at,
-              updated_at
+            WITH changed AS (
+              UPDATE activities
+              SET
+                name = $2,
+                area_id = $3,
+                setting = $4,
+                updated_at = CURRENT_TIMESTAMP::text
+              WHERE id = $1
+              RETURNING *
+            )
+            SELECT
+              c.id,
+              c.name,
+              c.area_id,
+              ar.name AS area_name,
+              c.setting,
+              c.created_at,
+              c.updated_at
+            FROM changed c
+            JOIN areas ar
+              ON ar.id = c.area_id
           `,
           [
             params.data.id,
             body.data.name ?? current.name,
+            nextAreaId,
             nextSetting,
           ]
         );
@@ -445,6 +476,13 @@ activitiesRouter.patch(
         return;
       }
 
+      if (error?.code === "23503") {
+        res.status(400).json({
+          error: "Area does not exist",
+        });
+        return;
+      }
+
       console.error(error);
 
       res.status(500).json({
@@ -502,7 +540,6 @@ activitiesRouter.delete(
 
       const dependencies = await client.query<{
         event_activities: string;
-        staff_activities: string;
       }>(
         `
           SELECT
@@ -510,12 +547,7 @@ activitiesRouter.delete(
               SELECT COUNT(*)::text
               FROM event_activities
               WHERE activity_id = $1
-            ) AS event_activities,
-            (
-              SELECT COUNT(*)::text
-              FROM staff_activities
-              WHERE activity_id = $1
-            ) AS staff_activities
+            ) AS event_activities
         `,
         [parsed.data.id]
       );
@@ -523,14 +555,13 @@ activitiesRouter.delete(
       const counts = dependencies.rows[0];
 
       if (
-        Number(counts.event_activities) > 0 ||
-        Number(counts.staff_activities) > 0
+        Number(counts.event_activities) > 0
       ) {
         await client.query("ROLLBACK");
 
         res.status(409).json({
           error:
-            "Cannot delete an activity that is scheduled in an event or assigned to staff",
+            "Cannot delete an activity that is scheduled in an event",
         });
         return;
       }

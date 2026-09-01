@@ -37,3 +37,15 @@ export type CreateStaffMemberInput =
 
 export type UpdateStaffMemberInput =
   z.infer<typeof updateStaffMemberSchema>;
+
+export type StaffMember = {
+  id: string;
+  user_id: string;
+  username: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  role: StaffRole;
+  created_at: string;
+  updated_at: string;
+};

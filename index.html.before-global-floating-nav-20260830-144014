@@ -1,0 +1,1568 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Matapon Builder</title>
+<style>
+  :root{
+    --bg:#f6f5f1;
+    --surface:#ffffff;
+    --surface-2:#fbfaf7;
+    --ink:#171915;
+    --muted:#6d7169;
+    --line:#dddcd5;
+    --line-strong:#c8c7bf;
+    --accent:#007854;
+    --accent-soft:#e7f3ef;
+    --accent-ink:#005d41;
+    --warning:#a86600;
+    --warning-soft:#fff4dc;
+    --danger:#b63a33;
+    --danger-soft:#fff0ef;
+    --code:#171a17;
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px}
+  button,input,textarea{font:inherit;color:inherit}
+  button{cursor:pointer}
+  code,.mono{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace}
+
+  .app{min-height:100vh}
+  .topbar{
+    height:64px;position:sticky;top:0;z-index:30;display:flex;align-items:center;
+    gap:18px;padding:0 24px;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line)
+  }
+  .brand{display:flex;align-items:center;gap:10px;min-width:max-content}
+  .mark{width:28px;height:28px;border-radius:8px;background:var(--accent);display:grid;place-items:center;color:#fff;font-weight:800;font-size:12px;letter-spacing:-.02em}
+  .brand-copy{line-height:1.02}
+  .brand-name{font-weight:760;letter-spacing:-.03em;font-size:15px}
+  .brand-sub{margin-top:3px;color:var(--muted);font-size:11px}
+  .project-switch{display:flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);font-weight:650;min-width:145px}
+  .chev{color:var(--muted);font-size:11px;margin-left:auto}
+  .tabs{display:flex;align-self:stretch;gap:22px;margin-left:4px}
+  .tab{position:relative;border:0;background:transparent;padding:0 1px;color:var(--muted);font-weight:650}
+  .tab:hover{color:var(--ink)}
+  .tab.active{color:var(--ink)}
+  .tab.active:after{content:"";position:absolute;height:2px;left:0;right:0;bottom:0;background:var(--accent);border-radius:2px 2px 0 0}
+  .top-spacer{flex:1}
+  .status-pill{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:12px;white-space:nowrap}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+  .btn{height:34px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:0 12px;font-weight:650;display:inline-flex;align-items:center;gap:7px}
+  .btn:hover{border-color:var(--line-strong);background:var(--surface-2)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:#006a4a}
+  .btn.ghost{background:transparent}
+  .btn.icon{width:34px;padding:0;justify-content:center}
+
+  main{max-width:1500px;margin:0 auto;padding:28px 32px 56px}
+  .screen{display:none}.screen.active{display:block}
+  .page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:24px}
+  .eyebrow{font-size:11px;font-weight:750;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px}
+  h1{margin:0;font-size:28px;line-height:1.05;letter-spacing:-.04em;font-weight:740}
+  .subtitle{margin-top:8px;color:var(--muted);max-width:720px;line-height:1.45}
+  .summary{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .chip{height:28px;padding:0 9px;border:1px solid var(--line);border-radius:999px;background:var(--surface);display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--muted)}
+  .chip.good{background:var(--accent-soft);color:var(--accent-ink);border-color:#b7ddcf}
+  .chip.warn{background:var(--warning-soft);color:var(--warning);border-color:#ecd29d}
+
+  .grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(320px,.8fr);gap:18px;align-items:start}
+  .stack{display:flex;flex-direction:column;gap:18px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .card-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .card-title{font-weight:730;letter-spacing:-.015em}
+  .card-kicker{font-size:11px;color:var(--muted);margin-top:3px}
+  .card-body{padding:18px}
+  .mini-action{border:0;background:transparent;color:var(--accent);font-size:12px;font-weight:700;padding:4px 0}
+
+  .config-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .config-group{background:var(--surface)}
+  .config-group+.config-group{border-left:1px solid var(--line)}
+  .config-label{padding:11px 13px;background:var(--surface-2);border-bottom:1px solid var(--line);font-size:11px;font-weight:760;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .field{padding:11px 13px;border-bottom:1px solid var(--line)}
+  .field:last-child{border-bottom:0}
+  .field-name{font-size:10px;letter-spacing:.055em;text-transform:uppercase;color:var(--muted);font-weight:740;margin-bottom:5px}
+  .field-value{display:flex;align-items:center;gap:8px;font-weight:650;min-height:24px}
+  .field-value input{width:100%;border:0;background:transparent;outline:none;padding:0;font-weight:650}
+  .field-value .edit{margin-left:auto;color:#9a9d96;font-size:12px;opacity:.75}
+  .hint{font-size:10px;color:#999b95;margin-top:4px}
+
+  .contract-list{display:flex;flex-direction:column}
+  .contract-item{display:grid;grid-template-columns:20px 1fr auto;gap:9px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
+  .contract-item:last-child{border-bottom:0}
+  .check{width:18px;height:18px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;font-size:11px;margin-top:1px}
+  .contract-main{font-weight:640;line-height:1.35}
+  .contract-sub{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}
+  .lock{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 6px;background:var(--surface-2)}
+
+  .repo-tree{background:var(--code);color:#e8ece8;border-radius:10px;padding:15px 16px;font-size:12px;line-height:1.7;overflow:auto}
+  .repo-tree .muted{color:#8f988f}.repo-tree .accent{color:#7fd1b5}
+
+  .naming-table{display:grid;grid-template-columns:1.05fr 1fr .8fr}
+  .naming-table>div{padding:11px 13px;border-bottom:1px solid var(--line)}
+  .naming-table>div:nth-last-child(-n+3){border-bottom:0}
+  .naming-table .head{background:var(--surface-2);font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:760}
+  .rule{font-weight:630}.example{font-size:12px;color:#4f544c}.scope{font-size:11px;color:var(--muted)}
+
+  .brief{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:15px 16px;min-height:155px;line-height:1.65;font-size:12px;color:#3d423b;white-space:pre-wrap}
+
+  .health-card{position:sticky;top:82px}
+  .health-top{display:grid;grid-template-columns:1fr auto;gap:12px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+  .big-number{font-size:26px;letter-spacing:-.04em;font-weight:760}.big-number small{font-size:11px;color:var(--muted);font-weight:650;letter-spacing:0}
+  .meter{height:6px;background:#ecece7;border-radius:99px;overflow:hidden;margin-top:8px}.meter>span{display:block;width:100%;height:100%;background:var(--accent)}
+  .metric-list{display:grid;grid-template-columns:1fr auto;gap:9px 12px;font-size:12px}
+  .metric-list .label{color:var(--muted)}.metric-list .value{font-weight:720}
+  .callout{margin-top:14px;padding:11px 12px;border-radius:9px;background:var(--accent-soft);color:var(--accent-ink);font-size:11px;line-height:1.45}
+
+  /* Schema mockup */
+  .schema-layout{display:grid;grid-template-columns:220px minmax(0,1fr) 310px;gap:18px;align-items:start}
+  .table-nav{position:sticky;top:82px}
+  .search{width:100%;height:35px;border:1px solid var(--line);border-radius:8px;padding:0 10px;background:var(--surface-2);outline:none}
+  .nav-list{display:flex;flex-direction:column;margin-top:10px;gap:3px;max-height:70vh;overflow:auto}
+  .nav-item{padding:9px 10px;border-radius:7px;color:var(--muted);font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .nav-item.active{background:var(--accent-soft);color:var(--accent-ink);font-weight:700}.nav-item:hover{background:var(--surface-2)}
+  .count{font-size:10px;opacity:.7}
+  .schema-card .card-head{padding:15px 16px}
+  .schema-title{font-size:20px;font-weight:750;letter-spacing:-.03em}
+  .schema-note{font-size:12px;color:var(--muted);margin-top:4px}
+  .schema-table{display:grid;grid-template-columns:1.05fr 1fr 1.35fr 42px}
+  .schema-table>div{padding:10px 12px;border-bottom:1px solid var(--line);min-width:0}
+  .schema-table .head{background:var(--surface-2);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:760}
+  .schema-table .fieldname{font-family:"SFMono-Regular",Consolas,monospace;font-weight:700;font-size:12px}
+  .type-pill{display:inline-flex;padding:3px 6px;border-radius:5px;background:#f1f1ed;font-family:"SFMono-Regular",Consolas,monospace;font-size:10px}
+  .schema-table .last-row{border-bottom:0}
+  .truth{padding:10px 0;border-bottom:1px solid var(--line);font-size:12px;line-height:1.45}.truth:last-child{border-bottom:0}
+  .truth .num{font-size:10px;color:var(--muted);font-weight:700;margin-bottom:3px}
+
+  /* Live database mockup */
+  .db-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;align-items:start}
+  .db-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .db-source{height:34px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);padding:0 10px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}
+  .pulse{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  .db-map-wrap{overflow:auto;background:#f8f8f5}
+  .db-map{position:relative;width:1100px;height:610px;min-width:1100px;background-image:radial-gradient(#d7d8d2 .7px,transparent .7px);background-size:18px 18px}
+  .db-map svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+  .db-edge{fill:none;stroke:#c6c9c2;stroke-width:1.25;opacity:.85}
+  .db-edge.active{stroke:var(--accent);stroke-width:1.8;opacity:1}
+  .db-node{position:absolute;width:190px;min-height:72px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.97);padding:11px 12px;box-shadow:0 1px 0 rgba(20,30,20,.025);transition:.14s ease;cursor:pointer}
+  .db-node:hover{border-color:#b9c0b9;transform:translateY(-1px)}
+  .db-node.active{border-color:#8ccab5;box-shadow:0 0 0 3px var(--accent-soft);background:#fff}
+  .db-node-name{font-family:"SFMono-Regular",Consolas,monospace;font-size:12px;font-weight:760;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .db-node-meta{display:flex;align-items:center;gap:7px;margin-top:8px;color:var(--muted);font-size:10px}
+  .db-node-meta b{color:var(--ink);font-weight:740}
+  .db-node-tag{margin-left:auto;padding:2px 5px;border-radius:4px;background:#f0f1ed;font-size:9px;font-weight:720;text-transform:uppercase;letter-spacing:.04em}
+  .db-domain{position:absolute;font-size:9px;text-transform:uppercase;letter-spacing:.1em;font-weight:800;color:#a0a49d;pointer-events:none}
+  .db-detail{position:sticky;top:82px}
+  .db-table-name{
+  display:inline-flex;
+  align-items:center;
+  margin-top:5px;
+  padding:5px 9px 6px;
+  border:1px solid #d6e2dc;
+  border-radius:7px;
+  background:#f3f7f5;
+  color:var(--accent-ink);
+  font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  font-size:15px;
+  line-height:1;
+  font-weight:760;
+  letter-spacing:-.025em;
+}
+  .db-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-bottom:15px}
+  .db-stat{padding:10px;background:var(--surface-2);text-align:center}
+  .db-stat+.db-stat{border-left:1px solid var(--line)}
+  .db-stat strong{display:block;font-size:16px;letter-spacing:-.03em}.db-stat span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em;margin-top:2px;font-weight:720}
+  .db-detail-section{padding:12px 0;border-top:1px solid var(--line)}
+  .db-detail-section:first-of-type{border-top:0;padding-top:0}
+  .db-detail-label{font-size:9px;text-transform:uppercase;letter-spacing:.075em;color:var(--muted);font-weight:780;margin-bottom:7px}
+  .db-column{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:5px 0;font-size:11px;align-items:center}
+  .db-column code{font-weight:700}.db-column span{font-family:"SFMono-Regular",Consolas,monospace;color:var(--muted);font-size:10px;text-align:right}
+  .db-relation{font-size:11px;line-height:1.45;padding:4px 0;color:#4d524b}.db-relation code{font-size:10px;font-weight:700}
+  .drift-grid{display:grid;grid-template-columns:1.2fr repeat(3,.7fr);align-items:center}
+  .drift-grid>div{padding:10px 12px;border-bottom:1px solid var(--line);font-size:11px}
+  .drift-grid>div:nth-last-child(-n+4){border-bottom:0}
+  .drift-grid .head{background:var(--surface-2);font-size:9px;text-transform:uppercase;letter-spacing:.065em;color:var(--muted);font-weight:780}
+  .same{color:var(--accent-ink);font-weight:760}
+  .snapshot-bar{padding:10px 14px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface-2);font-size:10px;color:var(--muted)}
+  .snapshot-bar strong{color:var(--ink)}
+
+  /* Live data browser */
+  .data-layout{display:grid;grid-template-columns:220px minmax(0,1fr) 350px;gap:18px;align-items:start}
+  .data-side{position:sticky;top:82px}
+  .data-table-list{display:flex;flex-direction:column;gap:3px;max-height:calc(100vh - 235px);overflow:auto;padding-right:2px}
+  .data-table-item{border:0;background:transparent;width:100%;padding:9px 10px;border-radius:7px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--muted);text-align:left}
+  .data-table-item:hover{background:var(--surface-2);color:var(--ink)}
+  .data-table-item.active{background:var(--accent-soft);color:var(--accent-ink);font-weight:730}
+  .data-table-item code{font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .data-table-count{font-size:9px;min-width:26px;text-align:right;opacity:.72}
+  .data-main{min-width:0}
+  .data-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .data-toolbar .search{width:min(360px,42vw)}
+  .data-table-shell{overflow:auto;max-height:62vh;background:var(--surface)}
+  .data-grid{width:100%;border-collapse:separate;border-spacing:0;font-size:11px;white-space:nowrap}
+  .data-grid th{position:sticky;top:0;z-index:3;background:var(--surface-2);border-bottom:1px solid var(--line-strong);padding:9px 11px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.065em;color:var(--muted);font-weight:800}
+  .data-grid th:first-child{left:0;z-index:5;min-width:38px;text-align:right}
+  .data-grid td{border-bottom:1px solid var(--line);padding:9px 11px;max-width:260px;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
+  .data-grid td:first-child{position:sticky;left:0;z-index:2;background:#fff;color:#a0a39e;text-align:right;font-size:9px;min-width:38px;border-right:1px solid var(--line)}
+  .data-grid tr:last-child td{border-bottom:0}
+  .data-grid tbody tr{cursor:pointer}
+  .data-grid tbody tr:hover td{background:#fafbf9}
+  .data-grid tbody tr:hover td:first-child{background:#fafbf9}
+  .data-grid tbody tr.selected td{background:var(--accent-soft)}
+  .data-grid tbody tr.selected td:first-child{background:#dff0e9;color:var(--accent-ink);font-weight:800}
+  .data-cell-id{font-family:"SFMono-Regular",Consolas,monospace;font-size:10px;color:#40443f}
+  .data-cell-muted{color:var(--muted)}
+  .null-pill{display:inline-flex;padding:2px 5px;border-radius:4px;background:#f0f1ed;color:#92958f;font-size:9px;font-style:italic}
+  .bool-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:999px;background:#f0f1ed;font-size:9px;font-weight:750}
+  .bool-pill.true{background:var(--accent-soft);color:var(--accent-ink)}
+  .fk-pill{display:inline-flex;align-items:center;gap:5px;max-width:190px;padding:3px 6px;border-radius:5px;background:#f2f4f1;border:1px solid #e3e5e0;font-family:"SFMono-Regular",Consolas,monospace;font-size:9px;color:#4f554f}
+  .fk-pill::before{content:'↗';color:var(--accent);font-family:inherit;font-weight:800}
+  .data-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-top:1px solid var(--line);background:var(--surface-2);font-size:10px;color:var(--muted)}
+  .pager{display:flex;align-items:center;gap:5px}.pager button{height:27px;min-width:27px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--muted)}.pager button:disabled{opacity:.4;cursor:default}
+  .data-inspector{position:sticky;top:82px;max-height:calc(100vh - 105px);overflow:hidden;display:flex;flex-direction:column}
+  .data-inspector .card-body{overflow:auto}
+  .row-key{font-family:"SFMono-Regular",Consolas,monospace;font-size:15px;font-weight:760;letter-spacing:-.025em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px}
+  .row-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:7px}
+  .data-field{padding:9px 0;border-bottom:1px solid var(--line)}
+  .data-field:last-child{border-bottom:0}
+  .data-field-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px}
+  .data-field-name{font-family:"SFMono-Regular",Consolas,monospace;font-size:10px;font-weight:760}
+  .data-field-type{font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:750}
+  .data-field-value{font-size:11px;line-height:1.45;overflow-wrap:anywhere;word-break:break-word}
+  .raw-json{background:var(--code);color:#dfe5df;border-radius:9px;padding:14px 16px;font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;font-size:11.5px;line-height:1.68;white-space:pre;overflow:auto;max-height:360px;tab-size:2}
+  .data-empty{padding:46px 24px;text-align:center;color:var(--muted)}
+  .data-empty strong{display:block;color:var(--ink);font-size:13px;margin-bottom:5px}
+
+
+  /* Idea Log */
+  .ideas-wrap{max-width:920px;margin:0 auto}
+  .idea-compose{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:14px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+  .idea-input{height:42px;border:1px solid var(--line);border-radius:9px;background:#fff;padding:0 13px;outline:none;font-size:13px}
+  .idea-input:focus{border-color:#9bcdbd;box-shadow:0 0 0 3px var(--accent-soft)}
+  .idea-filterbar{display:flex;align-items:center;gap:4px;padding:10px 14px;border-bottom:1px solid var(--line);overflow:auto;background:#fff}
+  .idea-filter{height:29px;border:0;border-radius:7px;background:transparent;padding:0 9px;color:var(--muted);font-size:11px;font-weight:700;white-space:nowrap}
+  .idea-filter:hover{background:var(--surface-2);color:var(--ink)}
+  .idea-filter.active{background:var(--accent-soft);color:var(--accent-ink)}
+  .idea-filter-count{opacity:.65;margin-left:4px;font-variant-numeric:tabular-nums}
+  .idea-list{display:flex;flex-direction:column}
+  .idea-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:9px;align-items:center;min-height:52px;padding:7px 12px;border-bottom:1px solid var(--line);background:#fff}
+  .idea-row:last-child{border-bottom:0}
+  .idea-row:hover{background:#fcfcfa}
+  .idea-check{width:22px;height:22px;border:1px solid var(--line-strong);border-radius:50%;background:#fff;display:grid;place-items:center;padding:0;color:transparent;font-size:12px;font-weight:900;transition:.12s ease}
+  .idea-check:hover{border-color:#8bbfab;background:var(--accent-soft)}
+  .idea-row.done .idea-check{background:var(--accent);border-color:var(--accent);color:#fff}
+  .idea-text{font-size:13px;line-height:1.4;min-width:0;overflow-wrap:anywhere}
+  .idea-row.done .idea-text{text-decoration:line-through;color:#90938d}
+  .idea-row.trash .idea-text{color:#999c96}
+  .idea-actions{display:flex;align-items:center;gap:3px;opacity:.2;transition:.12s ease}
+  .idea-row:hover .idea-actions,.idea-actions:focus-within{opacity:1}
+  .idea-action{width:30px;height:30px;border:0;border-radius:7px;background:transparent;color:var(--muted);display:grid;place-items:center;padding:0;font-size:13px}
+  .idea-action:hover{background:#f1f1ed;color:var(--ink)}
+  .idea-action.danger:hover{background:var(--danger-soft);color:var(--danger)}
+  .idea-empty{padding:52px 20px;text-align:center;color:var(--muted);font-size:12px}
+  .idea-empty strong{display:block;color:var(--ink);font-size:13px;margin-bottom:5px}
+  .idea-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;border-top:1px solid var(--line);background:var(--surface-2);font-size:10px;color:var(--muted)}
+  .idea-note{max-width:620px}
+  .idea-status{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  /* API mockup */
+  .api-toolbar{display:grid;grid-template-columns:minmax(240px,1fr) 180px auto auto;gap:10px;margin-bottom:16px}
+  .control{height:38px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:0 11px;outline:none}
+  .endpoint-grid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px}
+  .endpoint-list{display:flex;flex-direction:column;gap:5px}
+  .endpoint{padding:11px;border:1px solid transparent;border-radius:9px;display:grid;grid-template-columns:48px 1fr;gap:8px;align-items:center}
+  .endpoint:hover{background:var(--surface-2)}.endpoint.active{border-color:#badfd2;background:var(--accent-soft)}
+  .method{height:22px;border-radius:5px;background:#eef0ec;display:grid;place-items:center;font-size:9px;font-weight:800}
+  .ep-name{font-size:12px;font-weight:700}.ep-path{font-size:10px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .request-line{display:grid;grid-template-columns:88px minmax(0,1fr) auto;gap:8px}
+  .request-line>*{height:38px}.request-line input{border:1px solid var(--line);border-radius:8px;padding:0 10px;outline:none}.request-line .method-btn{border:1px solid var(--line);border-radius:8px;background:var(--surface-2);font-weight:760}
+  .body-editor{background:var(--code);color:#e9ede8;border:0;border-radius:10px;width:100%;min-height:190px;padding:14px;font-family:"SFMono-Regular",Consolas,monospace;font-size:12px;line-height:1.6;resize:vertical;outline:none}
+  .response{border:1px solid #2c302c;border-radius:10px;background:var(--code);color:#dfe5df;padding:16px 18px;font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;font-size:12.5px;line-height:1.72;min-height:130px;max-height:520px;white-space:pre;overflow:auto;tab-size:2}
+  .json-key{color:#79d6b5;font-weight:800}
+  .json-key-root{
+    color:#ffd166;
+    font-weight:900;
+    letter-spacing:.015em;
+  }
+  .json-key-id,.json-key-fk{color:#69c7ff;font-weight:850}
+  .json-string{color:#dfe5df}
+  .json-id-value{color:#ffd166;font-weight:750}
+  .json-time-value{color:#a9c7ff}
+  .json-number{color:#f1b86b}
+  .json-boolean{color:#d1a5ff;font-weight:750}
+  .json-null{color:#8e978e;font-style:italic}
+  .json-plain{color:#dfe5df}
+
+  @media(max-width:1100px){
+    .topbar{padding:0 16px}.status-pill{display:none}.tabs{gap:14px}.project-switch{display:none}
+    main{padding:24px 18px 48px}.grid,.schema-layout,.endpoint-grid,.db-layout,.data-layout{grid-template-columns:1fr}.health-card,.table-nav,.db-detail,.data-side,.data-inspector{position:static}.config-groups{grid-template-columns:1fr}.config-group+.config-group{border-left:0;border-top:1px solid var(--line)}
+    .data-table-list{max-height:260px}.data-inspector{max-height:none}.data-toolbar .search{width:100%}
+    .api-toolbar{grid-template-columns:1fr 1fr}.naming-table{grid-template-columns:1fr 1fr}.naming-table .scope{display:none}.drift-grid{grid-template-columns:1fr repeat(3,.6fr)}
+  }
+  @media(max-width:720px){
+    .brand-sub{display:none}.tabs{position:fixed;left:0;right:0;bottom:0;height:54px;z-index:40;background:#fff;border-top:1px solid var(--line);justify-content:space-around;align-items:stretch;margin:0;gap:0}.tab{flex:1}.tab.active:after{top:0;bottom:auto}.topbar .btn.ghost,.topbar .btn:not(.primary){display:none}
+    main{padding:20px 12px 78px}.idea-compose{grid-template-columns:1fr}.idea-compose .btn{width:100%;justify-content:center}.idea-actions{opacity:1}.data-table-shell{max-height:58vh}.data-toolbar{align-items:stretch}.data-toolbar .btn{flex:1}.page-head{align-items:flex-start;flex-direction:column}.summary{justify-content:flex-start}.schema-table{grid-template-columns:1fr 1fr}.drift-grid{grid-template-columns:1fr 1fr}.drift-grid .head:nth-child(3),.drift-grid .head:nth-child(4),.drift-grid>div:nth-child(4n+3),.drift-grid>div:nth-child(4n+4){display:none}.schema-table .notes-col,.schema-table .notes-cell{display:none}.api-toolbar{grid-template-columns:1fr}.request-line{grid-template-columns:72px 1fr}.request-line .btn{grid-column:1/-1}.naming-table{grid-template-columns:1fr}.naming-table .head:nth-child(n+2),.naming-table .example{display:none}
+  }
+
+
+  .hidden{display:none!important}
+  .top-project{border:0;background:transparent;font-weight:700;color:var(--ink);padding:6px 8px;border-radius:7px}
+  .top-project:hover{background:var(--surface-2)}
+  .schema-edit-grid{display:grid;grid-template-columns:1.05fr 1fr 1.35fr 44px}
+  .schema-edit-grid>div{padding:9px 11px;border-bottom:1px solid var(--line);min-width:0}
+  .schema-edit-grid .head{background:var(--surface-2);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:780}
+  .schema-edit-grid input,.schema-edit-grid select,.schema-edit-grid textarea,.schema-name-input,.schema-note-input,.truth-editor{width:100%;border:1px solid transparent;background:transparent;border-radius:6px;padding:6px 7px;outline:none}
+  .schema-edit-grid textarea{min-height:34px;resize:vertical}
+  .schema-edit-grid input:focus,.schema-edit-grid select:focus,.schema-edit-grid textarea:focus,.schema-name-input:focus,.schema-note-input:focus,.truth-editor:focus{border-color:#9bcdbd;background:#fff;box-shadow:0 0 0 3px var(--accent-soft)}
+  .schema-name-input{font-family:"SFMono-Regular",Consolas,monospace;font-size:19px;font-weight:780;letter-spacing:-.035em;padding-left:0}
+  .schema-note-input{font-size:12px;color:var(--muted);padding-left:0;margin-top:2px}
+  .schema-row-actions{display:flex;gap:5px;justify-content:flex-end}
+  .schema-icon{width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:var(--muted)}
+  .schema-icon:hover{background:var(--surface-2);color:var(--ink)}
+  .schema-icon.danger:hover{background:var(--danger-soft);color:var(--danger)}
+  .truth-editor{min-height:190px;border-color:var(--line);background:var(--surface-2);line-height:1.5;resize:vertical}
+  .issue-list{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+  .issue{padding:8px 9px;border-radius:7px;font-size:10px;line-height:1.4;background:var(--surface-2);border:1px solid var(--line)}
+  .issue.error{background:var(--danger-soft);border-color:#efc0bc;color:#87302b}.issue.warning{background:var(--warning-soft);border-color:#ecd29d;color:#855500}.issue.ok{background:var(--accent-soft);border-color:#b7ddcf;color:var(--accent-ink)}
+  .api-layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}
+  .api-layout .api-side{
+    position:relative;
+    overflow:visible;
+  }
+  .api-side{position:sticky;top:82px;max-height:calc(100vh - 104px);overflow:hidden;display:flex;flex-direction:column}
+  .api-side .card-body{overflow:auto}
+  .api-group-title{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800;padding:14px 8px 5px}
+  .api-group-section:first-child .api-group-title{padding-top:4px}
+  .api-jump-rail{
+  position:absolute;
+  left:-70px;
+  top:78px;
+  z-index:20;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  padding:0;
+  border:0;
+  background:transparent;
+  overflow:visible;
+  scrollbar-width:none;
+}
+  .api-jump-rail::-webkit-scrollbar{display:none}
+  .api-jump-btn{
+  width:52px;
+  min-height:28px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:#fff;
+  padding:6px 6px;
+  color:var(--muted);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  line-height:1;
+  box-shadow:0 1px 0 rgba(0,0,0,.04);
+}
+  .api-jump-btn:hover{
+  background:#fff;
+  color:var(--ink);
+  border-color:var(--line-strong);
+}
+  .api-jump-btn.active{
+  background:var(--accent-soft);
+  color:var(--accent-ink);
+  border-color:#9bcdbd;
+}
+  .api-group-tools{display:flex;align-items:center;gap:5px}
+  .api-group-edit{
+    display:none;
+    padding:10px;
+    margin-bottom:10px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:var(--surface-2);
+  }
+  .api-group-edit.open{display:block}
+  .api-group-edit-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:9px;
+    font-size:10px;
+    font-weight:800;
+  }
+  .api-group-edit-row{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 27px 27px;
+    gap:5px;
+    margin-bottom:5px;
+  }
+  .api-group-edit-row input,
+  .api-group-assign select{
+    height:30px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    background:#fff;
+    padding:0 8px;
+    outline:none;
+    min-width:0;
+    font-size:10px;
+  }
+  .api-group-edit-row input:focus,
+  .api-group-assign select:focus{
+    border-color:#9bcdbd;
+    box-shadow:0 0 0 2px var(--accent-soft);
+  }
+  .api-group-move{
+    width:27px;
+    height:30px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    background:#fff;
+    color:var(--muted);
+    padding:0;
+  }
+  .api-group-move:hover{color:var(--ink);border-color:var(--line-strong)}
+  .api-group-assign{
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px solid var(--line);
+  }
+  .api-group-assign label{
+    display:block;
+    margin-bottom:5px;
+    font-size:8px;
+    font-weight:800;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.06em;
+  }
+  .api-group-assign select{width:100%}
+  .api-endpoint{width:100%;border:0;background:transparent;padding:9px;border-radius:8px;display:grid;grid-template-columns:48px minmax(0,1fr);gap:8px;align-items:center;text-align:left}
+  .api-endpoint:hover{background:var(--surface-2)}.api-endpoint.active{background:var(--accent-soft);color:var(--accent-ink)}
+  .api-endpoint .method{height:22px;border-radius:5px;background:#eef0ec;display:grid;place-items:center;font-size:9px;font-weight:800;color:var(--ink)}
+  .api-endpoint-name{font-size:11px;font-weight:730;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.api-endpoint-path{font-size:9px;color:var(--muted);font-family:"SFMono-Regular",Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+  .api-input-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .api-input{display:flex;flex-direction:column;gap:5px}.api-input label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:780}.api-input input,.api-input select{height:36px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:0 9px;outline:none}.api-input input:focus,.api-input select:focus{border-color:#9bcdbd;box-shadow:0 0 0 3px var(--accent-soft)}
+  .required{color:var(--danger);font-size:8px;margin-left:4px}
+  .api-code{background:var(--code);color:#e7ece7;border-radius:9px;padding:12px 13px;font-family:"SFMono-Regular",Consolas,monospace;font-size:10px;line-height:1.55;white-space:pre-wrap;overflow:auto;max-height:230px}
+  .api-response{min-height:120px}.api-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px}.api-meta:empty{display:none}
+  .api-status{display:inline-flex;padding:3px 7px;border-radius:999px;background:#f0f1ed;font-size:9px;font-weight:760}.api-status.ok{background:var(--accent-soft);color:var(--accent-ink)}.api-status.bad{background:var(--danger-soft);color:var(--danger)}
+  .api-empty{padding:40px 20px;text-align:center;color:var(--muted)}
+  .login-callout{padding:13px;border:1px solid #ecd29d;background:var(--warning-soft);color:#755000;border-radius:9px;font-size:11px;line-height:1.45}
+  .db-map{height:660px}
+  .db-node{width:190px}
+  .db-node.audit{border-style:dashed}
+  .data-error{padding:18px;border:1px solid #ecd29d;background:var(--warning-soft);border-radius:9px;color:#755000;font-size:11px;line-height:1.45;margin:14px}
+  .toast{position:fixed;right:18px;bottom:18px;z-index:80;background:var(--code);color:#fff;padding:10px 13px;border-radius:8px;font-size:11px;opacity:0;transform:translateY(8px);pointer-events:none;transition:.18s}.toast.show{opacity:1;transform:translateY(0)}
+  @media(max-width:1100px){.api-layout{grid-template-columns:1fr}.api-side{position:static;max-height:none}.api-input-grid{grid-template-columns:1fr}}
+
+  @media (max-width: 980px){
+    .api-jump-rail{
+      position:sticky;
+      left:auto;
+      top:0;
+      flex-direction:row;
+      gap:4px;
+      padding:8px 0;
+      margin-bottom:8px;
+      background:var(--surface);
+      overflow-x:auto;
+    }
+    .api-jump-btn{
+      width:auto;
+      min-width:56px;
+      padding:6px 8px;
+    }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="mark">M</div><div class="brand-copy"><div class="brand-name">Matapon Builder</div><div class="brand-sub">architecture workspace</div></div></div>
+    <button class="top-project" id="projectBadge" data-open-tab="platform">mataponapp</button>
+    <nav class="tabs" aria-label="Builder sections">
+      <button class="tab active" data-target="schema">Schema</button>
+      <button class="tab" data-target="database">Database</button>
+      <button class="tab" data-target="data">Data</button>
+      <button class="tab" data-target="platform">Platform</button>
+      <button class="tab" data-target="api">API Tester</button>
+      <button class="tab" data-target="ideas">Idea Log</button>
+    </nav>
+    <div class="top-spacer"></div>
+    <div class="status-pill" id="topHealth"><span class="dot"></span> Checking local API…</div>
+    <button class="btn ghost" id="importBtn">Import</button>
+    <button class="btn ghost" id="exportBtn">Export</button>
+    <button class="btn primary" id="copyBuildBriefBtn">Copy build brief</button>
+    <input id="importFile" type="file" accept="application/json,.json" hidden />
+  </header>
+
+  <main>
+    <section class="screen active" id="schema">
+      <div class="page-head">
+        <div><div class="eyebrow">Data model</div><h1>Schema editor</h1><div class="subtitle">The intended structure. Edit one table at a time, keep product truths visible, and compare it against the live database instead of mixing the two.</div></div>
+        <div class="summary"><span class="chip good" id="schemaTableChip">0 tables</span><span class="chip good" id="schemaErrorChip">0 errors</span><span class="chip" id="schemaWarningChip">0 warnings</span><button class="btn primary" id="addTableBtn">+ Add table</button></div>
+      </div>
+      <div class="schema-layout">
+        <aside class="card table-nav"><div class="card-body"><input id="schemaSearch" class="search" placeholder="Find table…" autocomplete="off" /><div class="nav-list" id="schemaTableList"></div></div></aside>
+        <section class="card schema-card">
+          <div class="card-head">
+            <div style="min-width:0;flex:1"><input id="selectedTableName" class="schema-name-input" /><input id="selectedTableNote" class="schema-note-input" placeholder="What this table means" /></div>
+            <div class="schema-row-actions"><button class="btn" id="tableUpBtn">↑</button><button class="btn" id="tableDownBtn">↓</button><button class="btn" id="deleteTableBtn">Delete</button></div>
+          </div>
+          <div class="schema-edit-grid" id="schemaFields"></div>
+          <div class="card-body"><button class="btn primary" id="addFieldBtn">+ Add field</button></div>
+        </section>
+        <aside class="stack">
+          <section class="card health-card"><div class="card-head"><div><div class="card-title">Schema health</div><div class="card-kicker">Naming, duplicates, and foreign-key targets.</div></div><span class="chip good" id="schemaHealthChip">Healthy</span></div><div class="card-body"><div class="metric-list"><div class="label">Tables</div><div class="value" id="schemaMetricTables">0</div><div class="label">Foreign keys</div><div class="value" id="schemaMetricFks">0</div><div class="label">Errors</div><div class="value" id="schemaMetricErrors">0</div><div class="label">Warnings</div><div class="value" id="schemaMetricWarnings">0</div></div><div class="issue-list" id="schemaIssues"></div></div></section>
+          <section class="card"><div class="card-head"><div><div class="card-title">Product truths</div><div class="card-kicker">Accepted facts stay the constraint.</div></div></div><div class="card-body"><textarea id="productTruths" class="truth-editor"></textarea></div></section>
+        </aside>
+      </div>
+    </section>
+
+    <section class="screen" id="database">
+      <div class="page-head">
+        <div><div class="eyebrow">Live PostgreSQL</div><h1>Actual database</h1><div class="subtitle">Read-only physical truth from PostgreSQL: real tables, columns, foreign keys, indexes, and row counts.</div></div>
+        <div class="summary"><span class="chip" id="dbConnectedChip">Not loaded</span><span class="chip" id="dbTableChip">0 tables</span><span class="chip" id="dbFkChip">0 foreign keys</span><span class="chip" id="dbDriftChip">— drift</span><button class="btn primary" id="refreshDbBtn">↻ Refresh</button></div>
+      </div>
+      <div class="db-layout">
+        <div class="stack">
+          <section class="card"><div class="card-head"><div><div class="card-title">Relationship map</div><div class="card-kicker">Generated from the live database. Nothing here is mock data.</div></div><div class="db-toolbar"><div class="db-source"><span class="pulse"></span> PostgreSQL · local</div><button class="btn" id="fitDbBtn">Fit map</button></div></div><div class="db-map-wrap"><div class="db-map" id="dbMap"><svg id="dbEdges" aria-hidden="true"></svg></div></div><div class="snapshot-bar"><span id="dbSnapshot">Not loaded</span><span>Click a table to inspect it</span></div></section>
+          <section class="card"><div class="card-head"><div><div class="card-title">Builder ↔ database drift</div><div class="card-kicker">Builder is intended structure. PostgreSQL is what actually exists.</div></div><span class="chip" id="driftStateChip">Not checked</span></div><div class="drift-grid" id="driftGrid"></div></section>
+        </div>
+        <aside class="card db-detail"><div class="card-head"><div><div class="card-kicker">Selected live table</div><div class="db-table-name" id="dbTableName">—</div></div></div><div class="card-body"><div class="db-stat-grid"><div class="db-stat"><strong id="dbRows">0</strong><span>rows</span></div><div class="db-stat"><strong id="dbCols">0</strong><span>columns</span></div><div class="db-stat"><strong id="dbFks">0</strong><span>foreign keys</span></div></div><div class="db-detail-section"><div class="db-detail-label">Columns</div><div id="dbColumns"></div></div><div class="db-detail-section"><div class="db-detail-label">Relationships</div><div id="dbRelations"></div></div><div class="db-detail-section"><div class="db-detail-label">Indexes + constraints</div><div id="dbIndexes"></div></div><div class="callout">Read only. Schema changes belong in Schema and migrations—not in this screen.</div></div></aside>
+      </div>
+    </section>
+
+    <section class="screen" id="data">
+      <div class="page-head"><div><div class="eyebrow">Live row data</div><h1>Data browser</h1><div class="subtitle">Read-only row inspection. Password hashes are never returned. Mutations stay in explicit API/product workflows.</div></div><div class="summary"><span class="chip" id="dataLiveChip">Admin login required</span><span class="chip" id="dataTablesChip">0 tables</span><span class="chip good">Read only</span><button class="btn primary" id="refreshDataBtn">↻ Refresh data</button></div></div>
+      <div class="data-layout">
+        <aside class="card data-side"><div class="card-head"><div><div class="card-title">Tables</div><div class="card-kicker">Live PostgreSQL row counts.</div></div></div><div class="card-body"><input id="dataTableSearch" class="search" placeholder="Find table…" autocomplete="off" /><div id="dataTableList" class="data-table-list" style="margin-top:10px"></div></div></aside>
+        <section class="card data-main"><div class="card-head"><div><div class="card-kicker">Selected table</div><div class="db-table-name" id="dataTableName">—</div></div><div class="data-toolbar"><input id="rowSearch" class="search" placeholder="Search rows…" autocomplete="off" /><button class="btn" id="clearRowSearch">Clear</button></div></div><div class="snapshot-bar"><span><strong id="dataRowSummary">0 rows</strong> · <span id="dataColumnSummary">0 columns</span></span><span id="dataRedaction"></span></div><div id="dataError"></div><div class="data-table-shell"><table class="data-grid" id="dataGrid"><thead id="dataHead"></thead><tbody id="dataBody"></tbody></table><div class="data-empty" id="dataEmpty" hidden><strong>No matching rows</strong>Try a different search.</div></div><div class="data-footer"><span id="dataShowing">Showing rows</span><div class="pager"><button id="dataPrevBtn">‹</button><span id="dataPage">1</span><button id="dataNextBtn">›</button></div></div></section>
+        <aside class="card data-inspector"><div class="card-head"><div style="min-width:0"><div class="card-kicker">Selected row</div><div class="row-key" id="rowKey">—</div><div class="row-meta"><span class="chip" id="rowTableChip">—</span><span class="chip good">live row</span></div></div><button class="btn icon" id="copyRowBtn" title="Copy row JSON">⧉</button></div><div class="card-body"><div id="rowFields"></div><div class="db-detail-section"><div class="db-detail-label">Raw JSON</div><div class="raw-json" id="rowJson">{}</div></div></div></aside>
+      </div>
+    </section>
+
+    <section class="screen" id="platform">
+      <div class="page-head"><div><div class="eyebrow">Platform contract</div><h1>Architecture, without the noise.</h1><div class="subtitle">Editable project values are separated from settled conventions. The build brief is generated from this live state.</div></div><div class="summary"><span class="chip good" id="platformConfiguredChip">0 / 0 configured</span><span class="chip" id="platformConflictChip">0 conflicts</span><span class="chip" id="platformRepoChip">Monorepo</span></div></div>
+      <div class="grid"><div class="stack">
+        <section class="card"><div class="card-head"><div><div class="card-title">Stack & deployment</div><div class="card-kicker">Project values only.</div></div></div><div class="card-body"><div class="config-groups">
+          <div class="config-group"><div class="config-label">Repository</div><div class="field"><div class="field-name">Project name</div><div class="field-value"><input id="projectName" /></div></div><div class="field"><div class="field-name">Structure</div><div class="field-value"><input id="repoType" /></div></div><div class="field"><div class="field-name">Frontend folder</div><div class="field-value"><input id="frontendFolder" class="mono" /></div></div><div class="field"><div class="field-name">Backend folder</div><div class="field-value"><input id="backendFolder" class="mono" /></div></div></div>
+          <div class="config-group"><div class="config-label">Frontend</div><div class="field"><div class="field-name">Framework</div><div class="field-value"><input id="frontendStack" /></div></div><div class="field"><div class="field-name">CSS</div><div class="field-value"><input id="cssStrategy" /></div></div><div class="field"><div class="field-name">Deploy</div><div class="field-value"><input id="frontendDeploy" /></div></div></div>
+          <div class="config-group"><div class="config-label">Backend</div><div class="field"><div class="field-name">Runtime</div><div class="field-value"><input id="backendRuntime" /></div></div><div class="field"><div class="field-name">Server</div><div class="field-value"><input id="backendServer" /></div></div><div class="field"><div class="field-name">Language</div><div class="field-value"><input id="backendLanguage" /></div></div><div class="field"><div class="field-name">Validation</div><div class="field-value"><input id="validation" /></div></div><div class="field"><div class="field-name">Database access</div><div class="field-value"><input id="databaseAccess" /></div></div><div class="field"><div class="field-name">Deploy</div><div class="field-value"><input id="backendDeploy" /></div></div></div>
+        </div></div></section>
+        <section class="card"><div class="card-head"><div><div class="card-title">Naming contract</div><div class="card-kicker">Settled conventions.</div></div></div><div class="naming-table"><div class="head">Thing</div><div class="head">Rule</div><div class="head">Scope</div><div class="rule">React components</div><div class="example mono">PascalCase.tsx</div><div class="scope">fixed</div><div class="rule">TypeScript modules</div><div class="example mono">camelCase.ts</div><div class="scope">fixed</div><div class="rule">DB tables</div><div class="example mono">plural_snake_case</div><div class="scope">fixed</div><div class="rule">DB fields</div><div class="example mono">snake_case</div><div class="scope">fixed</div><div class="rule">Foreign keys</div><div class="example mono">singular_target_id</div><div class="scope">fixed</div><div class="rule">API routes</div><div class="example mono">/api/plural-resources</div><div class="scope">fixed</div><div class="rule">Environment vars</div><div class="example mono">UPPER_SNAKE_CASE</div><div class="scope">fixed</div></div></section>
+        <section class="card"><div class="card-head"><div><div class="card-title">Build brief</div><div class="card-kicker">Generated from current Builder state.</div></div><button class="mini-action" id="copyPlatformBriefBtn">Copy brief</button></div><div class="card-body"><div class="brief" id="buildBrief"></div></div></section>
+      </div><aside class="stack"><section class="card health-card"><div class="card-head"><div><div class="card-title">Architecture health</div><div class="card-kicker">Required platform values.</div></div><span class="chip good" id="platformHealthChip">Healthy</span></div><div class="card-body"><div class="health-top"><div><div class="big-number" id="platformPercent">100<small>% configured</small></div><div class="meter"><span id="platformMeter"></span></div></div></div><div class="metric-list"><div class="label">Configured values</div><div class="value" id="platformMetricConfigured">0 / 0</div><div class="label">Schema errors</div><div class="value" id="platformMetricSchemaErrors">0</div><div class="label">Backend endpoints</div><div class="value" id="platformMetricEndpoints">0</div><div class="label">Live DB drift</div><div class="value" id="platformMetricDrift">—</div></div></div></section><section class="card"><div class="card-head"><div><div class="card-title">Fixed conventions</div></div></div><div class="card-body contract-list"><div class="contract-item"><span class="check">✓</span><div><div class="contract-main">One monorepo</div></div><span class="lock">locked</span></div><div class="contract-item"><span class="check">✓</span><div><div class="contract-main">Token-based CSS</div></div><span class="lock">locked</span></div><div class="contract-item"><span class="check">✓</span><div><div class="contract-main">Zod at boundaries</div></div><span class="lock">locked</span></div><div class="contract-item"><span class="check">✓</span><div><div class="contract-main">Pure SQL</div></div><span class="lock">locked</span></div><div class="contract-item"><span class="check">✓</span><div><div class="contract-main">PostgreSQL</div></div><span class="lock">locked</span></div></div></section><section class="card"><div class="card-head"><div><div class="card-title">Repo shape</div></div></div><div class="card-body"><div class="repo-tree" id="repoShape"></div></div></section></aside></div>
+    </section>
+
+    <section class="screen" id="api">
+      <div class="page-head"><div><div class="eyebrow">Contract tester</div><h1>API tester</h1><div class="subtitle">Synced from the running backend. One endpoint list, one focused request workspace, no giant repeated cards.</div></div><div class="summary"><span class="chip" id="apiSyncChip">Not synced</span><span class="chip" id="apiCountChip">0 endpoints</span></div></div>
+      <div class="api-toolbar"><input id="apiSearch" class="control" placeholder="Search endpoints…" /><input id="curlBaseUrl" class="control mono" value="http://localhost:3001" /><button class="btn" id="syncEndpointsBtn">Sync backend</button><button class="btn" id="addEndpointBtn">+ Manual</button></div>
+      <div class="api-layout">
+        <aside class="card api-side">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Endpoints</div>
+              <div class="card-kicker">Grouped and searchable.</div>
+            </div>
+            <div class="api-group-tools">
+              <button class="mini-action" id="editApiGroupsBtn">Edit groups</button>
+            </div>
+          </div>
+          <div class="api-jump-rail" id="apiJumpRail"></div>
+          <div class="card-body">
+            <div class="api-group-edit" id="apiGroupEditor"></div>
+            <div id="apiEndpointList"></div>
+          </div>
+        </aside>
+        <section class="stack" id="apiWorkspace"></section>
+      </div>
+    </section>
+
+    <section class="screen" id="ideas">
+      <div class="ideas-wrap"><div class="page-head"><div><div class="eyebrow">Project scratchpad</div><h1>Idea Log</h1><div class="subtitle">A deliberately simple place to keep ideas. Add one. Check it off. Trash it.</div></div><div class="summary"><span class="chip good" id="ideaOpenChip">0 open</span><span class="chip" id="ideaDoneChip">0 completed</span></div></div><section class="card"><div class="idea-compose"><input id="ideaInput" class="idea-input" placeholder="Add an idea…" autocomplete="off" /><button class="btn primary" id="addIdeaBtn">Add idea</button></div><div class="idea-filterbar"><button class="idea-filter active" data-idea-filter="active">Open <span class="idea-filter-count" id="ideaCountActive">0</span></button><button class="idea-filter" data-idea-filter="done">Completed <span class="idea-filter-count" id="ideaCountDone">0</span></button><button class="idea-filter" data-idea-filter="trash">Trash <span class="idea-filter-count" id="ideaCountTrash">0</span></button><button class="idea-filter" data-idea-filter="all">All <span class="idea-filter-count" id="ideaCountAll">0</span></button></div><div class="idea-list" id="ideaList"></div><div class="idea-empty" id="ideaEmpty" hidden><strong>Nothing here.</strong><span id="ideaEmptyText">Add an idea above.</span></div><div class="idea-footer"><span>Open ideas stay in front. Completed and trash stay out of the way.</span><span id="ideaShowing"></span></div></section></div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  const KEY = "matapon_builder_v2";
+  const OLD_KEY = "matapon_builder_v1";
+  const IDEA_KEY = "matapon_builder_idea_log_v1";
+  const API_DEFAULT = "http://localhost:3001";
+
+  const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+  const field = (name, definition, details = "", tags = "") => ({
+    id: uid(), name, definition, details, tags,
+  });
+
+  const defaultTables = [
+    { name: "users", note: "Shared household/staff/admin login account.", fields: [
+      field("id", "PK"), field("username", "TEXT UNIQUE NOT NULL"), field("password_hash", "TEXT NOT NULL"), field("must_change_password", "BOOLEAN NOT NULL DEFAULT TRUE"), field("user_type", "CHOICE", "member, staff, admin"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"), field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
+    ]},
+    { name: "user_members", note: "Actual people inside a member household account.", fields: [
+      field("id", "PK"), field("user_id", "FK", "users.id"), field("full_name", "TEXT NOT NULL"), field("email", "TEXT"), field("phone", "TEXT"), field("dietary_restrictions", "TEXT"), field("member_role", "CHOICE", "primary, adult, child"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"), field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
+    ]},
+    { name: "event_types", note: "Admin-editable event taxonomy.", fields: [
+      field("id", "PK"), field("name", "TEXT UNIQUE NOT NULL"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"), field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
+    ]},
+    { name: "events", note: "Overall event container and event window.", fields: [
+      field("id", "PK"), field("name", "TEXT NOT NULL"), field("event_type_id", "FK", "event_types.id"), field("starts_at", "TEXT NOT NULL"), field("ends_at", "TEXT NOT NULL"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"), field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
+    ]},
+    { name: "event_type_others", note: "Event-type exception when normal taxonomy does not fit.", fields: [
+      field("id", "PK"), field("event_id", "FK", "events.id"), field("value", "TEXT NOT NULL"), field("reason", "TEXT NOT NULL"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
+    ]},
+    { name: "staff_members", note: "Staff profile. Role is staff or manager.", fields: [
+      field("id", "PK"), field("user_id", "FK", "users.id"), field("full_name", "TEXT NOT NULL"), field("email", "TEXT"), field("phone", "TEXT"), field("role", "CHOICE", "staff, manager"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"), field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
+    ]},
+    { name: "staff_areas", note: "Reusable staff work areas.", fields: [
+      field("id", "PK"), field("name", "TEXT UNIQUE NOT NULL"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"), field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
+    ]},
+    { name: "staff_member_areas", note: "Areas a staff member works in.", fields: [
+      field("id", "PK"), field("staff_member_id", "FK", "staff_members.id"), field("staff_area_id", "FK", "staff_areas.id"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"), field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
+    ]},
+    { name: "activities", note: "Reusable activities.", fields: [
+      field("id", "PK"), field("name", "TEXT UNIQUE NOT NULL"), field("setting", "CHOICE", "inside, outside, other"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"), field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
+    ]},
+    { name: "activity_others", note: "Actual setting when normal activity setting does not fit.", fields: [
+      field("id", "PK"), field("activity_id", "FK", "activities.id"), field("value", "TEXT NOT NULL"), field("reason", "TEXT NOT NULL"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
+    ]},
+    { name: "staff_activities", note: "Activities a staff member can do.", fields: [
+      field("id", "PK"), field("staff_member_id", "FK", "staff_members.id"), field("activity_id", "FK", "activities.id"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"), field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
+    ]},
+    { name: "event_activities", note: "A reusable activity scheduled into a specific event.", fields: [
+      field("id", "PK"), field("event_id", "FK", "events.id"), field("activity_id", "FK", "activities.id"), field("starts_at", "TEXT NOT NULL"), field("ends_at", "TEXT NOT NULL"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"), field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
+    ]},
+    { name: "event_activity_staff", note: "Staff booked to work a scheduled activity.", fields: [
+      field("id", "PK"), field("event_activity_id", "FK", "event_activities.id"), field("staff_member_id", "FK", "staff_members.id"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"), field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
+    ]},
+    { name: "member_attendees", note: "Household members registered for an overall event.", fields: [
+      field("id", "PK"), field("member_id", "FK", "user_members.id"), field("event_id", "FK", "events.id"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"), field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
+    ]},
+    { name: "event_activity_signups", note: "Signup sheet for a scheduled activity; checked_in_at records actual participation.", fields: [
+      field("id", "PK"), field("event_activity_id", "FK", "event_activities.id"), field("member_attendee_id", "FK", "member_attendees.id"), field("checked_in_at", "TEXT", "null until staff/admin confirms participation"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"), field("updated_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
+    ]},
+    { name: "audit_log", note: "Append-only history of row changes across product tables.", fields: [
+      field("id", "PK"), field("table_name", "TEXT NOT NULL"), field("row_id", "TEXT NOT NULL"), field("action", "CHOICE", "INSERT, UPDATE, DELETE"), field("old_values", "JSONB"), field("new_values", "JSONB"), field("actor_user_id", "BIGINT"), field("created_at", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
+    ]},
+  ];
+
+  const defaultState = {
+    projectName: "mataponapp",
+    productTruths: "Household accounts are shared logins; user_members are the actual people. Exactly one primary member is required per household once members exist. Events contain scheduled activities. Household members can see event activities and participant lists and can sign up their own household members. Staff/admin confirm actual activity participation with checked_in_at. Duplicate and overlapping activity signups are blocked; back-to-back activities are allowed. Audit history is append-only.",
+    platform: {
+      repoType: "monorepo",
+      frontendFolder: "frontend",
+      backendFolder: "backend",
+      frontendStack: "React + React Router",
+      frontendDeploy: "Netlify",
+      cssStrategy: "Reusable token-based CSS",
+      backendRuntime: "Node.js",
+      backendServer: "Express",
+      backendLanguage: "TypeScript",
+      validation: "Zod",
+      databaseAccess: "PostgreSQL · Pure SQL",
+      backendDeploy: "Railway",
+    },
+    curl: {
+      baseUrl: API_DEFAULT,
+      endpoints: [],
+      values: {},
+      lastSync: null,
+      syncError: "",
+      selectedId: null,
+      groups: [],
+      groupOverrides: {},
+      groupEditorOpen: false
+    },
+    tables: defaultTables,
+  };
+
+  function clone(value) { return JSON.parse(JSON.stringify(value)); }
+  function loadState() {
+    try {
+      const current = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (current) return current;
+      const old = JSON.parse(localStorage.getItem(OLD_KEY) || "null");
+      return old || null;
+    } catch { return null; }
+  }
+
+  let state = loadState() || clone(defaultState);
+  state.projectName ||= defaultState.projectName;
+  const OLD_PRODUCT_TRUTHS = "Users can be member, staff, or admin. Member accounts can contain multiple household people. Events have start/end windows. Activities are reusable and can be scheduled into events. Staff are staff or manager. Staff have activities they CAN do and can be booked to specific event activities. Event activity signups also store check-in. Activity setting is inside, outside, or other; OTHER stores the actual setting and reason.";
+  if (!state.productTruths || state.productTruths === OLD_PRODUCT_TRUTHS) state.productTruths = defaultState.productTruths;
+  state.platform = { ...defaultState.platform, ...(state.platform || {}) };
+  state.curl = { ...defaultState.curl, ...(state.curl || {}) };
+  state.curl.values ||= {};
+  state.curl.groupOverrides ||= {};
+  state.curl.groupEditorOpen = !!state.curl.groupEditorOpen;
+  state.curl.endpoints = Array.isArray(state.curl.endpoints) ? state.curl.endpoints : [];
+  state.tables = Array.isArray(state.tables) && state.tables.length ? state.tables : clone(defaultTables);
+  if (!state.tables.some((t) => t.name === "audit_log")) state.tables.push(clone(defaultTables.find((t) => t.name === "audit_log")));
+
+  let selectedSchemaIndex = 0;
+  let liveDb = null;
+  let selectedDbTable = null;
+  let dataTable = null;
+  let dataRows = [];
+  let dataTotal = 0;
+  let dataOffset = 0;
+  const dataLimit = 100;
+  let selectedDataRow = 0;
+  let dataAbort = null;
+
+  function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+  function esc(v) { return String(v ?? "").replace(/[&<>"']/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"})[m]); }
+
+  function jsonValueHtml(raw,key="") {
+    const value=String(raw??"");
+    const trimmed=value.trim();
+
+    if(/^"(?:\\.|[^"\\])*"$/.test(trimmed)){
+      const cls=
+        (key==="id"||key.endsWith("_id"))
+          ?"json-id-value"
+          :((key.endsWith("_at")||key==="starts_at"||key==="ends_at")
+            ?"json-time-value"
+            :"json-string");
+
+      return `<span class="${cls}">${esc(value)}</span>`;
+    }
+
+    if(/^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(trimmed))
+      return `<span class="json-number">${esc(value)}</span>`;
+
+    if(trimmed==="true"||trimmed==="false")
+      return `<span class="json-boolean">${esc(value)}</span>`;
+
+    if(trimmed==="null")
+      return `<span class="json-null">${esc(value)}</span>`;
+
+    return esc(value);
+  }
+
+  function highlightJsonText(text) {
+    let pretty=String(text??"");
+
+    try {
+      pretty=JSON.stringify(JSON.parse(pretty),null,2);
+    } catch {
+      return `<span class="json-plain">${esc(pretty)}</span>`;
+    }
+
+    return pretty.split("\n").map(line=>{
+      const match=line.match(/^(\s*)"([^"\\]*(?:\\.[^"\\]*)*)"(\s*:\s*)(.*?)(,?)$/);
+
+      if(!match) return esc(line);
+
+      const [,indent,keyRaw,separator,value,comma]=match;
+
+      let key=keyRaw;
+      try {
+        key=JSON.parse(`"${keyRaw}"`);
+      } catch {}
+
+      const keyClass=
+        indent.length===2
+          ?"json-key json-key-root"
+          :(key==="id"
+            ?"json-key json-key-id"
+            :(key.endsWith("_id")
+              ?"json-key json-key-fk"
+              :"json-key"));
+
+      return `${esc(indent)}<span class="${keyClass}">"${esc(keyRaw)}"</span>${esc(separator)}${jsonValueHtml(value,key)}${esc(comma)}`;
+    }).join("\n");
+  }
+  function toast(message) {
+    const node = document.getElementById("toast");
+    node.textContent = message;
+    node.classList.add("show");
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => node.classList.remove("show"), 1200);
+  }
+  function snake(s) { return String(s || "").trim().replace(/([a-z0-9])([A-Z])/g,"$1_$2").replace(/[^a-zA-Z0-9]+/g,"_").replace(/^_+|_+$/g,"").toLowerCase().replace(/_+/g,"_"); }
+  function pluralize(w) {
+    const ir={activity:"activities",category:"categories",person:"people",child:"children",staff:"staff"};
+    if(ir[w]) return ir[w]; if(w.endsWith("s")) return w; if(/[^aeiou]y$/.test(w)) return w.slice(0,-1)+"ies"; if(/(x|z|ch|sh)$/.test(w)) return w+"es"; return w+"s";
+  }
+  function tableSuggestion(n) { let s=snake(n); if(!s) return ""; const p=s.split("_"); p[p.length-1]=pluralize(p[p.length-1]); return p.join("_"); }
+
+  function schemaIssues() {
+    const issues=[]; const tableNames=new Map();
+    state.tables.forEach((t,ti)=>{
+      if(!t.name) issues.push({level:"error",text:"Table has no name.",ti});
+      const suggestion=tableSuggestion(t.name);
+      if(t.name && suggestion!==t.name) issues.push({level:"warning",text:`${t.name}: naming suggests ${suggestion}.`,ti});
+      if(tableNames.has(t.name)) issues.push({level:"error",text:`Duplicate table ${t.name}.`,ti});
+      tableNames.set(t.name,ti);
+      const fields=new Set();
+      (t.fields||[]).forEach((f,fi)=>{
+        if(!f.name) issues.push({level:"error",text:`${t.name}: unnamed field.`,ti,fi});
+        if(fields.has(f.name)) issues.push({level:"error",text:`${t.name}: duplicate field ${f.name}.`,ti,fi});
+        fields.add(f.name);
+        if(f.name && snake(f.name)!==f.name) issues.push({level:"warning",text:`${t.name}.${f.name}: use snake_case.`,ti,fi});
+        if(f.definition==="FK") {
+          const [tt,ff]=String(f.details||"").split(".");
+          const target=state.tables.find(x=>x.name===tt);
+          if(!target || !ff || !(target.fields||[]).some(x=>x.name===ff)) issues.push({level:"error",text:`${t.name}.${f.name}: broken FK target ${f.details||"(missing)"}.`,ti,fi});
+        }
+        if(f.definition==="CHOICE" && !String(f.details||"").trim()) issues.push({level:"warning",text:`${t.name}.${f.name}: CHOICE has no values.`,ti,fi});
+      });
+    });
+    return issues;
+  }
+
+  function fkOptions() {
+    const out=[];
+    state.tables.forEach(t=>(t.fields||[]).forEach(f=>{ if(f.definition==="PK" || f.name==="id") out.push(`${t.name}.${f.name}`); }));
+    return out;
+  }
+
+  function renderSchemaList() {
+    const q=document.getElementById("schemaSearch").value.trim().toLowerCase();
+    const list=document.getElementById("schemaTableList");
+    list.innerHTML=state.tables.map((t,i)=>({t,i})).filter(({t})=>!q||t.name.toLowerCase().includes(q)).map(({t,i})=>`<button class="nav-item ${i===selectedSchemaIndex?"active":""}" data-schema-index="${i}" style="border:0;width:100%;text-align:left"><span>${esc(t.name)}</span><span class="count">${(t.fields||[]).length}</span></button>`).join("");
+    list.querySelectorAll("[data-schema-index]").forEach(btn=>btn.onclick=()=>{selectedSchemaIndex=Number(btn.dataset.schemaIndex);renderSchema();});
+  }
+
+  function renderSchemaFields() {
+    const t=state.tables[selectedSchemaIndex];
+    if(!t) return;
+    document.getElementById("selectedTableName").value=t.name||"";
+    document.getElementById("selectedTableNote").value=t.note||"";
+    const defs=["PK","FK","TEXT","TEXT NOT NULL","TEXT UNIQUE NOT NULL","CHOICE","INTEGER","INTEGER NOT NULL","BIGINT","BOOLEAN","BOOLEAN NOT NULL","BOOLEAN NOT NULL DEFAULT TRUE","JSONB","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"];
+    const root=document.getElementById("schemaFields");
+    root.innerHTML='<div class="head">Field</div><div class="head">Definition</div><div class="head">Details / meaning</div><div class="head"></div>'+(t.fields||[]).map((f,fi)=>{
+      const options=[...new Set([f.definition,...defs].filter(Boolean))].map(x=>`<option ${x===f.definition?"selected":""}>${esc(x)}</option>`).join("");
+      const detail=f.definition==="FK"?`<select data-field-detail="${fi}"><option value="">Choose target…</option>${fkOptions().map(x=>`<option value="${esc(x)}" ${x===f.details?"selected":""}>${esc(x)}</option>`).join("")}</select>`:`<textarea data-field-detail="${fi}" placeholder="${f.definition==="CHOICE"?"comma-separated choices":"details / meaning"}">${esc(f.details||"")}</textarea>`;
+      return `<div><input data-field-name="${fi}" class="mono" value="${esc(f.name||"")}"></div><div><select data-field-def="${fi}">${options}</select></div><div>${detail}</div><div><button class="schema-icon danger" data-delete-field="${fi}" title="Delete field">×</button></div>`;
+    }).join("");
+    root.querySelectorAll("[data-field-name]").forEach(el=>el.oninput=()=>{t.fields[Number(el.dataset.fieldName)].name=el.value;save();renderSchemaHealth();renderSchemaList();});
+    root.querySelectorAll("[data-field-def]").forEach(el=>el.onchange=()=>{const f=t.fields[Number(el.dataset.fieldDef)];f.definition=el.value;if(el.value!=="FK"&&f.details===undefined)f.details="";save();renderSchemaFields();renderSchemaHealth();});
+    root.querySelectorAll("[data-field-detail]").forEach(el=>{const evt=el.tagName==="SELECT"?"change":"input";el.addEventListener(evt,()=>{t.fields[Number(el.dataset.fieldDetail)].details=el.value;save();renderSchemaHealth();});});
+    root.querySelectorAll("[data-delete-field]").forEach(btn=>btn.onclick=()=>{if(!confirm("Delete this field from the Builder schema?"))return;t.fields.splice(Number(btn.dataset.deleteField),1);save();renderSchema();});
+  }
+
+  function renderSchemaHealth() {
+    const issues=schemaIssues(); const errors=issues.filter(x=>x.level==="error").length; const warnings=issues.filter(x=>x.level==="warning").length; const fks=state.tables.reduce((n,t)=>n+(t.fields||[]).filter(f=>f.definition==="FK").length,0);
+    document.getElementById("schemaTableChip").textContent=`${state.tables.length} tables`;
+    document.getElementById("schemaErrorChip").textContent=`${errors} errors`;
+    document.getElementById("schemaWarningChip").textContent=`${warnings} warnings`;
+    document.getElementById("schemaMetricTables").textContent=state.tables.length;
+    document.getElementById("schemaMetricFks").textContent=fks;
+    document.getElementById("schemaMetricErrors").textContent=errors;
+    document.getElementById("schemaMetricWarnings").textContent=warnings;
+    const chip=document.getElementById("schemaHealthChip"); chip.textContent=errors?"Needs attention":"Healthy"; chip.className=`chip ${errors?"warn":"good"}`;
+    document.getElementById("schemaIssues").innerHTML=(issues.length?issues.slice(0,8):[{level:"ok",text:"No structural naming or FK problems found."}]).map(i=>`<div class="issue ${i.level}">${esc(i.text)}</div>`).join("");
+  }
+
+  function renderSchema() {
+    if(selectedSchemaIndex>=state.tables.length) selectedSchemaIndex=Math.max(0,state.tables.length-1);
+    renderSchemaList(); renderSchemaFields(); renderSchemaHealth();
+    document.getElementById("productTruths").value=state.productTruths||"";
+  }
+
+  function repoShape() {
+    const p=state.platform;
+    return `${state.projectName}/\n├── ${p.frontendFolder}/\n│   ├── src/\n│   └── package.json\n├── ${p.backendFolder}/\n│   ├── src/\n│   └── package.json\n├── shared/\n└── package.json`;
+  }
+
+  function buildBrief() {
+    const p=state.platform;
+    return `PROJECT: ${state.projectName}\n\nPLATFORM\n- Repository: ${p.repoType}\n- Frontend folder: ${p.frontendFolder}/\n- Backend folder: ${p.backendFolder}/\n- Frontend: ${p.frontendStack}\n- Frontend deploy: ${p.frontendDeploy}\n- CSS: ${p.cssStrategy}\n- Backend runtime: ${p.backendRuntime}\n- Backend server: ${p.backendServer}\n- Backend language: ${p.backendLanguage}\n- Validation: ${p.validation}\n- Database: ${p.databaseAccess}\n- Backend deploy: ${p.backendDeploy}\n\nPRODUCT TRUTHS\n${state.productTruths}\n\nAPI ENDPOINTS\n${(state.curl.endpoints||[]).map(ep=>`- ${ep.method} ${ep.path} — ${ep.name}`).join("\n")}\n\nSCHEMA\n${state.tables.map(t=>`${t.name}\n${(t.fields||[]).map(f=>`  ${f.name} | ${f.definition}${f.details?` | ${f.details}`:""}`).join("\n")}`).join("\n\n")}`;
+  }
+
+  function syncPlatformFromDom() {
+    const keys=Object.keys(defaultState.platform);
+    state.projectName=document.getElementById("projectName").value.trim()||"mataponapp";
+    keys.forEach(k=>{const el=document.getElementById(k);if(el)state.platform[k]=el.value.trim();});
+    save();
+    document.getElementById("projectBadge").textContent=state.projectName;
+    renderPlatformSummary();
+  }
+
+  function currentDriftCount() {
+    if(!liveDb) return null;
+    const liveNames=new Set(liveDb.tables.map(t=>t.name));
+    const builderNames=new Set(state.tables.map(t=>t.name));
+    let drift=0;
+    for(const name of new Set([...liveNames,...builderNames])) {
+      if(!liveNames.has(name)||!builderNames.has(name)){drift++;continue;}
+      const live=liveDb.tables.find(t=>t.name===name);
+      const intended=state.tables.find(t=>t.name===name);
+      const lc=new Set(live.columns.map(c=>c.name));
+      const bc=new Set((intended.fields||[]).map(f=>f.name));
+      if(lc.size!==bc.size || [...lc].some(c=>!bc.has(c))) drift++;
+    }
+    return drift;
+  }
+
+  function renderPlatformSummary() {
+    const keys=Object.keys(defaultState.platform); const configured=keys.filter(k=>String(state.platform[k]||"").trim()).length; const percent=Math.round(configured/keys.length*100); const errors=schemaIssues().filter(x=>x.level==="error").length; const drift=currentDriftCount();
+    document.getElementById("platformConfiguredChip").textContent=`${configured} / ${keys.length} configured`;
+    document.getElementById("platformConflictChip").textContent=`${errors} schema conflicts`;
+    document.getElementById("platformRepoChip").textContent=state.platform.repoType||"—";
+    document.getElementById("platformPercent").innerHTML=`${percent}<small>% configured</small>`;
+    document.getElementById("platformMeter").style.width=`${percent}%`;
+    document.getElementById("platformMetricConfigured").textContent=`${configured} / ${keys.length}`;
+    document.getElementById("platformMetricSchemaErrors").textContent=errors;
+    document.getElementById("platformMetricEndpoints").textContent=(state.curl.endpoints||[]).length;
+    document.getElementById("platformMetricDrift").textContent=drift===null?"—":drift;
+    const health=document.getElementById("platformHealthChip"); health.textContent=(configured===keys.length&&!errors)?"Healthy":"Needs attention"; health.className=`chip ${(configured===keys.length&&!errors)?"good":"warn"}`;
+    document.getElementById("repoShape").textContent=repoShape();
+    document.getElementById("buildBrief").textContent=buildBrief();
+  }
+
+  function renderPlatform() {
+    document.getElementById("projectName").value=state.projectName;
+    Object.keys(defaultState.platform).forEach(k=>{const el=document.getElementById(k);if(el)el.value=state.platform[k]||"";});
+    renderPlatformSummary();
+  }
+
+  function humanizeKey(key) { return String(key||"").replace(/_id$/, " ID").replace(/[_-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase()); }
+  function pathParamNames(path) {
+    const out=[]; const seen=new Set();
+    for(const m of String(path||"").matchAll(/:([A-Za-z_][A-Za-z0-9_]*)|\{([A-Za-z_][A-Za-z0-9_]*)\}/g)){const n=m[1]||m[2];if(!seen.has(n)){seen.add(n);out.push(n);}}
+    return out;
+  }
+  function valueKey(ep,input){return `${ep.id}:${input.location}:${input.key}`;}
+  function normalizeEndpoint(ep) {
+    ep.id=ep.id||uid(); ep.name=ep.name||humanizeKey(ep.id)||"Unnamed Endpoint"; ep.method=(ep.method||"GET").toUpperCase(); ep.path=ep.path||"/"; ep.notes=ep.notes||ep.description||""; ep.auth=!!ep.auth; ep.setsSession=!!ep.setsSession; ep.source=ep.source||"manual"; ep.inputs=Array.isArray(ep.inputs)?ep.inputs:[];
+    ep.inputs=ep.inputs.map(x=>({id:x.id||`${ep.id}:${x.location||"body"}:${x.key||uid()}`,key:x.key||"value",label:x.label||humanizeKey(x.key||"value"),location:x.location||"body",required:x.required!==false,type:x.type||"string",secret:!!x.secret||/password|secret|token/i.test(x.key||""),options:Array.isArray(x.options)?x.options:[],placeholder:x.placeholder||"",value:x.value??"",default:x.default,example:x.example}));
+    pathParamNames(ep.path).forEach(key=>{if(!ep.inputs.some(x=>x.location==="path"&&x.key===key))ep.inputs.push({id:`${ep.id}:path:${key}`,key,label:humanizeKey(key),location:"path",required:true,type:"string",secret:false,options:[],placeholder:"",value:""});});
+    ep.inputs.forEach(input=>{const stored=state.curl.values?.[valueKey(ep,input)];if(stored!==undefined&&input.value==="")input.value=stored;if(input.value===""&&input.default!==undefined&&!input.secret)input.value=String(input.default);if(input.value===""&&input.example!==undefined&&!input.secret)input.value=String(input.example);});
+    return ep;
+  }
+  state.curl.endpoints=state.curl.endpoints.map(normalizeEndpoint);
+
+  function allEndpoints(){state.curl.endpoints=(state.curl.endpoints||[]).map(normalizeEndpoint);return state.curl.endpoints;}
+  function coerceValue(input,value){if(input.type==="number"||input.type==="integer"){const n=Number(value);return Number.isFinite(n)?n:value;}if(input.type==="boolean"){if(String(value).toLowerCase()==="true")return true;if(String(value).toLowerCase()==="false")return false;}return value;}
+  function bodyObject(ep){const fields=ep.inputs.filter(x=>x.location==="body"&&(x.required||String(x.value||"")!==""));if(!fields.length)return null;const obj={};fields.forEach(x=>obj[x.key]=coerceValue(x,x.value));return obj;}
+  function resolvedEndpointUrl(ep){normalizeEndpoint(ep);let path=String(ep.path||"/");ep.inputs.filter(x=>x.location==="path").forEach(x=>{const val=String(x.value||"");if(val)path=path.replaceAll(":"+x.key,encodeURIComponent(val)).replaceAll("{"+x.key+"}",encodeURIComponent(val));});let base=String(state.curl.baseUrl||API_DEFAULT).replace(/\/+$/,"").trim();if(!path.startsWith("/"))path="/"+path;const q=ep.inputs.filter(x=>x.location==="query"&&String(x.value||"")!=="").map(x=>encodeURIComponent(x.key)+"="+encodeURIComponent(String(x.value))).join("&");return base+path+(q?(path.includes("?")?"&":"?")+q:"");}
+  function requestHeaders(ep){const headers={};const body=bodyObject(ep);if(body&&!['GET','HEAD'].includes(ep.method))headers['Content-Type']='application/json';return headers;}
+  function requestBody(ep){const obj=bodyObject(ep);return obj?JSON.stringify(obj):"";}
+  function shellQuote(v){return "'"+String(v??"").replace(/'/g,"'\\''")+"'";}
+  function curlCommand(ep){normalizeEndpoint(ep);const url=resolvedEndpointUrl(ep);const headers=requestHeaders(ep);const body=requestBody(ep);const parts=[];const methodBit=ep.method==="GET"&&!body?"":` -X ${ep.method}`;parts.push(`curl${methodBit} ${shellQuote(url)}`);if(ep.setsSession)parts.push(`  -c /tmp/matapon-cookie.txt`);if(ep.auth)parts.push(`  -b /tmp/matapon-cookie.txt`);Object.entries(headers).forEach(([k,v])=>parts.push(`  -H ${shellQuote(k+": "+v)}`));if(body)parts.push(`  --data-raw ${shellQuote(body)}`);return parts.join(" \\\n");}
+  function isDateTimeInput(input){return ["starts_at","ends_at","checked_in_at"].includes(String(input.key||""));}
+  function pad2(n){return String(n).padStart(2,"0");}
+  function dateTimeLocalValue(value){const raw=String(value||"").trim();if(!raw)return"";const m=raw.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/);return m?m[1]:"";}
+  function dateTimeWithLocalOffset(value){const raw=String(value||"").trim();if(!raw)return"";const d=new Date(raw);if(Number.isNaN(d.getTime()))return raw;const offset=-d.getTimezoneOffset();const sign=offset>=0?"+":"-";const abs=Math.abs(offset);return `${raw}:00${sign}${pad2(Math.floor(abs/60))}:${pad2(abs%60)}`;}
+
+  const API_GROUP_DEFAULTS=[
+    {key:"system",label:"System",short:"SYS"},
+    {key:"auth",label:"Auth",short:"AUTH"},
+    {key:"users",label:"Users + households",short:"USERS"},
+    {key:"events",label:"Events",short:"EVENTS"},
+    {key:"activities",label:"Activities",short:"ACT"},
+    {key:"staff",label:"Staff",short:"STAFF"},
+    {key:"attendance",label:"Attendance",short:"ATTEND"},
+    {key:"admin",label:"Admin / dev",short:"ADMIN"},
+    {key:"manual",label:"Manual",short:"MANUAL"},
+    {key:"other",label:"Other",short:"OTHER"},
+  ];
+
+  function initializeApiGroups(){
+    const current=Array.isArray(state.curl.groups)?state.curl.groups:[];
+    const byKey=new Map(current.map(g=>[g.key,g]));
+    const merged=[];
+
+    API_GROUP_DEFAULTS.forEach(def=>{
+      const existing=byKey.get(def.key);
+      merged.push({
+        key:def.key,
+        label:String(existing?.label||def.label),
+        short:String(existing?.short||def.short),
+        custom:false,
+      });
+      byKey.delete(def.key);
+    });
+
+    current.forEach(group=>{
+      if(!group?.key||!byKey.has(group.key))return;
+      merged.push({
+        key:String(group.key),
+        label:String(group.label||group.key),
+        short:String(group.short||group.label||group.key).slice(0,8),
+        custom:true,
+      });
+      byKey.delete(group.key);
+    });
+
+    state.curl.groups=merged;
+    state.curl.groupOverrides||={};
+  }
+
+  initializeApiGroups();
+
+  function apiGroups(){
+    initializeApiGroups();
+    return state.curl.groups;
+  }
+
+  const API_RESOURCE_ORDER=[
+    "/health",
+    "/db-check",
+    "/api/auth",
+    "/api/users",
+    "/api/user-members",
+    "/api/event-types",
+    "/api/events",
+    "/api/activities",
+    "/api/event-activities",
+    "/api/staff-members",
+    "/api/staff-areas",
+    "/api/staff-member-areas",
+    "/api/staff-activities",
+    "/api/event-activity-staff",
+    "/api/member-attendees",
+    "/api/event-activity-signups",
+    "/api/audit",
+    "/api/dev"
+  ];
+
+  function defaultApiGroupKey(ep){
+    const path=String(ep.path||"");
+
+    if(ep.source==="manual")return"manual";
+    if(path==="/health"||path==="/db-check")return"system";
+    if(path.startsWith("/api/auth"))return"auth";
+    if(path.startsWith("/api/users")||path.startsWith("/api/user-members"))return"users";
+
+    if(
+      path==="/api/activities" ||
+      path.startsWith("/api/activities/")
+    ) return "activities";
+
+    if(
+      path.startsWith("/api/staff") ||
+      path.startsWith("/api/event-activity-staff")
+    ) return "staff";
+
+    if(
+      path.startsWith("/api/member-attendees") ||
+      path.startsWith("/api/event-activity-signups")
+    ) return "attendance";
+
+    if(
+      path.startsWith("/api/dev") ||
+      path.startsWith("/api/audit")
+    ) return "admin";
+
+    if(
+      path.startsWith("/api/event-types") ||
+      path.startsWith("/api/events") ||
+      path.startsWith("/api/event-activities")
+    ) return "events";
+
+    return "other";
+  }
+
+  function apiGroupKey(ep){
+    const override=state.curl.groupOverrides?.[ep.id];
+
+    if(override && apiGroups().some(group=>group.key===override)){
+      return override;
+    }
+
+    return defaultApiGroupKey(ep);
+  }
+
+  function apiResourceRank(ep){
+    const path=String(ep.path||"");
+    const n=API_RESOURCE_ORDER.findIndex(
+      base=>path===base||path.startsWith(base+"/")
+    );
+    return n<0?999:n;
+  }
+
+  function apiActionRank(ep){
+    const m=String(ep.method||"GET").toUpperCase();
+    const hasId=
+      String(ep.path||"").includes(":id") ||
+      String(ep.path||"").includes("{id}");
+
+    if(m==="GET"&&!hasId)return 0;
+    if(m==="GET"&&hasId)return 1;
+    if(m==="POST")return 2;
+    if(m==="PATCH"||m==="PUT")return 3;
+    if(m==="DELETE")return 4;
+    return 9;
+  }
+
+  function sortedEndpoints(){
+    const groups=apiGroups();
+
+    return [...allEndpoints()].sort((a,b)=>{
+      const ga=groups.findIndex(g=>g.key===apiGroupKey(a));
+      const gb=groups.findIndex(g=>g.key===apiGroupKey(b));
+
+      return (
+        ga-gb ||
+        apiResourceRank(a)-apiResourceRank(b) ||
+        apiActionRank(a)-apiActionRank(b) ||
+        String(a.name).localeCompare(String(b.name))
+      );
+    });
+  }
+
+  const createLocks=new Set();
+  function shouldCreateLock(ep){
+    const path=String(ep.path||"");
+    return String(ep.method).toUpperCase()==="POST" && !path.startsWith("/api/auth/") && !path.startsWith("/api/dev/");
+  }
+  function createLockKey(ep){return `${ep.id}|${resolvedEndpointUrl(ep)}|${requestBody(ep)}`;}
+  function missingRequired(ep){return ep.inputs.filter(x=>x.required&&String(x.value??"").trim()==="");}
+
+  function renderApiGroupEditor(){
+    const editor=document.getElementById("apiGroupEditor");
+    if(!editor)return;
+
+    editor.classList.toggle("open",!!state.curl.groupEditorOpen);
+
+    if(!state.curl.groupEditorOpen){
+      editor.innerHTML="";
+      return;
+    }
+
+    const groups=apiGroups();
+    const selected=allEndpoints().find(ep=>ep.id===state.curl.selectedId);
+
+    editor.innerHTML=`
+      <div class="api-group-edit-title">
+        <span>Endpoint groups</span>
+        <button class="mini-action" id="addApiGroupBtn">+ Add</button>
+      </div>
+
+      <div id="apiGroupRows">
+        ${groups.map((group,index)=>`
+          <div class="api-group-edit-row">
+            <input
+              value="${esc(group.label)}"
+              data-api-group-label="${esc(group.key)}"
+              aria-label="Group name"
+            >
+            <button
+              class="api-group-move"
+              data-api-group-up="${esc(group.key)}"
+              ${index===0?"disabled":""}
+              title="Move up"
+            >↑</button>
+            <button
+              class="api-group-move"
+              data-api-group-down="${esc(group.key)}"
+              ${index===groups.length-1?"disabled":""}
+              title="Move down"
+            >↓</button>
+          </div>
+        `).join("")}
+      </div>
+
+      ${selected?`
+        <div class="api-group-assign">
+          <label>Selected endpoint · ${esc(selected.name)}</label>
+          <select id="selectedEndpointGroup">
+            ${groups.map(group=>`
+              <option
+                value="${esc(group.key)}"
+                ${apiGroupKey(selected)===group.key?"selected":""}
+              >${esc(group.label)}</option>
+            `).join("")}
+          </select>
+        </div>
+      `:""}
+    `;
+
+    editor.querySelectorAll("[data-api-group-label]").forEach(input=>{
+      input.addEventListener("change",()=>{
+        const group=state.curl.groups.find(g=>g.key===input.dataset.apiGroupLabel);
+        if(!group)return;
+
+        const value=input.value.trim();
+
+        if(!value){
+          input.value=group.label;
+          return;
+        }
+
+        group.label=value;
+        group.short=value.replace(/[^A-Za-z0-9]+/g," ").trim().split(/\s+/).map(x=>x[0]||"").join("").slice(0,7).toUpperCase() || value.slice(0,7).toUpperCase();
+        save();
+        renderApi();
+      });
+    });
+
+    editor.querySelectorAll("[data-api-group-up]").forEach(button=>{
+      button.onclick=()=>{
+        const key=button.dataset.apiGroupUp;
+        const index=state.curl.groups.findIndex(g=>g.key===key);
+        if(index<=0)return;
+        [state.curl.groups[index-1],state.curl.groups[index]]=
+          [state.curl.groups[index],state.curl.groups[index-1]];
+        save();
+        renderApi();
+      };
+    });
+
+    editor.querySelectorAll("[data-api-group-down]").forEach(button=>{
+      button.onclick=()=>{
+        const key=button.dataset.apiGroupDown;
+        const index=state.curl.groups.findIndex(g=>g.key===key);
+        if(index<0||index>=state.curl.groups.length-1)return;
+        [state.curl.groups[index+1],state.curl.groups[index]]=
+          [state.curl.groups[index],state.curl.groups[index+1]];
+        save();
+        renderApi();
+      };
+    });
+
+    const assign=document.getElementById("selectedEndpointGroup");
+
+    if(assign && selected){
+      assign.onchange=()=>{
+        const chosen=assign.value;
+
+        if(chosen===defaultApiGroupKey(selected)){
+          delete state.curl.groupOverrides[selected.id];
+        }else{
+          state.curl.groupOverrides[selected.id]=chosen;
+        }
+
+        save();
+        renderApi();
+      };
+    }
+
+    document.getElementById("addApiGroupBtn").onclick=()=>{
+      const label=prompt("New group name?","New group");
+      if(label===null)return;
+
+      const clean=label.trim();
+      if(!clean)return;
+
+      let base=clean
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g,"-")
+        .replace(/^-+|-+$/g,"") || "group";
+
+      let key=base;
+      let n=2;
+
+      while(state.curl.groups.some(g=>g.key===key)){
+        key=`${base}-${n++}`;
+      }
+
+      state.curl.groups.push({
+        key,
+        label:clean,
+        short:clean.slice(0,7).toUpperCase(),
+        custom:true
+      });
+
+      save();
+      renderApi();
+    };
+  }
+
+  function renderApiJumpRail(visibleGroups){
+    const rail=document.getElementById("apiJumpRail");
+    if(!rail)return;
+
+    const selected=allEndpoints().find(ep=>ep.id===state.curl.selectedId);
+    const selectedGroup=selected?apiGroupKey(selected):null;
+
+    rail.innerHTML=visibleGroups.map(group=>`
+      <button
+        class="api-jump-btn ${group.key===selectedGroup?"active":""}"
+        data-api-jump="${esc(group.key)}"
+      >${esc(group.short||group.label)}</button>
+    `).join("");
+
+    rail.querySelectorAll("[data-api-jump]").forEach(button=>{
+      button.onclick=()=>{
+        const section=document.querySelector(
+          `[data-api-group-section="${CSS.escape(button.dataset.apiJump)}"]`
+        );
+
+        const body=document.querySelector(".api-side .card-body");
+        const list=document.getElementById("apiEndpointList");
+
+        if(!section||!body||!list)return;
+
+        body.scrollTo({
+          top:Math.max(0,section.offsetTop-list.offsetTop-4),
+          behavior:"smooth"
+        });
+
+        rail.querySelectorAll(".api-jump-btn").forEach(btn=>
+          btn.classList.toggle("active",btn===button)
+        );
+      };
+    });
+  }
+
+  function renderApiList(){
+    const root=document.getElementById("apiEndpointList");
+    const q=document.getElementById("apiSearch").value.trim().toLowerCase();
+
+    const endpoints=sortedEndpoints().filter(ep=>
+      !q ||
+      `${ep.name} ${ep.method} ${ep.path}`.toLowerCase().includes(q)
+    );
+
+    const groups=apiGroups()
+      .map(group=>({
+        ...group,
+        endpoints:endpoints.filter(ep=>apiGroupKey(ep)===group.key)
+      }))
+      .filter(group=>group.endpoints.length);
+
+    root.innerHTML=groups.map(group=>`
+      <section
+        class="api-group-section"
+        data-api-group-section="${esc(group.key)}"
+      >
+        <div class="api-group-title">${esc(group.label)}</div>
+
+        ${group.endpoints.map(ep=>`
+          <button
+            class="api-endpoint ${ep.id===state.curl.selectedId?"active":""}"
+            data-api-id="${esc(ep.id)}"
+          >
+            <span class="method">${esc(ep.method)}</span>
+            <div style="min-width:0">
+              <div class="api-endpoint-name">${esc(ep.name)}</div>
+              <div class="api-endpoint-path">${esc(ep.path)}</div>
+            </div>
+          </button>
+        `).join("")}
+      </section>
+    `).join("") || '<div class="api-empty">No endpoints match.</div>';
+
+    root.querySelectorAll("[data-api-id]").forEach(button=>{
+      button.onclick=()=>{
+        state.curl.selectedId=button.dataset.apiId;
+        save();
+        renderApi();
+      };
+    });
+
+    renderApiJumpRail(groups);
+    renderApiGroupEditor();
+  }
+
+  function apiInputHtml(ep,input){
+    const req=input.required?'<span class="required">required</span>':'';
+    const attrs=`data-api-input="${esc(input.id)}"`;
+    if(isDateTimeInput(input))return `<div class="api-input"><label>${esc(input.label)}${req}</label><input type="datetime-local" step="60" ${attrs} value="${esc(dateTimeLocalValue(input.value))}"></div>`;
+    if(input.options?.length)return `<div class="api-input"><label>${esc(input.label)}${req}</label><select ${attrs}><option value=""></option>${input.options.map(v=>`<option value="${esc(v)}" ${String(v)===String(input.value)?"selected":""}>${esc(v)}</option>`).join("")}</select></div>`;
+    const type=input.secret?"password":(input.type==="number"||input.type==="integer"?"number":"text");
+    return `<div class="api-input"><label>${esc(input.label)}${req}</label><input type="${type}" ${attrs} value="${esc(input.value||"")}" placeholder="${esc(input.placeholder||"Enter value")}"></div>`;
+  }
+
+  function renderApiWorkspace(){
+    const root=document.getElementById("apiWorkspace"); const ep=allEndpoints().find(x=>x.id===state.curl.selectedId)||allEndpoints()[0];
+    if(!ep){root.innerHTML='<div class="card"><div class="api-empty">Sync the backend to load endpoint contracts.</div></div>';return;}
+    state.curl.selectedId=ep.id;
+    const visible=ep.inputs.filter(x=>["path","query","body"].includes(x.location)); const body=bodyObject(ep); const locked=shouldCreateLock(ep)&&createLocks.has(createLockKey(ep));
+    root.innerHTML=`
+      <section class="card"><div class="card-head"><div><div class="card-title">${esc(ep.name)}</div><div class="card-kicker">${esc(ep.notes||"")}</div></div><div class="summary">${ep.auth?'<span class="chip">auth required</span>':''}<span class="chip">${esc(ep.source)}</span></div></div><div class="card-body"><div class="request-line"><button class="method-btn">${esc(ep.method)}</button><input class="mono" value="${esc(resolvedEndpointUrl(ep))}" readonly><button class="btn primary" id="sendApiBtn" ${locked?"disabled":""}>${locked?"✓ Created":"Send request"}</button></div></div></section>
+      ${visible.length?`<section class="card"><div class="card-head"><div><div class="card-title">Inputs</div><div class="card-kicker">Generated from the backend contract. You fill only values.</div></div></div><div class="card-body"><div class="api-input-grid" id="apiInputs">${visible.map(input=>apiInputHtml(ep,input)).join("")}</div></div></section>`:""}
+      <section class="card"><div class="card-head"><div><div class="card-title">Request</div><div class="card-kicker">Generated cURL and JSON body.</div></div><button class="mini-action" id="copyCurlBtn">Copy cURL</button></div><div class="card-body"><div class="api-code" id="apiCurl">${esc(curlCommand(ep))}</div>${body?`<div class="db-detail-section"><div class="db-detail-label">JSON body</div><div class="raw-json" id="apiBody">${highlightJsonText(JSON.stringify(body,null,2))}</div></div>`:""}</div></section>
+      <section class="card"><div class="card-head"><div><div class="card-title">Response</div><div class="card-kicker" id="apiResponseKicker">No request sent yet.</div></div><button class="mini-action" id="copyResponseBtn">Copy JSON</button></div><div class="card-body"><div class="api-meta" id="apiResponseMeta"></div><div class="response api-response" id="apiResponse">—</div></div></section>`;
+    root.querySelectorAll("[data-api-input]").forEach(el=>{const evt=el.tagName==="SELECT"?"change":"input";el.addEventListener(evt,()=>{const input=ep.inputs.find(x=>x.id===el.dataset.apiInput);if(!input)return;input.value=isDateTimeInput(input)?dateTimeWithLocalOffset(el.value):el.value;state.curl.values[valueKey(ep,input)]=input.value;save();renderApiWorkspace();});});
+    document.getElementById("copyCurlBtn").onclick=async()=>{await navigator.clipboard.writeText(curlCommand(ep));toast("cURL copied");};
+    document.getElementById("copyResponseBtn").onclick=async()=>{const text=document.getElementById("apiResponse").textContent;if(text&&text!=="—"){await navigator.clipboard.writeText(text);toast("Response copied");}};
+    const send=document.getElementById("sendApiBtn"); if(send&&!locked)send.onclick=()=>runEndpoint(ep,send);
+  }
+
+  function renderApi(){
+    document.getElementById("curlBaseUrl").value=state.curl.baseUrl||API_DEFAULT;
+    const count=allEndpoints().length; document.getElementById("apiCountChip").textContent=`${count} endpoints`;
+    const sync=document.getElementById("apiSyncChip"); if(state.curl.syncError){sync.textContent="Sync failed";sync.className="chip warn";}else if(state.curl.lastSync){sync.textContent="Backend synced";sync.className="chip good";}else{sync.textContent="Not synced";sync.className="chip";}
+    if(!state.curl.selectedId&&allEndpoints()[0])state.curl.selectedId=allEndpoints()[0].id;
+    renderApiList();renderApiWorkspace();
+  }
+
+  async function syncDynamicEndpoints(silent=false){
+    const base=String(state.curl.baseUrl||API_DEFAULT).replace(/\/+$/,"").trim();
+    try{
+      const res=await fetch(base+"/__matapon/endpoints",{credentials:"include"}); if(!res.ok)throw new Error(`${res.status} ${res.statusText}`); const data=await res.json(); if(!Array.isArray(data.endpoints))throw new Error("Backend did not return endpoint definitions");
+      const manual=(state.curl.endpoints||[]).filter(x=>x.source==="manual"); const dynamic=data.endpoints.map(x=>normalizeEndpoint({...x,source:"backend"})); state.curl.endpoints=[...dynamic,...manual]; if(!state.curl.endpoints.some(x=>x.id===state.curl.selectedId))state.curl.selectedId=state.curl.endpoints[0]?.id||null; state.curl.lastSync=new Date().toISOString(); state.curl.syncError=""; save(); renderApi(); renderPlatformSummary(); return true;
+    }catch(err){state.curl.syncError=String(err?.message||err);save();renderApi();if(!silent)toast("Backend sync failed");return false;}
+  }
+
+  async function runEndpoint(ep,button){
+    const missing=missingRequired(ep); if(missing.length){toast(`Enter ${missing.map(x=>x.label).join(", ")}`);return;}
+    if(location.protocol==="file:"&&(ep.auth||ep.setsSession)){toast("Open the live Builder for authenticated requests");return;}
+    button.disabled=true;button.textContent="Sending…";const started=performance.now();const response=document.getElementById("apiResponse"),meta=document.getElementById("apiResponseMeta"),kicker=document.getElementById("apiResponseKicker");response.innerHTML='<span class="json-plain">Waiting…</span>';meta.innerHTML="";
+    try{
+      const body=requestBody(ep);const options={method:ep.method,headers:requestHeaders(ep),credentials:"include"};if(body&&!['GET','HEAD'].includes(ep.method))options.body=body;const res=await fetch(resolvedEndpointUrl(ep),options);const elapsed=Math.round(performance.now()-started);const raw=await res.text();let pretty=raw;try{pretty=JSON.stringify(JSON.parse(raw),null,2);}catch{}
+      meta.innerHTML=`<span class="api-status ${res.ok?"ok":"bad"}">${res.status} ${esc(res.statusText)}</span><span class="api-status">${elapsed} ms</span>`;kicker.textContent=`${res.status} ${res.statusText} · ${elapsed} ms`;response.innerHTML=pretty?highlightJsonText(pretty):'<span class="json-plain">(empty response)</span>';
+      if(res.ok&&shouldCreateLock(ep)){createLocks.add(createLockKey(ep));button.textContent="✓ Created";return;}
+      button.disabled=false;button.textContent="Send request";
+    }catch(err){const elapsed=Math.round(performance.now()-started);meta.innerHTML=`<span class="api-status bad">Request failed</span><span class="api-status">${elapsed} ms</span>`;kicker.textContent="Request failed";response.innerHTML=`<span class="json-plain">${esc(String(err?.message||err))}</span>`;button.disabled=false;button.textContent="Send request";}
+  }
+
+  function builderFkCount(){return state.tables.reduce((sum,t)=>sum+(t.fields||[]).filter(f=>f.definition==="FK").length,0);}
+  function tableGroup(name){
+    if(["users","user_members","staff_members","staff_areas"].includes(name))return 0;
+    if(["member_attendees","event_activity_signups","staff_member_areas"].includes(name))return 1;
+    if(["events","event_activities","event_activity_staff","staff_activities"].includes(name))return 2;
+    return 3;
+  }
+  function groupLabel(group){return ["Identity + people","Attendance + links","Events + bookings","Taxonomy + audit"][group];}
+
+  async function loadDatabaseSchema(force=false){
+    if(liveDb&&!force){renderDatabase();return true;}
+    const base=String(state.curl.baseUrl||API_DEFAULT).replace(/\/+$/,"").trim();
+    const btn=document.getElementById("refreshDbBtn");if(btn){btn.disabled=true;btn.textContent="↻ Refreshing…";}
+    try{
+      const res=await fetch(base+"/__matapon/database/schema",{credentials:"include"});if(!res.ok)throw new Error(`${res.status} ${res.statusText}`);liveDb=await res.json();selectedDbTable=selectedDbTable&&liveDb.tables.some(t=>t.name===selectedDbTable)?selectedDbTable:liveDb.tables[0]?.name||null;renderDatabase();renderDataTableList();renderPlatformSummary();return true;
+    }catch(err){liveDb=null;document.getElementById("dbConnectedChip").textContent="Load failed";document.getElementById("dbConnectedChip").className="chip warn";document.getElementById("dbMap").innerHTML='<div class="data-error">Could not load the live database. Start the backend and refresh.</div>';document.getElementById("dbSnapshot").textContent=String(err?.message||err);return false;
+    }finally{if(btn){btn.disabled=false;btn.textContent="↻ Refresh";}}
+  }
+
+  function driftDetails(){
+    if(!liveDb)return {count:null,missing:[],unexpected:[],columnMismatches:[]};
+    const liveNames=new Set(liveDb.tables.map(t=>t.name));const builderNames=new Set(state.tables.map(t=>t.name));const missing=[...builderNames].filter(x=>!liveNames.has(x));const unexpected=[...liveNames].filter(x=>!builderNames.has(x));const columnMismatches=[];
+    for(const name of [...builderNames].filter(x=>liveNames.has(x))){const b=state.tables.find(t=>t.name===name),l=liveDb.tables.find(t=>t.name===name);const bc=new Set((b.fields||[]).map(f=>f.name)),lc=new Set(l.columns.map(c=>c.name));const miss=[...bc].filter(x=>!lc.has(x)),extra=[...lc].filter(x=>!bc.has(x));if(miss.length||extra.length)columnMismatches.push({name,missing:miss,extra});}
+    return {count:missing.length+unexpected.length+columnMismatches.length,missing,unexpected,columnMismatches};
+  }
+
+  function renderDatabase(){
+    if(!liveDb)return;
+    const summary=liveDb.summary||{};const drift=driftDetails();
+    document.getElementById("dbConnectedChip").textContent="Connected";document.getElementById("dbConnectedChip").className="chip good";document.getElementById("dbTableChip").textContent=`${summary.table_count??liveDb.tables.length} tables`;document.getElementById("dbFkChip").textContent=`${summary.foreign_key_count??0} foreign keys`;document.getElementById("dbDriftChip").textContent=`${drift.count??"—"} drift`;document.getElementById("dbDriftChip").className=`chip ${drift.count===0?"good":drift.count===null?"":"warn"}`;document.getElementById("dbSnapshot").textContent=`Snapshot ${new Date().toLocaleTimeString()} · live PostgreSQL`;
+    renderDbMap();renderDbDetail();renderDrift();
+  }
+
+  function renderDbMap(){
+    const map=document.getElementById("dbMap");const groups=[0,1,2,3];const x=[38,308,578,848];let html='<svg id="dbEdges" aria-hidden="true"></svg>';
+    groups.forEach(g=>{html+=`<div class="db-domain" style="left:${x[g]}px;top:22px">${groupLabel(g)}</div>`;const items=liveDb.tables.filter(t=>tableGroup(t.name)===g);items.forEach((t,i)=>{const top=50+i*112;html+=`<button class="db-node ${t.name===selectedDbTable?"active":""} ${t.name==="audit_log"?"audit":""}" data-db-node="${esc(t.name)}" style="left:${x[g]}px;top:${top}px;text-align:left"><div class="db-node-name">${esc(t.name)}</div><div class="db-node-meta"><span><b>${t.row_count}</b> rows</span><span>${t.columns.length} cols</span><span class="db-node-tag">${t.foreign_keys.length?"linked":"root"}</span></div></button>`;});});
+    map.innerHTML=html;map.querySelectorAll("[data-db-node]").forEach(btn=>btn.onclick=()=>{selectedDbTable=btn.dataset.dbNode;renderDbMap();renderDbDetail();});setTimeout(drawDbEdges,0);
+  }
+
+  function drawDbEdges(){
+    if(!liveDb)return;const map=document.getElementById("dbMap"),svg=document.getElementById("dbEdges");if(!map||!svg)return;const mr=map.getBoundingClientRect();svg.innerHTML="";
+    liveDb.tables.forEach(table=>table.foreign_keys.forEach(fk=>{const a=map.querySelector(`[data-db-node="${CSS.escape(table.name)}"]`),b=map.querySelector(`[data-db-node="${CSS.escape(fk.target_table)}"]`);if(!a||!b)return;const ar=a.getBoundingClientRect(),br=b.getBoundingClientRect();const x1=ar.left-mr.left+ar.width/2,y1=ar.top-mr.top+ar.height/2,x2=br.left-mr.left+br.width/2,y2=br.top-mr.top+br.height/2,dx=Math.max(42,Math.abs(x2-x1)*.45),dir=x2>=x1?1:-1;const path=document.createElementNS("http://www.w3.org/2000/svg","path");path.setAttribute("d",`M ${x1} ${y1} C ${x1+dx*dir} ${y1}, ${x2-dx*dir} ${y2}, ${x2} ${y2}`);path.setAttribute("class","db-edge"+((table.name===selectedDbTable||fk.target_table===selectedDbTable)?" active":""));svg.appendChild(path);}));
+  }
+
+  function renderDbDetail(){
+    if(!liveDb||!selectedDbTable)return;const t=liveDb.tables.find(x=>x.name===selectedDbTable);if(!t)return;document.getElementById("dbTableName").textContent=t.name;document.getElementById("dbRows").textContent=t.row_count;document.getElementById("dbCols").textContent=t.columns.length;document.getElementById("dbFks").textContent=t.foreign_keys.length;document.getElementById("dbColumns").innerHTML=t.columns.map(c=>`<div class="db-column"><code>${esc(c.name)}</code><span>${esc(c.data_type)}${c.nullable?"":" · NOT NULL"}</span></div>`).join("");document.getElementById("dbRelations").innerHTML=t.foreign_keys.length?t.foreign_keys.map(f=>`<div class="db-relation"><code>${esc(t.name)}.${esc(f.column)}</code> → <code>${esc(f.target_table)}.${esc(f.target_column)}</code></div>`).join(""):'<div class="db-relation">No outgoing foreign keys.</div>';document.getElementById("dbIndexes").innerHTML=t.indexes.length?t.indexes.map(i=>`<div class="db-relation"><code>${esc(i.name)}</code><div style="color:var(--muted);font-size:9px;margin-top:2px">${esc(i.definition)}</div></div>`).join(""):'<div class="db-relation">No indexes returned.</div>';
+  }
+
+  function renderDrift(){
+    if(!liveDb)return;const d=driftDetails();const builderCols=state.tables.reduce((n,t)=>n+(t.fields||[]).length,0),liveCols=liveDb.summary?.column_count??liveDb.tables.reduce((n,t)=>n+t.columns.length,0);const builderFks=builderFkCount(),liveFks=liveDb.summary?.foreign_key_count??0;const rows=[
+      ["Tables",state.tables.length,liveDb.tables.length,state.tables.length===liveDb.tables.length&&d.missing.length===0&&d.unexpected.length===0?"✓ same":"review"],
+      ["Columns",builderCols,liveCols,d.columnMismatches.length===0?"✓ same":"review"],
+      ["Foreign keys",builderFks,liveFks,builderFks===liveFks?"✓ same":"review"],
+      ["Missing / unexpected objects",d.missing.length+d.unexpected.length,0,(d.missing.length+d.unexpected.length)===0?"✓ none":"review"],
+    ];
+    document.getElementById("driftGrid").innerHTML='<div class="head">Object</div><div class="head">Builder</div><div class="head">Database</div><div class="head">State</div>'+rows.map(r=>`<div>${esc(r[0])}</div><div>${esc(r[1])}</div><div>${esc(r[2])}</div><div class="${String(r[3]).startsWith("✓")?"same":""}">${esc(r[3])}</div>`).join("");const chip=document.getElementById("driftStateChip");chip.textContent=d.count===0?"Exact match":`${d.count} differences`;chip.className=`chip ${d.count===0?"good":"warn"}`;
+  }
+
+  function dataType(name,value){if(value===null)return"NULL";if(typeof value==="boolean")return"BOOLEAN";if(name==="id")return"PRIMARY KEY";if(name.endsWith("_id"))return"FOREIGN KEY";if(name.endsWith("_at")||name==="starts_at"||name==="ends_at")return"TIME";if(typeof value==="object")return"JSON";return typeof value==="number"?"NUMBER":"TEXT";}
+  function cellHtml(col,value){if(value===null)return'<span class="null-pill">null</span>';if(typeof value==="boolean")return`<span class="bool-pill ${value?"true":""}">${value?"✓ true":"false"}</span>`;if(typeof value==="object")return`<span class="data-cell-muted">${esc(JSON.stringify(value))}</span>`;if(col.endsWith("_id")&&col!=="id")return`<span class="fk-pill">${esc(value)}</span>`;const cls=col==="id"?"data-cell-id":(col.endsWith("_at")||col==="starts_at"||col==="ends_at"?"data-cell-muted":"");return`<span class="${cls}" title="${esc(value)}">${esc(value)}</span>`;}
+
+  function renderDataTableList(){
+    const list=document.getElementById("dataTableList");if(!liveDb){list.innerHTML='<div class="api-empty">Load Database first.</div>';return;}const q=document.getElementById("dataTableSearch").value.trim().toLowerCase();list.innerHTML=liveDb.tables.filter(t=>!q||t.name.includes(q)).map(t=>`<button class="data-table-item ${t.name===dataTable?"active":""}" data-data-table="${esc(t.name)}"><code>${esc(t.name)}</code><span class="data-table-count">${t.row_count}</span></button>`).join("");list.querySelectorAll("[data-data-table]").forEach(btn=>btn.onclick=()=>{dataTable=btn.dataset.dataTable;dataOffset=0;selectedDataRow=0;document.getElementById("rowSearch").value="";renderDataTableList();loadDataRows();});document.getElementById("dataTablesChip").textContent=`${liveDb.tables.length} tables`;
+  }
+
+  async function loadDataRows(){
+    if(!dataTable){if(liveDb?.tables[0])dataTable=liveDb.tables[0].name;else return;}
+    if(dataAbort)dataAbort.abort();dataAbort=new AbortController();const base=String(state.curl.baseUrl||API_DEFAULT).replace(/\/+$/,"").trim();const q=document.getElementById("rowSearch").value.trim();const url=new URL(base+`/__matapon/database/data/${encodeURIComponent(dataTable)}`);url.searchParams.set("limit",String(dataLimit));url.searchParams.set("offset",String(dataOffset));if(q)url.searchParams.set("q",q);document.getElementById("dataError").innerHTML="";
+    try{
+      const res=await fetch(url,{credentials:"include",signal:dataAbort.signal});if(res.status===401||res.status===403){document.getElementById("dataLiveChip").textContent="Admin login required";document.getElementById("dataLiveChip").className="chip warn";document.getElementById("dataError").innerHTML='<div class="data-error"><strong>Admin login required.</strong> Use API Tester → Login, then come back and Refresh data.</div>';dataRows=[];dataTotal=0;renderDataGrid();return;}if(!res.ok)throw new Error(`${res.status} ${res.statusText}`);const data=await res.json();dataRows=Array.isArray(data.rows)?data.rows:[];dataTotal=Number(data.total||0);selectedDataRow=Math.min(selectedDataRow,Math.max(0,dataRows.length-1));document.getElementById("dataLiveChip").textContent="Live database";document.getElementById("dataLiveChip").className="chip good";document.getElementById("dataRedaction").textContent=(data.redacted_fields||[]).length?`Redacted: ${(data.redacted_fields||[]).join(", ")}`:"";renderDataGrid();renderDataTableList();
+    }catch(err){if(err?.name==="AbortError")return;document.getElementById("dataError").innerHTML=`<div class="data-error">Could not load rows: ${esc(err?.message||err)}</div>`;dataRows=[];dataTotal=0;renderDataGrid();}
+  }
+
+  function renderDataGrid(){
+    document.getElementById("dataTableName").textContent=dataTable||"—";const liveTable=liveDb?.tables.find(t=>t.name===dataTable);const columns=dataRows[0]?Object.keys(dataRows[0]):(liveTable?.columns||[]).filter(c=>c.name!=="password_hash").map(c=>c.name);document.getElementById("dataRowSummary").textContent=`${dataTotal} rows`;document.getElementById("dataColumnSummary").textContent=`${columns.length} columns`;document.getElementById("dataHead").innerHTML='<tr><th>#</th>'+columns.map(c=>`<th>${esc(c)}</th>`).join("")+'</tr>';document.getElementById("dataBody").innerHTML=dataRows.map((row,i)=>`<tr data-row="${i}" class="${i===selectedDataRow?"selected":""}"><td>${dataOffset+i+1}</td>${columns.map(c=>`<td>${cellHtml(c,row[c])}</td>`).join("")}</tr>`).join("");document.getElementById("dataEmpty").hidden=dataRows.length>0;document.getElementById("dataGrid").style.display=dataRows.length?"table":"none";document.getElementById("dataShowing").textContent=dataRows.length?`Showing ${dataOffset+1}–${dataOffset+dataRows.length} of ${dataTotal}`:`0 rows`;document.getElementById("dataPage").textContent=String(Math.floor(dataOffset/dataLimit)+1);document.getElementById("dataPrevBtn").disabled=dataOffset===0;document.getElementById("dataNextBtn").disabled=dataOffset+dataRows.length>=dataTotal;document.querySelectorAll("#dataBody tr[data-row]").forEach(tr=>tr.onclick=()=>{selectedDataRow=Number(tr.dataset.row);renderDataGrid();});renderSelectedRow();
+  }
+
+  function renderSelectedRow(){const row=dataRows[selectedDataRow];document.getElementById("rowTableChip").textContent=dataTable||"—";if(!row){document.getElementById("rowKey").textContent="No row";document.getElementById("rowFields").innerHTML="";document.getElementById("rowJson").textContent="{}";return;}document.getElementById("rowKey").textContent=String(row.id??`row ${dataOffset+selectedDataRow+1}`);document.getElementById("rowFields").innerHTML=Object.entries(row).map(([k,v])=>`<div class="data-field"><div class="data-field-top"><span class="data-field-name">${esc(k)}</span><span class="data-field-type">${dataType(k,v)}</span></div><div class="data-field-value">${cellHtml(k,v)}</div></div>`).join("");document.getElementById("rowJson").innerHTML=highlightJsonText(JSON.stringify(row,null,2));}
+
+  const defaultIdeas=[];
+  let ideas; try{ideas=JSON.parse(localStorage.getItem(IDEA_KEY)||"null")||defaultIdeas;}catch{ideas=[];} let ideaFilter="active";
+  function saveIdeas(){try{localStorage.setItem(IDEA_KEY,JSON.stringify(ideas));}catch{}}
+  function ideaCounts(){return{active:ideas.filter(x=>x.status==="active").length,done:ideas.filter(x=>x.status==="done").length,trash:ideas.filter(x=>x.status==="trash").length,all:ideas.length};}
+  function renderIdeas(){const counts=ideaCounts();document.getElementById("ideaCountActive").textContent=counts.active;document.getElementById("ideaCountDone").textContent=counts.done;document.getElementById("ideaCountTrash").textContent=counts.trash;document.getElementById("ideaCountAll").textContent=counts.all;document.getElementById("ideaOpenChip").textContent=`${counts.active} open`;document.getElementById("ideaDoneChip").textContent=`${counts.done} completed`;document.querySelectorAll("[data-idea-filter]").forEach(btn=>btn.classList.toggle("active",btn.dataset.ideaFilter===ideaFilter));const visible=ideaFilter==="all"?ideas:ideas.filter(x=>x.status===ideaFilter);const list=document.getElementById("ideaList"),empty=document.getElementById("ideaEmpty");if(!visible.length){list.innerHTML="";empty.hidden=false;document.getElementById("ideaEmptyText").textContent=ideaFilter==="active"?"Add an idea above.":"Nothing in this view.";}else{empty.hidden=true;list.innerHTML=visible.map(item=>{const done=item.status==="done",trash=item.status==="trash";const actions=trash?`<button class="idea-action" data-idea-action="restore" data-id="${esc(item.id)}">↶</button><button class="idea-action danger" data-idea-action="delete" data-id="${esc(item.id)}">×</button>`:`<button class="idea-action danger" data-idea-action="trash" data-id="${esc(item.id)}">⌫</button>`;return`<div class="idea-row ${done?"done":""} ${trash?"trash":""}"><button class="idea-check" data-idea-action="toggle" data-id="${esc(item.id)}" ${trash?"disabled":""}>✓</button><div class="idea-text">${esc(item.text)}</div><div class="idea-actions">${actions}</div></div>`;}).join("");}document.getElementById("ideaShowing").textContent=`${visible.length} shown`;document.querySelectorAll("[data-idea-action]").forEach(btn=>btn.onclick=()=>handleIdeaAction(btn.dataset.ideaAction,btn.dataset.id));}
+  function addIdea(){const input=document.getElementById("ideaInput"),text=input.value.trim();if(!text)return;ideas.unshift({id:uid(),text,status:"active"});input.value="";ideaFilter="active";saveIdeas();renderIdeas();input.focus();}
+  function handleIdeaAction(action,id){const item=ideas.find(x=>x.id===id);if(!item)return;if(action==="toggle"&&item.status!=="trash")item.status=item.status==="done"?"active":"done";if(action==="trash")item.status="trash";if(action==="restore")item.status="active";if(action==="delete")ideas=ideas.filter(x=>x.id!==id);saveIdeas();renderIdeas();}
+
+  async function refreshTopHealth(){const base=String(state.curl.baseUrl||API_DEFAULT).replace(/\/+$/,"").trim();const node=document.getElementById("topHealth");try{const [health,db]=await Promise.all([fetch(base+"/health",{credentials:"include"}),fetch(base+"/db-check",{credentials:"include"})]);if(health.ok&&db.ok){node.innerHTML='<span class="dot"></span> API + PostgreSQL healthy · local';}else throw new Error();}catch{node.innerHTML='<span class="dot" style="background:#b63a33"></span> Local backend unavailable';}}
+
+  function openTab(name){document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.target===name));document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===name));if(name==="schema")renderSchema();if(name==="platform")renderPlatform();if(name==="api")renderApi();if(name==="database")loadDatabaseSchema();if(name==="data"){loadDatabaseSchema().then(ok=>{if(ok){if(!dataTable)dataTable=liveDb.tables[0]?.name||null;renderDataTableList();loadDataRows();}});}if(name==="ideas")renderIdeas();}
+
+  document.querySelectorAll(".tab").forEach(tab=>tab.onclick=()=>openTab(tab.dataset.target));
+  document.querySelectorAll("[data-open-tab]").forEach(btn=>btn.onclick=()=>openTab(btn.dataset.openTab));
+
+  document.getElementById("schemaSearch").addEventListener("input",renderSchemaList);
+  document.getElementById("selectedTableName").addEventListener("input",e=>{const t=state.tables[selectedSchemaIndex];if(!t)return;t.name=e.target.value;save();renderSchemaList();renderSchemaHealth();});
+  document.getElementById("selectedTableNote").addEventListener("input",e=>{const t=state.tables[selectedSchemaIndex];if(!t)return;t.note=e.target.value;save();});
+  document.getElementById("productTruths").addEventListener("input",e=>{state.productTruths=e.target.value;save();renderPlatformSummary();});
+  document.getElementById("addFieldBtn").onclick=()=>{const t=state.tables[selectedSchemaIndex];if(!t)return;t.fields.push(field("new_field","TEXT"));save();renderSchema();};
+  document.getElementById("addTableBtn").onclick=()=>{state.tables.push({name:"new_tables",note:"",fields:[field("id","PK"),field("created_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"),field("updated_at","TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")]});selectedSchemaIndex=state.tables.length-1;save();renderSchema();};
+  document.getElementById("deleteTableBtn").onclick=()=>{const t=state.tables[selectedSchemaIndex];if(!t||!confirm(`Delete ${t.name} from the Builder schema? This does not alter PostgreSQL.`))return;state.tables.splice(selectedSchemaIndex,1);selectedSchemaIndex=Math.max(0,selectedSchemaIndex-1);save();renderSchema();};
+  document.getElementById("tableUpBtn").onclick=()=>{if(selectedSchemaIndex<=0)return;[state.tables[selectedSchemaIndex-1],state.tables[selectedSchemaIndex]]=[state.tables[selectedSchemaIndex],state.tables[selectedSchemaIndex-1]];selectedSchemaIndex--;save();renderSchema();};
+  document.getElementById("tableDownBtn").onclick=()=>{if(selectedSchemaIndex>=state.tables.length-1)return;[state.tables[selectedSchemaIndex+1],state.tables[selectedSchemaIndex]]=[state.tables[selectedSchemaIndex],state.tables[selectedSchemaIndex+1]];selectedSchemaIndex++;save();renderSchema();};
+
+  Object.keys(defaultState.platform).forEach(k=>document.getElementById(k)?.addEventListener("input",syncPlatformFromDom));
+  document.getElementById("projectName").addEventListener("input",syncPlatformFromDom);
+  document.getElementById("copyPlatformBriefBtn").onclick=async()=>{await navigator.clipboard.writeText(buildBrief());toast("Build brief copied");};
+  document.getElementById("copyBuildBriefBtn").onclick=async()=>{renderPlatform();await navigator.clipboard.writeText(buildBrief());toast("Build brief copied");};
+
+  document.getElementById("exportBtn").onclick=()=>{save();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`${state.projectName}-builder.json`;a.click();URL.revokeObjectURL(a.href);};
+  document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
+  document.getElementById("importFile").onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{const next=JSON.parse(await file.text());if(!next||!Array.isArray(next.tables))throw new Error("Missing tables");state={...clone(defaultState),...next,platform:{...defaultState.platform,...(next.platform||{})},curl:{...defaultState.curl,...(next.curl||{})}};state.curl.values||={};state.curl.endpoints=Array.isArray(state.curl.endpoints)?state.curl.endpoints.map(normalizeEndpoint):[];if(!state.tables.some(t=>t.name==="audit_log"))state.tables.push(clone(defaultTables.find(t=>t.name==="audit_log")));save();selectedSchemaIndex=0;document.getElementById("projectBadge").textContent=state.projectName;renderSchema();renderPlatform();renderApi();toast("Builder state imported");}catch{toast("Could not import that Builder JSON");}finally{e.target.value="";}};
+
+  document.getElementById("curlBaseUrl").addEventListener("input",e=>{state.curl.baseUrl=e.target.value.trim()||API_DEFAULT;save();renderApiWorkspace();refreshTopHealth();});
+  document.getElementById("apiSearch").addEventListener("input",renderApiList);
+
+  document.getElementById("editApiGroupsBtn").onclick=()=>{
+    state.curl.groupEditorOpen=!state.curl.groupEditorOpen;
+    save();
+    renderApiList();
+  };
+  document.getElementById("syncEndpointsBtn").onclick=()=>syncDynamicEndpoints(false);
+  document.getElementById("addEndpointBtn").onclick=()=>{const name=prompt("Endpoint name?","New Endpoint");if(name===null)return;const method=(prompt("Method? GET, POST, PATCH, PUT, DELETE","GET")||"GET").toUpperCase();const path=prompt("Path?","/api/")||"/api/";const ep=normalizeEndpoint({id:uid(),name:name.trim()||"New Endpoint",method,path,source:"manual",auth:false,setsSession:false,inputs:[]});state.curl.endpoints.push(ep);state.curl.selectedId=ep.id;save();renderApi();};
+
+  document.getElementById("refreshDbBtn").onclick=()=>loadDatabaseSchema(true);
+  document.getElementById("fitDbBtn").onclick=()=>{const wrap=document.querySelector(".db-map-wrap");if(wrap){wrap.scrollLeft=0;wrap.scrollTop=0;}drawDbEdges();};
+  window.addEventListener("resize",drawDbEdges);
+
+  let searchTimer=null;
+  document.getElementById("dataTableSearch").addEventListener("input",renderDataTableList);
+  document.getElementById("rowSearch").addEventListener("input",()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>{dataOffset=0;selectedDataRow=0;loadDataRows();},250);});
+  document.getElementById("clearRowSearch").onclick=()=>{document.getElementById("rowSearch").value="";dataOffset=0;loadDataRows();};
+  document.getElementById("refreshDataBtn").onclick=()=>loadDatabaseSchema(true).then(ok=>{if(ok){renderDataTableList();loadDataRows();}});
+  document.getElementById("dataPrevBtn").onclick=()=>{dataOffset=Math.max(0,dataOffset-dataLimit);selectedDataRow=0;loadDataRows();};
+  document.getElementById("dataNextBtn").onclick=()=>{if(dataOffset+dataRows.length>=dataTotal)return;dataOffset+=dataLimit;selectedDataRow=0;loadDataRows();};
+  document.getElementById("copyRowBtn").onclick=async()=>{const row=dataRows[selectedDataRow];if(!row)return;await navigator.clipboard.writeText(JSON.stringify(row,null,2));toast("Row JSON copied");};
+
+  document.getElementById("addIdeaBtn").onclick=addIdea;
+  document.getElementById("ideaInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addIdea();}});
+  document.querySelectorAll("[data-idea-filter]").forEach(btn=>btn.onclick=()=>{ideaFilter=btn.dataset.ideaFilter;renderIdeas();});
+
+  document.getElementById("projectBadge").textContent=state.projectName;
+  renderSchema();renderPlatform();renderApi();renderIdeas();refreshTopHealth();
+  syncDynamicEndpoints(true);
+  save();
+})();
+
+</script>
+</body>
+</html>
